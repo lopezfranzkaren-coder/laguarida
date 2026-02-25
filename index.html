@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Calculadora de Costos</title>
+<style>
+  :root {
+    --bg: #0d1b2a; --surface: #111f30; --border: #1e3a5f;
+    --accent: #e94560; --gold: #f5a623; --green: #27ae60;
+    --blue: #2980b9; --text: #e8edf4; --muted: #6b8cae;
+    --input-bg: #0a1520;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+  /* ── Header ── */
+  header { background: #0a1520; border-bottom: 1px solid var(--border); padding: 0 28px; }
+  .header-top { padding: 18px 0 0; }
+  .header-top h1 { font-size: 22px; font-weight: 800; background: linear-gradient(90deg,#e94560,#f5a623); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .header-top p { color: var(--muted); font-size: 12px; margin-top: 3px; padding-bottom: 14px; }
+  nav { display: flex; gap: 4px; }
+  nav button { background: transparent; border: none; color: var(--muted); padding: 10px 18px; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; font-weight: 500; transition: all .2s; white-space: nowrap; }
+  nav button.active { background: var(--accent); color: #fff; font-weight: 700; }
+  nav button:hover:not(.active) { color: var(--text); background: #1a2d44; }
+
+  /* ── Layout ── */
+  main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  .tab { display: none; } .tab.active { display: block; }
+
+  /* ── Cards ── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; margin-bottom: 18px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; position: relative; overflow: hidden; }
+  .kpi-icon { position: absolute; top:-8px; right:-8px; font-size: 55px; opacity: .08; }
+  .kpi label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 8px; }
+  .kpi .val { font-size: 24px; font-weight: 800; }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { padding: 10px 14px; font-size: 11px; color: var(--muted); text-align: left; border-bottom: 2px solid var(--border); font-weight: 600; white-space: nowrap; }
+  td { padding: 10px 14px; border-bottom: 1px solid #1e3a5f22; }
+  tr:nth-child(even) td { background: #0f1c2c44; }
+  tr:hover td { background: #1a2d4433; }
+  .ta-right { text-align: right; }
+  .ta-center { text-align: center; }
+
+  /* ── Inputs ── */
+  input, select, textarea {
+    background: var(--input-bg); border: 1px solid var(--border); border-radius: 7px;
+    padding: 8px 12px; color: var(--text); font-size: 13px; font-family: inherit;
+    transition: border-color .2s;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--accent); }
+  input[type=number] { text-align: right; }
+  input.full, select.full { width: 100%; }
+
+  /* ── Buttons ── */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all .2s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #c73652; }
+  .btn-success { background: var(--green); color: #fff; }
+  .btn-success:hover { background: #219150; }
+  .btn-ghost { background: transparent; border: 1px dashed var(--border); color: var(--muted); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+  .btn-sm { padding: 5px 11px; font-size: 12px; }
+  .btn-danger { background: transparent; border: none; color: var(--accent); cursor: pointer; font-size: 16px; padding: 2px 6px; }
+  .btn-edit { background: transparent; border: none; color: var(--blue); cursor: pointer; font-size: 14px; padding: 2px 6px; }
+
+  /* ── Forms ── */
+  .form-row { display: grid; gap: 12px; margin-bottom: 14px; }
+  .form-row.cols2 { grid-template-columns: 1fr 1fr; }
+  .form-row.cols3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-row.cols4 { grid-template-columns: 2fr 1fr 1fr auto; }
+  label.lbl { font-size: 11px; color: var(--muted); display: block; margin-bottom: 5px; }
+
+  /* ── Badges ── */
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .badge-green { background: #27ae6033; color: var(--green); }
+  .badge-gold { background: #f5a62333; color: var(--gold); }
+  .badge-red { background: #e9456033; color: var(--accent); }
+  .badge-blue { background: #2980b933; color: var(--blue); }
+  .badge-gray { background: #6b8cae33; color: var(--muted); }
+
+  /* ── Mini bar ── */
+  .bar-bg { background: #1e2a3a; border-radius: 4px; height: 7px; width: 100%; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width .4s; }
+
+  /* ── Calculator layout ── */
+  .calc-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+  .result-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .result-row .rl { font-size: 13px; color: var(--muted); }
+  .result-row .rv { font-size: 15px; font-weight: 700; }
+  .result-row.big .rv { font-size: 22px; font-weight: 800; }
+  .divider { border: none; border-top: 2px solid var(--border); margin: 14px 0; }
+
+  /* ── Modal ── */
+  .modal-bg { display: none; position: fixed; inset: 0; background: #000a; z-index: 100; align-items: center; justify-content: center; }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; min-width: 420px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; }
+  .modal h3 { margin-bottom: 20px; font-size: 16px; }
+
+  /* ── Toast ── */
+  #toast { position: fixed; bottom: 24px; right: 24px; background: var(--green); color:#fff; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; opacity: 0; transition: opacity .3s; z-index: 200; }
+  #toast.show { opacity: 1; }
+  #toast.error { background: var(--accent); }
+
+  /* ── Utils ── */
+  .flex { display: flex; gap: 10px; align-items: center; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+  .mb-16 { margin-bottom: 16px; }
+  .text-green { color: var(--green); } .text-gold { color: var(--gold); } .text-red { color: var(--accent); } .text-muted { color: var(--muted); }
+  .bold { font-weight: 700; } .big-num { font-size: 20px; font-weight: 800; }
+  .spinner { text-align:center; padding:40px; color:var(--muted); }
+  .section-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <h1>💼 CALCULADORA DE COSTOS</h1>
+    <p>Sistema local de gestión · Base de datos SQLite</p>
+  </div>
+  <nav>
+    <button class="active" onclick="showTab('dashboard')">📊 Dashboard</button>
+    <button onclick="showTab('calculadora')">🧮 Calculadora</button>
+    <button onclick="showTab('productos')">📦 Productos</button>
+    <button onclick="showTab('cotizaciones')">📋 Cotizaciones</button>
+    <button onclick="showTab('ventas')">📈 Ventas</button>
+    <button onclick="showTab('gastos')">🏢 Gastos Fijos</button>
+    <button onclick="window.location.href='/logout'" style="margin-left:auto;background:transparent;border:1px solid #1e3a5f;color:#6b8cae;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:12px">Salir 🚪</button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ══ DASHBOARD ══════════════════════════════════════════════════════════ -->
+<div id="tab-dashboard" class="tab active">
+  <div class="kpi-grid" id="kpi-grid">
+    <div class="spinner">Cargando...</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div class="card">
+      <h2>🏆 Top Productos por Costo</h2>
+      <div id="dash-top-products"><div class="spinner">Cargando...</div></div>
+    </div>
+    <div class="card">
+      <h2>📋 Últimas Cotizaciones</h2>
+      <div id="dash-cotizaciones"><div class="spinner">Cargando...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CALCULADORA ═══════════════════════════════════════════════════════ -->
+<div id="tab-calculadora" class="tab">
+  <div class="calc-grid">
+    <div>
+      <div class="card">
+        <div class="form-row cols2 mb-16">
+          <div>
+            <label class="lbl">Nombre / Cliente</label>
+            <input id="calc-nombre" class="full" placeholder="Ej: Remera + estampa para Juan"/>
+          </div>
+          <div>
+            <label class="lbl">% Variables (IIBB, etc): <span id="var-pct-label">44%</span></label>
+            <input type="range" id="var-pct" min="0" max="80" value="44" style="width:100%;margin-top:8px;accent-color:var(--accent)" oninput="updateCalc()"/>
+          </div>
+        </div>
+
+        <div class="section-title">🔧 Insumos / Componentes</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Insumo</th><th class="ta-right">Costo ($)</th><th class="ta-right">Cant.</th><th class="ta-right">Subtotal</th><th></th>
+            </tr></thead>
+            <tbody id="calc-rows"></tbody>
+          </table>
+        </div>
+        <button class="btn btn-ghost" style="margin-top:12px;width:100%" onclick="addCalcRow()">+ Agregar insumo</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="position:sticky;top:20px">
+        <h2>📊 Resultado</h2>
+        <div class="result-row"><span class="rl">Subtotal costos</span><span class="rv text-muted" id="r-subtotal">$0</span></div>
+        <div class="result-row"><span class="rl">Variables (<span id="r-varpct">44</span>%)</span><span class="rv text-muted" id="r-variable">$0</span></div>
+        <hr class="divider"/>
+        <div class="result-row big"><span class="rl bold">Costo Final</span><span class="rv text-red" id="r-costo">$0</span></div>
+        <div style="height:14px"></div>
+        <div id="price-results"></div>
+        <hr class="divider"/>
+        <div class="form-row cols2" style="margin-top:12px">
+          <div>
+            <label class="lbl">Precio de venta ($)</label>
+            <input type="number" id="calc-precio" placeholder="0" style="width:100%" oninput="updateCalc()"/>
+          </div>
+          <div>
+            <label class="lbl">Margen real</label>
+            <div id="r-margen" style="padding:8px 0;font-size:20px;font-weight:800;color:var(--green)">—</div>
+          </div>
+        </div>
+        <button class="btn btn-success" style="width:100%;margin-top:10px" onclick="guardarCotizacion()">💾 Guardar Cotización</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PRODUCTOS ══════════════════════════════════════════════════════════ -->
+<div id="tab-productos" class="tab">
+  <div class="card">
+    <div class="flex-between mb-16">
+      <input id="prod-search" placeholder="🔍 Buscar..." style="width:260px" oninput="renderProductos()"/>
+      <div class="flex">
+        <select id="prod-sort" onchange="renderProductos()">
+          <option value="nombre">Nombre A-Z</option>
+          <option value="costo_desc">Mayor costo</option>
+          <option value="costo_asc">Menor costo</option>
+        </select>
+        <button class="btn btn-primary" onclick="openModal('modal-prod')">+ Nuevo producto</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Producto</th>
+          <th class="ta-right">Costo Base</th>
+          <th class="ta-right">+30%</th>
+          <th class="ta-right">+40%</th>
+          <th class="ta-right">+50%</th>
+          <th class="ta-right">Doble</th>
+          <th class="ta-center">Acciones</th>
+        </tr></thead>
+        <tbody id="prod-tbody"></tbody>
+      </table>
+    </div>
+    <div id="prod-count" style="margin-top:10px;font-size:12px;color:var(--muted)"></div>
+  </div>
+</div>
+
+<!-- ══ COTIZACIONES ═══════════════════════════════════════════════════════ -->
+<div id="tab-cotizaciones" class="tab">
+  <div class="flex-between mb-16">
+    <div class="flex">
+      <input id="cot-search" placeholder="🔍 Buscar..." style="width:220px" oninput="renderCotizaciones()"/>
+      <select id="cot-filter" onchange="renderCotizaciones()">
+        <option value="">Todos los estados</option>
+        <option value="borrador">Borrador</option>
+        <option value="enviada">Enviada</option>
+        <option value="aprobada">Aprobada</option>
+        <option value="rechazada">Rechazada</option>
+      </select>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Fecha</th><th>Cliente</th><th>Descripción</th>
+        <th class="ta-right">Costo Final</th><th class="ta-right">Precio Venta</th>
+        <th class="ta-right">Margen</th><th>Estado</th><th class="ta-center">Acciones</th>
+      </tr></thead>
+      <tbody id="cot-tbody"></tbody>
+    </table>
+  </div>
+  <div id="cot-count" style="margin-top:10px;font-size:12px;color:var(--muted)"></div>
+</div>
+
+<!-- ══ VENTAS ══════════════════════════════════════════════════════════════ -->
+<div id="tab-ventas" class="tab">
+  <div class="card">
+    <div class="flex-between mb-16">
+      <div class="flex">
+        <label class="lbl" style="margin:0">Año:</label>
+        <select id="ventas-anio" onchange="loadVentas()">
+          <option value="2024">2024</option>
+          <option value="2025" selected>2025</option>
+          <option value="2026">2026</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('modal-venta')">+ Cargar ventas</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Producto</th>
+          <th class="ta-right">Ene</th><th class="ta-right">Feb</th><th class="ta-right">Mar</th>
+          <th class="ta-right">Abr</th><th class="ta-right">May</th><th class="ta-right">Jun</th>
+          <th class="ta-right">Jul</th><th class="ta-right">Ago</th><th class="ta-right">Sep</th>
+          <th class="ta-right">Oct</th><th class="ta-right">Nov</th><th class="ta-right">Dic</th>
+          <th class="ta-right">Total</th>
+        </tr></thead>
+        <tbody id="ventas-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GASTOS FIJOS ═══════════════════════════════════════════════════════ -->
+<div id="tab-gastos" class="tab">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div class="card">
+      <div class="flex-between mb-16">
+        <h2>💸 Gastos Fijos Mensuales</h2>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modal-gasto')">+ Agregar</button>
+      </div>
+      <div id="gastos-list"></div>
+      <div style="border-top:2px solid var(--accent);margin-top:16px;padding-top:14px" class="flex-between">
+        <span class="bold">TOTAL MENSUAL</span>
+        <span class="big-num text-red" id="gastos-total">$0</span>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h2>📊 Distribución</h2>
+        <div id="gastos-dist"></div>
+      </div>
+      <div class="card">
+        <h2>📅 Proyección</h2>
+        <div id="gastos-proy"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ══ MODALS ══════════════════════════════════════════════════════════════ -->
+
+<!-- Producto -->
+<div class="modal-bg" id="modal-prod">
+  <div class="modal">
+    <h3 id="modal-prod-title">➕ Nuevo Producto</h3>
+    <input type="hidden" id="prod-edit-id"/>
+    <div class="form-row mb-16"><label class="lbl">Nombre del producto</label><input id="prod-nombre" class="full" placeholder="Ej: Taza XL"/></div>
+    <div class="form-row mb-16"><label class="lbl">Costo base ($)</label><input type="number" id="prod-costo" class="full" placeholder="0"/></div>
+    <div class="flex" style="justify-content:flex-end;gap:10px;margin-top:20px">
+      <button class="btn btn-ghost" onclick="closeModal('modal-prod')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProducto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Gasto -->
+<div class="modal-bg" id="modal-gasto">
+  <div class="modal">
+    <h3 id="modal-gasto-title">➕ Nuevo Gasto Fijo</h3>
+    <input type="hidden" id="gasto-edit-id"/>
+    <div class="form-row mb-16"><label class="lbl">Concepto</label><input id="gasto-item" class="full" placeholder="Ej: Seguro"/></div>
+    <div class="form-row mb-16"><label class="lbl">Monto mensual ($)</label><input type="number" id="gasto-monto" class="full" placeholder="0"/></div>
+    <div class="flex" style="justify-content:flex-end;gap:10px;margin-top:20px">
+      <button class="btn btn-ghost" onclick="closeModal('modal-gasto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveGasto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ventas -->
+<div class="modal-bg" id="modal-venta">
+  <div class="modal">
+    <h3>📈 Cargar Ventas</h3>
+    <div class="form-row cols2 mb-16">
+      <div><label class="lbl">Producto</label><input id="venta-prod" class="full" list="prod-list-dl" placeholder="Nombre producto"/></div>
+      <div><label class="lbl">Año</label><select id="venta-anio" class="full"><option>2024</option><option selected>2025</option><option>2026</option></select></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">
+      <div><label class="lbl">Ene</label><input type="number" id="v-1" class="full" value="0" min="0"/></div>
+      <div><label class="lbl">Feb</label><input type="number" id="v-2" class="full" value="0" min="0"/></div>
+      <div><label class="lbl">Mar</label><input type="number" id="v-3" class="full" value="0" min="0"/></div>
+      <div><label class="lbl">Abr</label><input type="number" id="v-4" class="full" value="0" min="0"/></div>
+      <div><label class="lbl">May</label><input type="number" id="v-5" class="full" value="0" min="0"/></div>
+      <div><label class="lbl">Jun</label><input type="number" id="v-6" class="full" value="0" min="0"/></div>
+      <div><label class="lbl">Jul</label><input type="number" id="v-7" class="full" value="0" min="0"/></div>
+      <div><label class="lbl">Ago</label><input type="number" id="v-8" class="full" value="0" min="0"/></div>
+      <div><label class="lbl">Sep</label><input type="number" id="v-9" class="full" value="0" min="0"/></div>
+      <div><label class="lbl">Oct</label><input type="number" id="v-10" class="full" value="0" min="0"/></div>
+      <div><label class="lbl">Nov</label><input type="number" id="v-11" class="full" value="0" min="0"/></div>
+      <div><label class="lbl">Dic</label><input type="number" id="v-12" class="full" value="0" min="0"/></div>
+    </div>
+    <datalist id="prod-list-dl" id="venta-prod-dl"></datalist>
+    <div class="flex" style="justify-content:flex-end;gap:10px">
+      <button class="btn btn-ghost" onclick="closeModal('modal-venta')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveVentas()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detalle cotización -->
+<div class="modal-bg" id="modal-cot-detail">
+  <div class="modal" style="max-width:700px">
+    <h3 id="cot-detail-title">📋 Detalle de Cotización</h3>
+    <div id="cot-detail-body"></div>
+    <div class="flex" style="justify-content:flex-end;margin-top:20px">
+      <button class="btn btn-ghost" onclick="closeModal('modal-cot-detail')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+let productos = [];
+let gastos = [];
+let cotizaciones = [];
+let ventas = {};
+let calcRows = [
+  {insumo:"Producto base", costo:920, qty:1},
+  {insumo:"Hoja", costo:70, qty:1},
+  {insumo:"Tinta", costo:50, qty:1},
+];
+
+// ─── Utils ────────────────────────────────────────────────────────────────────
+const fmt = n => "$" + Math.round(n).toLocaleString("es-AR").replace(/,/g,".");
+const pct = n => (n*100).toFixed(1)+"%";
+const api = async (url, opts={}) => {
+  const r = await fetch(url, {headers:{"Content-Type":"application/json"}, ...opts});
+  return r.json();
+};
+
+function toast(msg, err=false) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "show" + (err?" error":"");
+  setTimeout(()=>t.className="", 2800);
+}
+
+function showTab(name) {
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+  document.getElementById("tab-"+name).classList.add("active");
+  event.currentTarget.classList.add("active");
+  if(name==="dashboard") loadDashboard();
+  if(name==="productos") renderProductos();
+  if(name==="cotizaciones") renderCotizaciones();
+  if(name==="ventas") loadVentas();
+  if(name==="gastos") renderGastos();
+}
+
+function openModal(id) { document.getElementById(id).classList.add("open"); }
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+document.querySelectorAll(".modal-bg").forEach(m => m.addEventListener("click",e=>{ if(e.target===m) m.classList.remove("open"); }));
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+async function init() {
+  [productos, gastos, cotizaciones] = await Promise.all([
+    api("/api/productos"),
+    api("/api/gastos"),
+    api("/api/cotizaciones"),
+  ]);
+  loadDashboard();
+  renderCalcRows();
+  populateProdDatalist();
+}
+
+function populateProdDatalist() {
+  const dl = document.getElementById("prod-list-dl");
+  dl.innerHTML = productos.map(p=>`<option value="${p.nombre}">`).join("");
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  const stats = await api("/api/stats");
+  const totalFijos = gastos.reduce((s,g)=>s+g.monto,0);
+
+  document.getElementById("kpi-grid").innerHTML = `
+    <div class="kpi" style="border-color:#e9456044">
+      <div class="kpi-icon">📦</div>
+      <label>Productos activos</label>
+      <div class="val" style="color:var(--accent)">${stats.n_productos}</div>
+    </div>
+    <div class="kpi" style="border-color:#2980b944">
+      <div class="kpi-icon">📋</div>
+      <label>Cotizaciones totales</label>
+      <div class="val" style="color:var(--blue)">${stats.n_cotizaciones}</div>
+    </div>
+    <div class="kpi" style="border-color:#27ae6044">
+      <div class="kpi-icon">✅</div>
+      <label>Aprobadas · Vol. vendido</label>
+      <div class="val" style="color:var(--green)">${fmt(stats.vol_aprobado)}</div>
+    </div>
+    <div class="kpi" style="border-color:#f5a62344">
+      <div class="kpi-icon">💸</div>
+      <label>Gasto fijo mensual</label>
+      <div class="val" style="color:var(--gold)">${fmt(totalFijos)}</div>
+    </div>`;
+
+  const maxCost = Math.max(...productos.map(p=>p.costo));
+  const top = [...productos].sort((a,b)=>b.costo-a.costo).slice(0,8);
+  document.getElementById("dash-top-products").innerHTML = top.map(p=>`
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:13px;font-weight:600">${p.nombre}</span>
+        <span style="font-size:12px;color:var(--muted)">${fmt(p.costo)}</span>
+      </div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${(p.costo/maxCost*100).toFixed(1)}%;background:var(--accent)"></div></div>
+    </div>`).join("");
+
+  const recientes = cotizaciones.slice(0,5);
+  document.getElementById("dash-cotizaciones").innerHTML = recientes.length
+    ? recientes.map(c=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)22">
+        <div>
+          <div style="font-size:13px;font-weight:600">${c.descripcion}</div>
+          <div style="font-size:11px;color:var(--muted)">${c.cliente||"Sin cliente"} · ${c.fecha}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-weight:700;color:var(--green)">${fmt(c.precio_venta)}</div>
+          <span class="badge ${badgeEstado(c.estado)}">${c.estado}</span>
+        </div>
+      </div>`).join("")
+    : `<p style="color:var(--muted);font-size:13px">No hay cotizaciones aún.</p>`;
+}
+
+function badgeEstado(e) {
+  return {borrador:"badge-gray",enviada:"badge-blue",aprobada:"badge-green",rechazada:"badge-red"}[e]||"badge-gray";
+}
+
+// ─── CALCULADORA ──────────────────────────────────────────────────────────────
+function addCalcRow() {
+  calcRows.push({insumo:"",costo:0,qty:1});
+  renderCalcRows();
+}
+
+function renderCalcRows() {
+  const tbody = document.getElementById("calc-rows");
+  const prods = productos.map(p=>`<option value="${p.nombre}" data-costo="${p.costo}">`).join("");
+  tbody.innerHTML = calcRows.map((r,i)=>`
+    <tr>
+      <td><input list="calc-prod-dl" value="${r.insumo}" onchange="calcRowChange(${i},'insumo',this.value)" style="width:100%"/></td>
+      <td><input type="number" value="${r.costo}" oninput="calcRowChange(${i},'costo',this.value)" style="width:100px"/></td>
+      <td><input type="number" value="${r.qty}" min="1" oninput="calcRowChange(${i},'qty',this.value)" style="width:70px"/></td>
+      <td class="ta-right bold">${fmt(r.costo*r.qty)}</td>
+      <td><button class="btn-danger" onclick="removeCalcRow(${i})">×</button></td>
+    </tr>`).join("")+`<datalist id="calc-prod-dl">${prods}</datalist>`;
+  updateCalc();
+}
+
+function calcRowChange(i, field, val) {
+  // Auto-fill cost when product name matches
+  if(field==="insumo") {
+    const prod = productos.find(p=>p.nombre.toLowerCase()===val.toLowerCase());
+    if(prod) { calcRows[i].costo = prod.costo; }
+  }
+  calcRows[i][field] = field==="insumo" ? val : Number(val)||0;
+  renderCalcRows();
+}
+
+function removeCalcRow(i) { calcRows.splice(i,1); renderCalcRows(); }
+
+function updateCalc() {
+  const varPct = Number(document.getElementById("var-pct").value);
+  document.getElementById("var-pct-label").textContent = varPct+"%";
+  document.getElementById("r-varpct").textContent = varPct;
+
+  const subtotal = calcRows.reduce((s,r)=>s+r.costo*r.qty,0);
+  const variable = subtotal * varPct/100;
+  const costoFinal = subtotal + variable;
+
+  document.getElementById("r-subtotal").textContent = fmt(subtotal);
+  document.getElementById("r-variable").textContent = fmt(variable);
+  document.getElementById("r-costo").textContent = fmt(costoFinal);
+
+  const prices = [
+    {label:"+30%", mult:1.3, color:"var(--muted)"},
+    {label:"+40%", mult:1.4, color:"var(--blue)"},
+    {label:"+50%", mult:1.5, color:"var(--green)"},
+    {label:"Doble", mult:2.0, color:"var(--gold)"},
+  ];
+  document.getElementById("price-results").innerHTML = prices.map(p=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:12px;color:var(--muted)">${p.label}</span>
+      <span style="font-size:16px;font-weight:700;color:${p.color}">${fmt(costoFinal*p.mult)}</span>
+    </div>`).join("");
+
+  const precioVenta = Number(document.getElementById("calc-precio").value)||0;
+  if(precioVenta>0) {
+    const ganancia = precioVenta - costoFinal;
+    const margen = ganancia/precioVenta;
+    const color = margen>0.4?"var(--green)":margen>0.2?"var(--gold)":"var(--accent)";
+    document.getElementById("r-margen").style.color = color;
+    document.getElementById("r-margen").textContent = pct(margen);
+  } else {
+    document.getElementById("r-margen").textContent = "—";
+  }
+}
+
+async function guardarCotizacion() {
+  const varPct = Number(document.getElementById("var-pct").value);
+  const subtotal = calcRows.reduce((s,r)=>s+r.costo*r.qty,0);
+  const costoFinal = subtotal * (1+varPct/100);
+  const precio = Number(document.getElementById("calc-precio").value)||0;
+  const nombre = document.getElementById("calc-nombre").value.trim();
+
+  if(!nombre) { toast("Ingresá un nombre o descripción",true); return; }
+  if(precio===0) { toast("Ingresá el precio de venta",true); return; }
+
+  const payload = {
+    fecha: new Date().toISOString().slice(0,10),
+    cliente: nombre,
+    descripcion: nombre,
+    detalle_json: calcRows,
+    subtotal, costo_final: costoFinal,
+    precio_venta: precio,
+    margen_pct: precio>0?(precio-costoFinal)/precio:0,
+    estado: "borrador"
+  };
+  const res = await api("/api/cotizaciones", {method:"POST",body:JSON.stringify(payload)});
+  if(res.ok) {
+    toast("✅ Cotización guardada!");
+    cotizaciones = await api("/api/cotizaciones");
+  } else toast("Error al guardar",true);
+}
+
+// ─── PRODUCTOS ────────────────────────────────────────────────────────────────
+function renderProductos() {
+  const q = document.getElementById("prod-search").value.toLowerCase();
+  const sort = document.getElementById("prod-sort").value;
+  let list = productos.filter(p=>p.nombre.toLowerCase().includes(q));
+  if(sort==="costo_desc") list.sort((a,b)=>b.costo-a.costo);
+  else if(sort==="costo_asc") list.sort((a,b)=>a.costo-b.costo);
+  else list.sort((a,b)=>a.nombre.localeCompare(b.nombre));
+
+  document.getElementById("prod-tbody").innerHTML = list.map(p=>`
+    <tr>
+      <td class="bold">${p.nombre}</td>
+      <td class="ta-right text-muted">${fmt(p.costo)}</td>
+      <td class="ta-right">${fmt(p.costo*1.3)}</td>
+      <td class="ta-right" style="color:var(--blue)">${fmt(p.costo*1.4)}</td>
+      <td class="ta-right" style="color:var(--green);font-weight:700">${fmt(p.costo*1.5)}</td>
+      <td class="ta-right" style="color:var(--gold);font-weight:700">${fmt(p.costo*2)}</td>
+      <td class="ta-center">
+        <button class="btn-edit" onclick="editProducto(${p.id})">✏️</button>
+        <button class="btn-danger" onclick="deleteProducto(${p.id})">🗑️</button>
+      </td>
+    </tr>`).join("");
+  document.getElementById("prod-count").textContent = `${list.length} de ${productos.length} productos`;
+}
+
+function editProducto(id) {
+  const p = productos.find(x=>x.id===id);
+  document.getElementById("prod-edit-id").value = id;
+  document.getElementById("prod-nombre").value = p.nombre;
+  document.getElementById("prod-costo").value = p.costo;
+  document.getElementById("modal-prod-title").textContent = "✏️ Editar Producto";
+  openModal("modal-prod");
+}
+
+async function saveProducto() {
+  const id = document.getElementById("prod-edit-id").value;
+  const nombre = document.getElementById("prod-nombre").value.trim();
+  const costo = Number(document.getElementById("prod-costo").value);
+  if(!nombre||!costo) { toast("Completá nombre y costo",true); return; }
+
+  let res;
+  if(id) res = await api(`/api/productos/${id}`,{method:"PUT",body:JSON.stringify({nombre,costo})});
+  else res = await api("/api/productos",{method:"POST",body:JSON.stringify({nombre,costo})});
+
+  if(res.ok) {
+    toast(id?"✅ Producto actualizado":"✅ Producto creado");
+    productos = await api("/api/productos");
+    populateProdDatalist();
+    renderProductos();
+    closeModal("modal-prod");
+    document.getElementById("prod-edit-id").value="";
+    document.getElementById("modal-prod-title").textContent="➕ Nuevo Producto";
+  } else toast(res.error||"Error",true);
+}
+
+async function deleteProducto(id) {
+  if(!confirm("¿Eliminar este producto?")) return;
+  await api(`/api/productos/${id}`,{method:"DELETE"});
+  toast("🗑️ Eliminado");
+  productos = await api("/api/productos");
+  renderProductos();
+}
+
+// ─── COTIZACIONES ──────────────────────────────────────────────────────────────
+function renderCotizaciones() {
+  const q = document.getElementById("cot-search").value.toLowerCase();
+  const filtro = document.getElementById("cot-filter").value;
+  let list = cotizaciones.filter(c=>{
+    const matchQ = c.descripcion.toLowerCase().includes(q)||(c.cliente||"").toLowerCase().includes(q);
+    const matchF = !filtro||c.estado===filtro;
+    return matchQ && matchF;
+  });
+
+  document.getElementById("cot-tbody").innerHTML = list.map(c=>`
+    <tr>
+      <td>${c.fecha}</td>
+      <td>${c.cliente||"—"}</td>
+      <td class="bold">${c.descripcion}</td>
+      <td class="ta-right text-muted">${fmt(c.costo_final)}</td>
+      <td class="ta-right" style="color:var(--green);font-weight:700">${fmt(c.precio_venta)}</td>
+      <td class="ta-right">${pct(c.margen_pct)}</td>
+      <td>
+        <select onchange="updateEstado(${c.id},this.value)" style="background:transparent;border:none;color:var(--text);font-size:12px;cursor:pointer">
+          ${["borrador","enviada","aprobada","rechazada"].map(e=>`<option value="${e}"${c.estado===e?" selected":""}>${e}</option>`).join("")}
+        </select>
+      </td>
+      <td class="ta-center">
+        <button class="btn-edit" onclick="verCotizacion(${c.id})">👁️</button>
+        <button class="btn-danger" onclick="deleteCotizacion(${c.id})">🗑️</button>
+      </td>
+    </tr>`).join("");
+  document.getElementById("cot-count").textContent = `${list.length} cotizaciones`;
+}
+
+async function updateEstado(id, estado) {
+  await api(`/api/cotizaciones/${id}/estado`,{method:"PUT",body:JSON.stringify({estado})});
+  cotizaciones = await api("/api/cotizaciones");
+  toast("Estado actualizado");
+}
+
+function verCotizacion(id) {
+  const c = cotizaciones.find(x=>x.id===id);
+  document.getElementById("cot-detail-title").textContent = `📋 ${c.descripcion}`;
+  document.getElementById("cot-detail-body").innerHTML = `
+    <div class="form-row cols2" style="margin-bottom:14px">
+      <div><label class="lbl">Cliente</label><div class="bold">${c.cliente||"—"}</div></div>
+      <div><label class="lbl">Fecha</label><div>${c.fecha}</div></div>
+      <div><label class="lbl">Costo final</label><div class="bold text-red">${fmt(c.costo_final)}</div></div>
+      <div><label class="lbl">Precio venta</label><div class="bold text-green">${fmt(c.precio_venta)}</div></div>
+    </div>
+    <div class="section-title">Detalle de insumos</div>
+    <table><thead><tr><th>Insumo</th><th class="ta-right">Costo</th><th class="ta-right">Cant.</th><th class="ta-right">Subtotal</th></tr></thead>
+    <tbody>${(c.detalle_json||[]).filter(r=>r.insumo).map(r=>`
+      <tr><td>${r.insumo}</td><td class="ta-right">${fmt(r.costo)}</td><td class="ta-right">${r.qty}</td><td class="ta-right bold">${fmt(r.costo*r.qty)}</td></tr>
+    `).join("")}</tbody></table>`;
+  openModal("modal-cot-detail");
+}
+
+async function deleteCotizacion(id) {
+  if(!confirm("¿Eliminar esta cotización?")) return;
+  await api(`/api/cotizaciones/${id}`,{method:"DELETE"});
+  toast("🗑️ Eliminada");
+  cotizaciones = await api("/api/cotizaciones");
+  renderCotizaciones();
+}
+
+// ─── VENTAS ────────────────────────────────────────────────────────────────────
+async function loadVentas() {
+  const anio = document.getElementById("ventas-anio").value;
+  const data = await api(`/api/ventas?anio=${anio}`);
+  const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+  const MESES_FULL = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+  // Build pivot
+  const pivot = {};
+  data.forEach(r=>{
+    if(!pivot[r.producto]) pivot[r.producto]={};
+    const mi = MESES_FULL.indexOf(r.mes);
+    if(mi>=0) pivot[r.producto][mi+1] = r.cantidad;
+  });
+
+  const prods = Object.keys(pivot).sort();
+  if(!prods.length) {
+    document.getElementById("ventas-tbody").innerHTML = `<tr><td colspan="14" style="color:var(--muted);text-align:center;padding:30px">No hay ventas cargadas para ${anio}. Usá el botón "Cargar ventas".</td></tr>`;
+    return;
+  }
+
+  document.getElementById("ventas-tbody").innerHTML = prods.map(p=>{
+    const row = pivot[p];
+    const total = Object.values(row).reduce((s,v)=>s+v,0);
+    return `<tr>
+      <td class="bold">${p}</td>
+      ${Array.from({length:12},(_,i)=>`<td class="ta-right">${row[i+1]||"—"}</td>`).join("")}
+      <td class="ta-right bold text-green">${total}</td>
+    </tr>`;
+  }).join("");
+
+  // Populate datalist
+  document.getElementById("prod-list-dl").innerHTML = productos.map(p=>`<option value="${p.nombre}">`).join("");
+}
+
+async function saveVentas() {
+  const prod = document.getElementById("venta-prod").value.trim();
+  const anio = Number(document.getElementById("venta-anio").value);
+  const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  if(!prod) { toast("Ingresá el nombre del producto",true); return; }
+
+  const promises = MESES.map((mes,i)=>{
+    const val = Number(document.getElementById(`v-${i+1}`).value)||0;
+    return api("/api/ventas",{method:"POST",body:JSON.stringify({producto:prod,mes,anio,cantidad:val})});
+  });
+  await Promise.all(promises);
+  toast("✅ Ventas guardadas");
+  closeModal("modal-venta");
+  loadVentas();
+}
+
+// ─── GASTOS FIJOS ─────────────────────────────────────────────────────────────
+function renderGastos() {
+  const total = gastos.reduce((s,g)=>s+g.monto,0);
+  document.getElementById("gastos-total").textContent = fmt(total);
+  document.getElementById("gastos-list").innerHTML = gastos.map(g=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="flex:1;margin-right:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:13px;font-weight:600">${g.item}</span>
+          <div>
+            <button class="btn-edit" onclick="editGasto(${g.id})">✏️</button>
+            <button class="btn-danger" onclick="deleteGasto(${g.id})">🗑️</button>
+          </div>
+        </div>
+        <div class="bar-bg"><div class="bar-fill" style="width:${(g.monto/total*100).toFixed(1)}%;background:var(--accent)"></div></div>
+      </div>
+      <span style="font-size:14px;font-weight:700;color:var(--gold);min-width:100px;text-align:right">${fmt(g.monto)}</span>
+    </div>`).join("");
+
+  document.getElementById("gastos-dist").innerHTML = gastos.map(g=>`
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="font-size:12px">${g.item}</span>
+        <span style="font-size:12px;color:var(--muted)">${(g.monto/total*100).toFixed(1)}%</span>
+      </div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${(g.monto/total*100).toFixed(1)}%;background:var(--blue)"></div></div>
+    </div>`).join("");
+
+  document.getElementById("gastos-proy").innerHTML = [["Mensual",1],["Trimestral",3],["Semestral",6],["Anual",12]].map(([l,m])=>`
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)22">
+      <span style="color:var(--muted);font-size:13px">${l}</span>
+      <span style="font-weight:700;color:var(--gold)">${fmt(total*m)}</span>
+    </div>`).join("");
+}
+
+function editGasto(id) {
+  const g = gastos.find(x=>x.id===id);
+  document.getElementById("gasto-edit-id").value = id;
+  document.getElementById("gasto-item").value = g.item;
+  document.getElementById("gasto-monto").value = g.monto;
+  document.getElementById("modal-gasto-title").textContent = "✏️ Editar Gasto";
+  openModal("modal-gasto");
+}
+
+async function saveGasto() {
+  const id = document.getElementById("gasto-edit-id").value;
+  const item = document.getElementById("gasto-item").value.trim();
+  const monto = Number(document.getElementById("gasto-monto").value);
+  if(!item||!monto) { toast("Completá item y monto",true); return; }
+
+  let res;
+  if(id) res = await api(`/api/gastos/${id}`,{method:"PUT",body:JSON.stringify({item,monto})});
+  else res = await api("/api/gastos",{method:"POST",body:JSON.stringify({item,monto})});
+
+  if(res.ok) {
+    toast(id?"✅ Gasto actualizado":"✅ Gasto creado");
+    gastos = await api("/api/gastos");
+    renderGastos();
+    closeModal("modal-gasto");
+    document.getElementById("gasto-edit-id").value="";
+    document.getElementById("modal-gasto-title").textContent="➕ Nuevo Gasto Fijo";
+  } else toast(res.error||"Error",true);
+}
+
+async function deleteGasto(id) {
+  if(!confirm("¿Eliminar este gasto?")) return;
+  await api(`/api/gastos/${id}`,{method:"DELETE"});
+  toast("🗑️ Eliminado");
+  gastos = await api("/api/gastos");
+  renderGastos();
+}
+
+// Boot
+init();
+</script>
+</body>
+</html>
