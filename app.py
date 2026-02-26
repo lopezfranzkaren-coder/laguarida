@@ -452,3 +452,11 @@ if __name__ == "__main__":
 
 with app.app_context():
     init_db()
+
+@app.route("/inicializar-laguarida-2026")
+def seed_now():
+    try:
+        init_db()
+        return "✅ Datos cargados correctamente!"
+    except Exception as e:
+        return f"❌ Error: {str(e)}", 500
