@@ -431,8 +431,8 @@ def del_pedido(pid):
 @app.route("/api/clientes", methods=["GET"])
 def get_clientes():
     return jsonify(q("""SELECT cliente,telefono,provincia,COUNT(DISTINCT id) as num_pedidos,MAX(fecha) as ultimo_pedido,
-        SUM(CASE WHEN fecha LIKE '2025%' THEN total ELSE 0 END) as total_2025,
-        SUM(CASE WHEN fecha LIKE '2026%' THEN total ELSE 0 END) as total_2026,
+        SUM(CASE WHEN LEFT(fecha,4)='2025' THEN total ELSE 0 END) as total_2025,
+        SUM(CASE WHEN LEFT(fecha,4)='2026' THEN total ELSE 0 END) as total_2026,
         SUM(total) as total_acumulado FROM pedidos GROUP BY cliente,telefono,provincia ORDER BY total_acumulado DESC"""))
 
 @app.route("/api/clientes/<path:nombre>/pedidos", methods=["GET"])
