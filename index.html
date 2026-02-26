@@ -3,397 +3,575 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Calculadora de Costos</title>
+<title>La Guarida</title>
 <style>
-  :root {
-    --bg: #0d1b2a; --surface: #111f30; --border: #1e3a5f;
-    --accent: #e94560; --gold: #f5a623; --green: #27ae60;
-    --blue: #2980b9; --text: #e8edf4; --muted: #6b8cae;
-    --input-bg: #0a1520;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+:root{
+  --bg:#0d1b2a;--surface:#111f30;--surface2:#162236;--border:#1e3a5f;
+  --accent:#e94560;--gold:#f5a623;--green:#27ae60;--blue:#2980b9;
+  --text:#e8edf4;--muted:#6b8cae;--input-bg:#0a1520;
+  --red:#e94560;--ok:#27ae60;--warn:#f5a623;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;}
 
-  /* ── Header ── */
-  header { background: #0a1520; border-bottom: 1px solid var(--border); padding: 0 28px; }
-  .header-top { padding: 18px 0 0; }
-  .header-top h1 { font-size: 22px; font-weight: 800; background: linear-gradient(90deg,#e94560,#f5a623); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .header-top p { color: var(--muted); font-size: 12px; margin-top: 3px; padding-bottom: 14px; }
-  nav { display: flex; gap: 4px; }
-  nav button { background: transparent; border: none; color: var(--muted); padding: 10px 18px; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; font-weight: 500; transition: all .2s; white-space: nowrap; }
-  nav button.active { background: var(--accent); color: #fff; font-weight: 700; }
-  nav button:hover:not(.active) { color: var(--text); background: #1a2d44; }
+/* HEADER */
+header{background:#0a1520;border-bottom:2px solid var(--border);padding:0 20px;position:sticky;top:0;z-index:50;}
+.header-top{display:flex;align-items:center;gap:14px;padding:12px 0 0;}
+.logo-wrap{width:46px;height:46px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--gold));display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;overflow:hidden;flex-shrink:0;border:2px solid var(--accent);}
+.logo-wrap img{width:100%;height:100%;object-fit:cover;display:none;}
+.brand-title{font-size:18px;font-weight:800;background:linear-gradient(90deg,#e94560,#f5a623);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.brand-sub{font-size:10px;color:var(--muted);}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+.last-update{text-align:right;font-size:10px;color:var(--muted);}
+.last-update strong{color:var(--gold);font-size:12px;display:block;}
+.last-update button{background:none;border:none;color:var(--accent);cursor:pointer;font-size:10px;}
+.btn-logout{background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 11px;border-radius:6px;cursor:pointer;font-size:11px;}
+#logo-upload{display:none;}
 
-  /* ── Layout ── */
-  main { max-width: 1200px; margin: 0 auto; padding: 24px; }
-  .tab { display: none; } .tab.active { display: block; }
+nav{display:flex;gap:2px;padding-top:10px;overflow-x:auto;}
+nav button{background:transparent;border:none;color:var(--muted);padding:8px 14px;border-radius:7px 7px 0 0;cursor:pointer;font-size:12px;font-weight:500;white-space:nowrap;transition:all .2s;}
+nav button.active{background:var(--accent);color:#fff;font-weight:700;}
+nav button:hover:not(.active){color:var(--text);background:#1a2d44;}
 
-  /* ── Cards ── */
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
-  .card h2 { font-size: 15px; margin-bottom: 18px; }
-  .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
-  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; position: relative; overflow: hidden; }
-  .kpi-icon { position: absolute; top:-8px; right:-8px; font-size: 55px; opacity: .08; }
-  .kpi label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 8px; }
-  .kpi .val { font-size: 24px; font-weight: 800; }
+/* LAYOUT */
+main{max-width:1400px;margin:0 auto;padding:18px 16px;}
+.tab{display:none;}.tab.active{display:block;}
 
-  /* ── Tables ── */
-  .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { padding: 10px 14px; font-size: 11px; color: var(--muted); text-align: left; border-bottom: 2px solid var(--border); font-weight: 600; white-space: nowrap; }
-  td { padding: 10px 14px; border-bottom: 1px solid #1e3a5f22; }
-  tr:nth-child(even) td { background: #0f1c2c44; }
-  tr:hover td { background: #1a2d4433; }
-  .ta-right { text-align: right; }
-  .ta-center { text-align: center; }
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:18px;margin-bottom:14px;}
+.card-title{font-size:13px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
 
-  /* ── Inputs ── */
-  input, select, textarea {
-    background: var(--input-bg); border: 1px solid var(--border); border-radius: 7px;
-    padding: 8px 12px; color: var(--text); font-size: 13px; font-family: inherit;
-    transition: border-color .2s;
-  }
-  input:focus, select:focus { outline: none; border-color: var(--accent); }
-  input[type=number] { text-align: right; }
-  input.full, select.full { width: 100%; }
+/* INFO BOX */
+.info-box{background:#162236;border-left:3px solid var(--blue);border-radius:6px;padding:10px 14px;font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.7;}
+.info-box strong{color:var(--text);}
 
-  /* ── Buttons ── */
-  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all .2s; }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:hover { background: #c73652; }
-  .btn-success { background: var(--green); color: #fff; }
-  .btn-success:hover { background: #219150; }
-  .btn-ghost { background: transparent; border: 1px dashed var(--border); color: var(--muted); }
-  .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
-  .btn-sm { padding: 5px 11px; font-size: 12px; }
-  .btn-danger { background: transparent; border: none; color: var(--accent); cursor: pointer; font-size: 16px; padding: 2px 6px; }
-  .btn-edit { background: transparent; border: none; color: var(--blue); cursor: pointer; font-size: 14px; padding: 2px 6px; }
+/* TABLES */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{padding:8px 10px;font-size:10px;color:var(--muted);text-align:left;border-bottom:2px solid var(--border);font-weight:600;white-space:nowrap;background:#0a1520;position:sticky;top:0;}
+td{padding:8px 10px;border-bottom:1px solid #1e3a5f18;white-space:nowrap;}
+tr:hover td{background:#1a2d4418;}
+.tr{text-align:right;}.tc{text-align:center;}
 
-  /* ── Forms ── */
-  .form-row { display: grid; gap: 12px; margin-bottom: 14px; }
-  .form-row.cols2 { grid-template-columns: 1fr 1fr; }
-  .form-row.cols3 { grid-template-columns: 1fr 1fr 1fr; }
-  .form-row.cols4 { grid-template-columns: 2fr 1fr 1fr auto; }
-  label.lbl { font-size: 11px; color: var(--muted); display: block; margin-bottom: 5px; }
+/* INPUTS */
+input,select,textarea{background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:12px;font-family:inherit;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);}
+input[type=number]{text-align:right;}
+.w100{width:100%;}
+.price-inp{width:100px;background:#0d1b2a;border:1px solid #1e3a5f44;border-radius:5px;padding:4px 8px;color:var(--gold);font-size:12px;text-align:right;font-weight:700;}
+.price-inp:focus{border-color:var(--gold);outline:none;}
 
-  /* ── Badges ── */
-  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-  .badge-green { background: #27ae6033; color: var(--green); }
-  .badge-gold { background: #f5a62333; color: var(--gold); }
-  .badge-red { background: #e9456033; color: var(--accent); }
-  .badge-blue { background: #2980b933; color: var(--blue); }
-  .badge-gray { background: #6b8cae33; color: var(--muted); }
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:7px;border:none;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-green{background:var(--green);color:#fff;}
+.btn-ghost{background:transparent;border:1px dashed var(--border);color:var(--muted);}
+.btn-sm{padding:4px 10px;font-size:11px;}
+.btn-icon{background:transparent;border:none;cursor:pointer;padding:2px 6px;font-size:13px;color:var(--muted);}
+.btn-icon:hover{color:var(--text);}
 
-  /* ── Mini bar ── */
-  .bar-bg { background: #1e2a3a; border-radius: 4px; height: 7px; width: 100%; }
-  .bar-fill { height: 100%; border-radius: 4px; transition: width .4s; }
+/* BADGES / SEMAFORO */
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;}
+.b-green{background:#27ae6022;color:var(--green);}
+.b-gold{background:#f5a62322;color:var(--gold);}
+.b-red{background:#e9456022;color:var(--red);}
+.b-blue{background:#2980b922;color:var(--blue);}
+.b-gray{background:#6b8cae18;color:var(--muted);}
 
-  /* ── Calculator layout ── */
-  .calc-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
-  .result-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-  .result-row .rl { font-size: 13px; color: var(--muted); }
-  .result-row .rv { font-size: 15px; font-weight: 700; }
-  .result-row.big .rv { font-size: 22px; font-weight: 800; }
-  .divider { border: none; border-top: 2px solid var(--border); margin: 14px 0; }
+/* TOGGLE tipo venta */
+.toggle-group{display:flex;background:#0a1520;border-radius:8px;padding:3px;border:1px solid var(--border);}
+.toggle-group button{flex:1;padding:6px 14px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;background:transparent;color:var(--muted);transition:all .2s;}
+.toggle-group button.active{background:var(--accent);color:#fff;}
 
-  /* ── Modal ── */
-  .modal-bg { display: none; position: fixed; inset: 0; background: #000a; z-index: 100; align-items: center; justify-content: center; }
-  .modal-bg.open { display: flex; }
-  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; min-width: 420px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; }
-  .modal h3 { margin-bottom: 20px; font-size: 16px; }
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:#000c;z-index:200;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:24px;min-width:360px;max-width:600px;width:95%;max-height:92vh;overflow-y:auto;}
+.modal h3{margin-bottom:16px;font-size:15px;}
+.form-row{margin-bottom:12px;}
+.form-row label{font-size:10px;color:var(--muted);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
 
-  /* ── Toast ── */
-  #toast { position: fixed; bottom: 24px; right: 24px; background: var(--green); color:#fff; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; opacity: 0; transition: opacity .3s; z-index: 200; }
-  #toast.show { opacity: 1; }
-  #toast.error { background: var(--accent); }
+/* FLEX UTILS */
+.flex{display:flex;gap:8px;align-items:center;}
+.flex-between{display:flex;justify-content:space-between;align-items:center;}
+.mb12{margin-bottom:12px;}
+.gap12{gap:12px;}
 
-  /* ── Utils ── */
-  .flex { display: flex; gap: 10px; align-items: center; }
-  .flex-between { display: flex; justify-content: space-between; align-items: center; }
-  .mb-16 { margin-bottom: 16px; }
-  .text-green { color: var(--green); } .text-gold { color: var(--gold); } .text-red { color: var(--accent); } .text-muted { color: var(--muted); }
-  .bold { font-weight: 700; } .big-num { font-size: 20px; font-weight: 800; }
-  .spinner { text-align:center; padding:40px; color:var(--muted); }
-  .section-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+/* RECETA checkboxes */
+.insumo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-top:10px;}
+.insumo-check{background:#0a1520;border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:space-between;}
+.insumo-check.selected{border-color:var(--green);background:#27ae6012;}
+.insumo-check.selected-mayor{border-color:var(--blue);background:#2980b912;}
+.insumo-tipo{display:flex;gap:4px;margin-top:6px;}
+.tipo-btn{font-size:10px;padding:2px 7px;border-radius:10px;border:1px solid var(--border);cursor:pointer;background:transparent;color:var(--muted);}
+.tipo-btn.active-min{background:#e9456022;border-color:var(--accent);color:var(--accent);}
+.tipo-btn.active-may{background:#2980b922;border-color:var(--blue);color:var(--blue);}
+.tipo-btn.active-both{background:#27ae6022;border-color:var(--green);color:var(--green);}
+
+/* CALCULADORA */
+.calc-result-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #1e3a5f22;font-size:13px;}
+.calc-result-row.highlight{font-weight:700;font-size:15px;color:var(--accent);}
+.calc-result-row.sub{color:var(--muted);font-size:12px;}
+
+/* PEDIDO items */
+.item-row{display:grid;grid-template-columns:2fr 80px 100px 100px 30px;gap:8px;align-items:center;margin-bottom:6px;}
+
+/* TOAST */
+#toast{position:fixed;bottom:20px;right:20px;background:var(--green);color:#fff;padding:10px 18px;border-radius:9px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;z-index:999;pointer-events:none;}
+#toast.show{opacity:1;}
+#toast.err{background:var(--accent);}
+
+/* Estado badges */
+.estado-pendiente{background:#f5a62322;color:var(--gold);}
+.estado-pagado{background:#27ae6022;color:var(--green);}
+.estado-entregado{background:#2980b922;color:var(--blue);}
+.estado-cancelado{background:#e9456022;color:var(--red);}
+
+/* INFLACIÓN grid */
+.inf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.inf-card{background:#0a1520;border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;}
+.inf-card label{font-size:10px;color:var(--muted);display:block;margin-bottom:6px;}
+.inf-card input{width:80px;text-align:center;background:transparent;border:none;border-bottom:2px solid var(--border);border-radius:0;color:var(--gold);font-size:20px;font-weight:700;padding:2px 4px;}
+.inf-card input:focus{outline:none;border-bottom-color:var(--gold);}
+
+/* SECTION LABEL */
+.slbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+
+/* KPI grid */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+.kpi label{font-size:10px;color:var(--muted);display:block;margin-bottom:5px;}
+.kpi .kval{font-size:20px;font-weight:800;}
+
+@media(max-width:768px){
+  .kpi-grid{grid-template-columns:1fr 1fr;}
+  .inf-grid{grid-template-columns:1fr 1fr;}
+  .form-grid{grid-template-columns:1fr;}
+  .form-grid3{grid-template-columns:1fr 1fr;}
+}
 </style>
 </head>
 <body>
 
 <header>
   <div class="header-top">
-    <h1>💼 CALCULADORA DE COSTOS</h1>
-    <p>Sistema local de gestión · Base de datos SQLite</p>
+    <div class="logo-wrap" id="logo-btn" onclick="document.getElementById('logo-upload').click()" title="Clic para subir logo">
+      <span id="logo-emoji">🏪</span>
+      <img id="logo-img"/>
+    </div>
+    <input type="file" id="logo-upload" accept="image/*" onchange="uploadLogo(event)"/>
+    <div>
+      <div class="brand-title">LA GUARIDA</div>
+      <div class="brand-sub">Sistema de gestión de precios</div>
+    </div>
+    <div class="header-right">
+      <div class="last-update">
+        <span>Última actualización</span>
+        <strong id="ts-display">—</strong>
+        <button onclick="updateTs()">📅 actualizar hoy</button>
+      </div>
+      <button class="btn-logout" onclick="window.location.href='/logout'">Salir 🚪</button>
+    </div>
   </div>
   <nav>
-    <button class="active" onclick="showTab('dashboard')">📊 Dashboard</button>
-    <button onclick="showTab('calculadora')">🧮 Calculadora</button>
-    <button onclick="showTab('productos')">📦 Productos</button>
-    <button onclick="showTab('cotizaciones')">📋 Cotizaciones</button>
-    <button onclick="showTab('ventas')">📈 Ventas</button>
-    <button onclick="showTab('gastos')">🏢 Gastos Fijos</button>
-    <button onclick="window.location.href='/logout'" style="margin-left:auto;background:transparent;border:1px solid #1e3a5f;color:#6b8cae;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:12px">Salir 🚪</button>
+    <button class="active" onclick="showTab('precios',this)">💰 Precios</button>
+    <button onclick="showTab('mayoristas',this)">📦 Mayoristas</button>
+    <button onclick="showTab('calculadora',this)">🧮 Calculadora</button>
+    <button onclick="showTab('recetas',this)">🏭 Recetas</button>
+    <button onclick="showTab('pedidos',this)">🛒 Pedidos</button>
+    <button onclick="showTab('clientes',this)">👥 Clientes</button>
+    <button onclick="showTab('productos',this)">🗂️ Productos</button>
+    <button onclick="showTab('insumos',this)">🔧 Insumos</button>
+    <button onclick="showTab('gastos',this)">🏢 Gastos</button>
+    <button onclick="showTab('config',this)">⚙️ Config</button>
   </nav>
 </header>
 
 <main>
 
-<!-- ══ DASHBOARD ══════════════════════════════════════════════════════════ -->
-<div id="tab-dashboard" class="tab active">
-  <div class="kpi-grid" id="kpi-grid">
-    <div class="spinner">Cargando...</div>
+<!-- ══ PRECIOS MINORISTA ══════════════════════════════════════════════════════ -->
+<div id="tab-precios" class="tab active">
+  <div class="info-box">
+    💰 <strong>Minorista</strong> &nbsp;·&nbsp; Margen mínimo <strong>100%</strong> sobre costo final
+    &nbsp;·&nbsp; Transferencia <strong>−5%</strong> &nbsp;·&nbsp; Efectivo <strong>−10%</strong>
+    &nbsp;·&nbsp; QR Débito <strong>+1.35%</strong> &nbsp;·&nbsp; QR Crédito <strong>+6.29%</strong>
+    &nbsp;·&nbsp; 3 Cuotas <strong>+8.60%</strong>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-    <div class="card">
-      <h2>🏆 Top Productos por Costo</h2>
-      <div id="dash-top-products"><div class="spinner">Cargando...</div></div>
-    </div>
-    <div class="card">
-      <h2>📋 Últimas Cotizaciones</h2>
-      <div id="dash-cotizaciones"><div class="spinner">Cargando...</div></div>
-    </div>
-  </div>
-</div>
-
-<!-- ══ CALCULADORA ═══════════════════════════════════════════════════════ -->
-<div id="tab-calculadora" class="tab">
-  <div class="calc-grid">
-    <div>
-      <div class="card">
-        <div class="form-row cols2 mb-16">
-          <div>
-            <label class="lbl">Nombre / Cliente</label>
-            <input id="calc-nombre" class="full" placeholder="Ej: Remera + estampa para Juan"/>
-          </div>
-          <div>
-            <label class="lbl">% Variables (IIBB, etc): <span id="var-pct-label">44%</span></label>
-            <input type="range" id="var-pct" min="0" max="80" value="44" style="width:100%;margin-top:8px;accent-color:var(--accent)" oninput="updateCalc()"/>
-          </div>
-        </div>
-
-        <div class="section-title">🔧 Insumos / Componentes</div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th>Insumo</th><th class="ta-right">Costo ($)</th><th class="ta-right">Cant.</th><th class="ta-right">Subtotal</th><th></th>
-            </tr></thead>
-            <tbody id="calc-rows"></tbody>
-          </table>
-        </div>
-        <button class="btn btn-ghost" style="margin-top:12px;width:100%" onclick="addCalcRow()">+ Agregar insumo</button>
-      </div>
-    </div>
-
-    <div>
-      <div class="card" style="position:sticky;top:20px">
-        <h2>📊 Resultado</h2>
-        <div class="result-row"><span class="rl">Subtotal costos</span><span class="rv text-muted" id="r-subtotal">$0</span></div>
-        <div class="result-row"><span class="rl">Variables (<span id="r-varpct">44</span>%)</span><span class="rv text-muted" id="r-variable">$0</span></div>
-        <hr class="divider"/>
-        <div class="result-row big"><span class="rl bold">Costo Final</span><span class="rv text-red" id="r-costo">$0</span></div>
-        <div style="height:14px"></div>
-        <div id="price-results"></div>
-        <hr class="divider"/>
-        <div class="form-row cols2" style="margin-top:12px">
-          <div>
-            <label class="lbl">Precio de venta ($)</label>
-            <input type="number" id="calc-precio" placeholder="0" style="width:100%" oninput="updateCalc()"/>
-          </div>
-          <div>
-            <label class="lbl">Margen real</label>
-            <div id="r-margen" style="padding:8px 0;font-size:20px;font-weight:800;color:var(--green)">—</div>
-          </div>
-        </div>
-        <button class="btn btn-success" style="width:100%;margin-top:10px" onclick="guardarCotizacion()">💾 Guardar Cotización</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══ PRODUCTOS ══════════════════════════════════════════════════════════ -->
-<div id="tab-productos" class="tab">
   <div class="card">
-    <div class="flex-between mb-16">
-      <input id="prod-search" placeholder="🔍 Buscar..." style="width:260px" oninput="renderProductos()"/>
-      <div class="flex">
-        <select id="prod-sort" onchange="renderProductos()">
-          <option value="nombre">Nombre A-Z</option>
-          <option value="costo_desc">Mayor costo</option>
-          <option value="costo_asc">Menor costo</option>
-        </select>
-        <button class="btn btn-primary" onclick="openModal('modal-prod')">+ Nuevo producto</button>
-      </div>
+    <div class="flex-between mb12">
+      <span class="card-title">💰 Lista de Precios Minorista</span>
+      <input id="precio-search" placeholder="🔍 Buscar..." style="width:180px" oninput="renderPrecios()"/>
     </div>
-    <div class="table-wrap">
+    <div class="tbl-wrap">
       <table>
         <thead><tr>
           <th>Producto</th>
-          <th class="ta-right">Costo Base</th>
-          <th class="ta-right">+30%</th>
-          <th class="ta-right">+40%</th>
-          <th class="ta-right">+50%</th>
-          <th class="ta-right">Doble</th>
-          <th class="ta-center">Acciones</th>
+          <th class="tr">Costo Base</th>
+          <th class="tr">Costo Final Min.</th>
+          <th class="tr" style="color:var(--accent)">Precio Mínimo ×2</th>
+          <th class="tr" style="color:var(--blue)">Transferencia −5%</th>
+          <th class="tr" style="color:var(--blue)">Efectivo −10%</th>
+          <th class="tr">QR Débito</th>
+          <th class="tr">QR Crédito</th>
+          <th class="tr" style="color:var(--gold)">3 Cuotas</th>
+          <th class="tc">Tu precio actual</th>
+          <th class="tc">Estado</th>
+        </tr></thead>
+        <tbody id="precios-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card" style="padding:12px 16px">
+    <div class="flex" style="gap:20px;flex-wrap:wrap;font-size:12px">
+      <span>🟢 <strong style="color:var(--green)">Bien</strong> — sobre el mínimo</span>
+      <span>🟡 <strong style="color:var(--gold)">Justo</strong> — dentro del ±5% del mínimo</span>
+      <span>🔴 <strong style="color:var(--red)">Barata</strong> — por debajo del mínimo</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAYORISTAS ══════════════════════════════════════════════════════════════ -->
+<div id="tab-mayoristas" class="tab">
+  <div class="info-box">
+    📦 <strong>Mayorista</strong> &nbsp;·&nbsp; Solo efectivo o transferencia (sin descuento)
+    &nbsp;·&nbsp; Márgenes objetivo: <strong>+12u = 60%</strong> · <strong>+36u = 50%</strong> · <strong>+72u = 30%</strong>
+  </div>
+  <div class="card">
+    <div class="flex-between mb12">
+      <span class="card-title">📦 Precios Mayoristas</span>
+      <input id="mayor-search" placeholder="🔍 Buscar..." style="width:180px" oninput="renderMayoristas()"/>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Producto</th>
+          <th class="tr">Costo Final May.</th>
+          <th class="tr" style="color:var(--blue)">Sugerido +12u<br/><small style="font-weight:400">(60% margen)</small></th>
+          <th class="tr">Tu precio +12u</th>
+          <th class="tc">Estado</th>
+          <th class="tr" style="color:var(--green)">Sugerido +36u<br/><small style="font-weight:400">(50% margen)</small></th>
+          <th class="tr">Tu precio +36u</th>
+          <th class="tc">Estado</th>
+          <th class="tr" style="color:var(--gold)">Sugerido +72u<br/><small style="font-weight:400">(30% margen)</small></th>
+          <th class="tr">Tu precio +72u</th>
+          <th class="tc">Estado</th>
+        </tr></thead>
+        <tbody id="mayor-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CALCULADORA ══════════════════════════════════════════════════════════════ -->
+<div id="tab-calculadora" class="tab">
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:16px">
+    <div>
+      <div class="card">
+        <div class="slbl">Tipo de venta</div>
+        <div class="toggle-group mb12" style="max-width:280px">
+          <button class="active" id="calc-tipo-min" onclick="setCalcTipo('minorista')">🏪 Minorista</button>
+          <button id="calc-tipo-may" onclick="setCalcTipo('mayorista')">📦 Mayorista</button>
+        </div>
+        <div class="form-row">
+          <label>Seleccionar producto (carga receta automáticamente)</label>
+          <select id="calc-producto" class="w100" onchange="cargarRecetaCalc()">
+            <option value="">— Elegí un producto o cargá manual —</option>
+          </select>
+        </div>
+        <div class="slbl" style="margin-top:14px">Insumos / componentes</div>
+        <table style="margin-top:8px">
+          <thead><tr>
+            <th>Concepto</th><th class="tr">Costo ($)</th><th class="tc">Cant.</th><th class="tr">Subtotal</th><th></th>
+          </tr></thead>
+          <tbody id="calc-rows"></tbody>
+        </table>
+        <button class="btn btn-ghost" style="margin-top:10px;width:100%" onclick="addCalcRow()">+ Agregar insumo</button>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="position:sticky;top:80px">
+        <div class="card-title">📊 Precios sugeridos</div>
+        <div id="calc-tipo-label" style="font-size:11px;color:var(--muted);margin-bottom:10px">Minorista</div>
+        <div id="calc-results">
+          <div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">Cargá insumos para ver los precios</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RECETAS ══════════════════════════════════════════════════════════════════ -->
+<div id="tab-recetas" class="tab">
+  <div class="info-box">
+    🏭 Definí qué insumos lleva cada producto. <strong>Ambos</strong> = aplica a minorista y mayorista.
+    <strong>Solo minorista</strong> = caja, bolsa (no va en mayorista). <strong>Solo mayorista</strong> = algún insumo exclusivo.
+  </div>
+  <div style="display:grid;grid-template-columns:280px 1fr;gap:16px">
+    <div class="card" style="align-self:start">
+      <div class="card-title">🗂️ Productos</div>
+      <input id="receta-search" placeholder="🔍 Buscar..." class="w100 mb12" oninput="filterRecetaProds()"/>
+      <div id="receta-prod-list" style="max-height:500px;overflow-y:auto"></div>
+    </div>
+    <div class="card">
+      <div id="receta-header" class="flex-between mb12">
+        <span class="card-title" id="receta-title">Seleccioná un producto</span>
+        <button class="btn btn-green btn-sm" id="receta-save-btn" style="display:none" onclick="saveReceta()">💾 Guardar receta</button>
+      </div>
+      <div id="receta-costo-base" style="margin-bottom:12px;display:none">
+        <div class="flex" style="gap:20px">
+          <div style="background:#0a1520;border:1px solid var(--border);border-radius:8px;padding:10px 16px">
+            <div style="font-size:10px;color:var(--muted)">Costo base</div>
+            <div style="font-size:18px;font-weight:700;color:var(--gold)" id="receta-base-val">$0</div>
+          </div>
+          <div style="background:#0a1520;border:1px solid var(--border);border-radius:8px;padding:10px 16px">
+            <div style="font-size:10px;color:var(--muted)">Costo total minorista</div>
+            <div style="font-size:18px;font-weight:700;color:var(--accent)" id="receta-total-min">$0</div>
+          </div>
+          <div style="background:#0a1520;border:1px solid var(--border);border-radius:8px;padding:10px 16px">
+            <div style="font-size:10px;color:var(--muted)">Costo total mayorista</div>
+            <div style="font-size:18px;font-weight:700;color:var(--blue)" id="receta-total-may">$0</div>
+          </div>
+        </div>
+      </div>
+      <div id="receta-insumos-grid" class="insumo-grid"></div>
+      <div id="receta-empty" style="color:var(--muted);font-size:12px;text-align:center;padding:40px">
+        Seleccioná un producto de la lista para ver y editar su receta
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PEDIDOS ══════════════════════════════════════════════════════════════════ -->
+<div id="tab-pedidos" class="tab">
+  <div class="flex-between mb12">
+    <div class="flex">
+      <select id="pedido-filtro-estado" onchange="renderPedidos()" style="width:140px">
+        <option value="">Todos los estados</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="pagado">Pagado</option>
+        <option value="entregado">Entregado</option>
+        <option value="cancelado">Cancelado</option>
+      </select>
+      <input id="pedido-search" placeholder="🔍 Buscar cliente..." style="width:200px" oninput="renderPedidos()"/>
+    </div>
+    <button class="btn btn-primary" onclick="abrirModalPedido()">+ Nuevo Pedido</button>
+  </div>
+  <div class="card">
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>N°</th><th>Fecha</th><th>Cliente</th><th>Provincia</th>
+          <th>Transporte</th><th>Tipo Pago</th><th class="tr">Total</th>
+          <th class="tc">Estado</th><th class="tc">Acciones</th>
+        </tr></thead>
+        <tbody id="pedidos-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CLIENTES ══════════════════════════════════════════════════════════════════ -->
+<div id="tab-clientes" class="tab">
+  <div class="kpi-grid" id="clientes-kpis"></div>
+  <div style="display:grid;grid-template-columns:1fr 400px;gap:16px">
+    <div class="card">
+      <div class="card-title">👥 Clientes Mayoristas</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Cliente</th><th>Teléfono</th><th>Provincia</th>
+            <th class="tc">Pedidos</th><th>Último Pedido</th>
+            <th class="tr">Total 2025</th><th class="tr">Total 2026</th>
+            <th class="tr">Acumulado</th><th class="tc">Ver</th>
+          </tr></thead>
+          <tbody id="clientes-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card" id="cliente-detalle-card" style="display:none;align-self:start">
+      <div class="flex-between mb12">
+        <span class="card-title" id="cliente-detalle-title">Historial</span>
+        <button class="btn-icon" onclick="cerrarDetalleCliente()">✕</button>
+      </div>
+      <div id="cliente-detalle-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PRODUCTOS ══════════════════════════════════════════════════════════════════ -->
+<div id="tab-productos" class="tab">
+  <div class="card">
+    <div class="flex-between mb12">
+      <input id="prod-search" placeholder="🔍 Buscar..." style="width:180px" oninput="renderProductosTab()"/>
+      <button class="btn btn-primary btn-sm" onclick="abrirModalProd()">+ Nuevo Producto</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Producto</th><th class="tr">Costo Base ($)</th>
+          <th class="tc">Receta</th><th class="tc">Acciones</th>
         </tr></thead>
         <tbody id="prod-tbody"></tbody>
       </table>
     </div>
-    <div id="prod-count" style="margin-top:10px;font-size:12px;color:var(--muted)"></div>
   </div>
 </div>
 
-<!-- ══ COTIZACIONES ═══════════════════════════════════════════════════════ -->
-<div id="tab-cotizaciones" class="tab">
-  <div class="flex-between mb-16">
-    <div class="flex">
-      <input id="cot-search" placeholder="🔍 Buscar..." style="width:220px" oninput="renderCotizaciones()"/>
-      <select id="cot-filter" onchange="renderCotizaciones()">
-        <option value="">Todos los estados</option>
-        <option value="borrador">Borrador</option>
-        <option value="enviada">Enviada</option>
-        <option value="aprobada">Aprobada</option>
-        <option value="rechazada">Rechazada</option>
-      </select>
-    </div>
-  </div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr>
-        <th>Fecha</th><th>Cliente</th><th>Descripción</th>
-        <th class="ta-right">Costo Final</th><th class="ta-right">Precio Venta</th>
-        <th class="ta-right">Margen</th><th>Estado</th><th class="ta-center">Acciones</th>
-      </tr></thead>
-      <tbody id="cot-tbody"></tbody>
-    </table>
-  </div>
-  <div id="cot-count" style="margin-top:10px;font-size:12px;color:var(--muted)"></div>
-</div>
-
-<!-- ══ VENTAS ══════════════════════════════════════════════════════════════ -->
-<div id="tab-ventas" class="tab">
+<!-- ══ INSUMOS ══════════════════════════════════════════════════════════════════ -->
+<div id="tab-insumos" class="tab">
   <div class="card">
-    <div class="flex-between mb-16">
-      <div class="flex">
-        <label class="lbl" style="margin:0">Año:</label>
-        <select id="ventas-anio" onchange="loadVentas()">
-          <option value="2024">2024</option>
-          <option value="2025" selected>2025</option>
-          <option value="2026">2026</option>
-        </select>
-      </div>
-      <button class="btn btn-primary" onclick="openModal('modal-venta')">+ Cargar ventas</button>
+    <div class="flex-between mb12">
+      <span class="card-title">🔧 Insumos Variables</span>
+      <button class="btn btn-primary btn-sm" onclick="abrirModalInsumo()">+ Nuevo Insumo</button>
     </div>
-    <div class="table-wrap">
+    <div class="tbl-wrap">
       <table>
         <thead><tr>
-          <th>Producto</th>
-          <th class="ta-right">Ene</th><th class="ta-right">Feb</th><th class="ta-right">Mar</th>
-          <th class="ta-right">Abr</th><th class="ta-right">May</th><th class="ta-right">Jun</th>
-          <th class="ta-right">Jul</th><th class="ta-right">Ago</th><th class="ta-right">Sep</th>
-          <th class="ta-right">Oct</th><th class="ta-right">Nov</th><th class="ta-right">Dic</th>
-          <th class="ta-right">Total</th>
+          <th>Insumo</th><th class="tr">Costo ($)</th><th>Descripción</th><th class="tc">Acciones</th>
         </tr></thead>
-        <tbody id="ventas-tbody"></tbody>
+        <tbody id="insumos-tbody"></tbody>
       </table>
     </div>
   </div>
 </div>
 
-<!-- ══ GASTOS FIJOS ═══════════════════════════════════════════════════════ -->
+<!-- ══ GASTOS ══════════════════════════════════════════════════════════════════ -->
 <div id="tab-gastos" class="tab">
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+  <div style="display:grid;grid-template-columns:1fr 320px;gap:16px">
     <div class="card">
-      <div class="flex-between mb-16">
-        <h2>💸 Gastos Fijos Mensuales</h2>
-        <button class="btn btn-primary btn-sm" onclick="openModal('modal-gasto')">+ Agregar</button>
+      <div class="flex-between mb12">
+        <span class="card-title">🏢 Gastos Fijos Mensuales</span>
+        <button class="btn btn-primary btn-sm" onclick="abrirModalGasto()">+ Agregar</button>
       </div>
       <div id="gastos-list"></div>
-      <div style="border-top:2px solid var(--accent);margin-top:16px;padding-top:14px" class="flex-between">
-        <span class="bold">TOTAL MENSUAL</span>
-        <span class="big-num text-red" id="gastos-total">$0</span>
+      <div style="border-top:2px solid var(--accent);margin-top:14px;padding-top:12px" class="flex-between">
+        <span style="font-weight:700">TOTAL MENSUAL</span>
+        <span style="font-size:20px;font-weight:800;color:var(--accent)" id="gastos-total">$0</span>
       </div>
     </div>
     <div>
       <div class="card">
-        <h2>📊 Distribución</h2>
-        <div id="gastos-dist"></div>
-      </div>
-      <div class="card">
-        <h2>📅 Proyección</h2>
+        <div class="card-title">📅 Proyección</div>
         <div id="gastos-proy"></div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- ══ CONFIG ══════════════════════════════════════════════════════════════════ -->
+<div id="tab-config" class="tab">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card">
+      <div class="card-title">🔧 Parámetros de cálculo</div>
+      <div class="form-row"><label>% Variables (IIBB + operativos)</label><input type="number" id="cfg-vars" step="0.01" class="w100"/></div>
+      <div class="form-row"><label>Descuento Transferencia</label><input type="number" id="cfg-trf" step="0.01" class="w100"/></div>
+      <div class="form-row"><label>Descuento Efectivo</label><input type="number" id="cfg-efe" step="0.01" class="w100"/></div>
+      <div class="form-row"><label>Comisión QR Débito</label><input type="number" id="cfg-qrd" step="0.001" class="w100"/></div>
+      <div class="form-row"><label>Comisión QR Crédito</label><input type="number" id="cfg-qrc" step="0.001" class="w100"/></div>
+      <div class="form-row"><label>Comisión 3 cuotas sin interés</label><input type="number" id="cfg-3c" step="0.001" class="w100"/></div>
+      <button class="btn btn-primary w100" onclick="saveConfig()">💾 Guardar parámetros</button>
+    </div>
+    <div class="card">
+      <div class="card-title">📈 Inflación Trimestral</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:14px">Ingresá el % de inflación de cada trimestre. Se aplica a todos los costos y gastos.</div>
+      <div class="inf-grid" id="inf-grid"></div>
+      <div style="margin-top:14px;padding:12px;background:#0a1520;border-radius:8px;text-align:center">
+        <div style="font-size:10px;color:var(--muted)">Factor acumulado</div>
+        <div style="font-size:24px;font-weight:800;color:var(--gold)" id="factor-display">1.000</div>
+        <div style="font-size:10px;color:var(--muted)">multiplica todos los costos</div>
+      </div>
+      <button class="btn btn-primary w100" style="margin-top:12px" onclick="saveConfig()">💾 Guardar inflación</button>
+    </div>
+  </div>
+</div>
+
 </main>
 
-<!-- ══ MODALS ══════════════════════════════════════════════════════════════ -->
-
-<!-- Producto -->
+<!-- MODALS -->
 <div class="modal-bg" id="modal-prod">
   <div class="modal">
     <h3 id="modal-prod-title">➕ Nuevo Producto</h3>
     <input type="hidden" id="prod-edit-id"/>
-    <div class="form-row mb-16"><label class="lbl">Nombre del producto</label><input id="prod-nombre" class="full" placeholder="Ej: Taza XL"/></div>
-    <div class="form-row mb-16"><label class="lbl">Costo base ($)</label><input type="number" id="prod-costo" class="full" placeholder="0"/></div>
-    <div class="flex" style="justify-content:flex-end;gap:10px;margin-top:20px">
+    <div class="form-row"><label>Nombre del producto</label><input id="prod-nombre" class="w100"/></div>
+    <div class="form-row"><label>Costo base ($) — pieza en blanco terminada</label><input type="number" id="prod-costo" class="w100"/></div>
+    <div class="flex" style="justify-content:flex-end;gap:8px;margin-top:16px">
       <button class="btn btn-ghost" onclick="closeModal('modal-prod')">Cancelar</button>
       <button class="btn btn-primary" onclick="saveProducto()">Guardar</button>
     </div>
   </div>
 </div>
 
-<!-- Gasto -->
+<div class="modal-bg" id="modal-insumo">
+  <div class="modal">
+    <h3 id="modal-insumo-title">➕ Nuevo Insumo</h3>
+    <input type="hidden" id="insumo-edit-id"/>
+    <div class="form-row"><label>Nombre</label><input id="insumo-nombre" class="w100"/></div>
+    <div class="form-row"><label>Costo unitario ($)</label><input type="number" id="insumo-costo" class="w100"/></div>
+    <div class="form-row"><label>Descripción (opcional)</label><input id="insumo-desc" class="w100"/></div>
+    <div class="flex" style="justify-content:flex-end;gap:8px;margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeModal('modal-insumo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveInsumo()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="modal-gasto">
   <div class="modal">
     <h3 id="modal-gasto-title">➕ Nuevo Gasto Fijo</h3>
     <input type="hidden" id="gasto-edit-id"/>
-    <div class="form-row mb-16"><label class="lbl">Concepto</label><input id="gasto-item" class="full" placeholder="Ej: Seguro"/></div>
-    <div class="form-row mb-16"><label class="lbl">Monto mensual ($)</label><input type="number" id="gasto-monto" class="full" placeholder="0"/></div>
-    <div class="flex" style="justify-content:flex-end;gap:10px;margin-top:20px">
+    <div class="form-row"><label>Concepto</label><input id="gasto-item" class="w100"/></div>
+    <div class="form-row"><label>Monto mensual ($)</label><input type="number" id="gasto-monto" class="w100"/></div>
+    <div class="flex" style="justify-content:flex-end;gap:8px;margin-top:16px">
       <button class="btn btn-ghost" onclick="closeModal('modal-gasto')">Cancelar</button>
       <button class="btn btn-primary" onclick="saveGasto()">Guardar</button>
     </div>
   </div>
 </div>
 
-<!-- Ventas -->
-<div class="modal-bg" id="modal-venta">
-  <div class="modal">
-    <h3>📈 Cargar Ventas</h3>
-    <div class="form-row cols2 mb-16">
-      <div><label class="lbl">Producto</label><input id="venta-prod" class="full" list="prod-list-dl" placeholder="Nombre producto"/></div>
-      <div><label class="lbl">Año</label><select id="venta-anio" class="full"><option>2024</option><option selected>2025</option><option>2026</option></select></div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">
-      <div><label class="lbl">Ene</label><input type="number" id="v-1" class="full" value="0" min="0"/></div>
-      <div><label class="lbl">Feb</label><input type="number" id="v-2" class="full" value="0" min="0"/></div>
-      <div><label class="lbl">Mar</label><input type="number" id="v-3" class="full" value="0" min="0"/></div>
-      <div><label class="lbl">Abr</label><input type="number" id="v-4" class="full" value="0" min="0"/></div>
-      <div><label class="lbl">May</label><input type="number" id="v-5" class="full" value="0" min="0"/></div>
-      <div><label class="lbl">Jun</label><input type="number" id="v-6" class="full" value="0" min="0"/></div>
-      <div><label class="lbl">Jul</label><input type="number" id="v-7" class="full" value="0" min="0"/></div>
-      <div><label class="lbl">Ago</label><input type="number" id="v-8" class="full" value="0" min="0"/></div>
-      <div><label class="lbl">Sep</label><input type="number" id="v-9" class="full" value="0" min="0"/></div>
-      <div><label class="lbl">Oct</label><input type="number" id="v-10" class="full" value="0" min="0"/></div>
-      <div><label class="lbl">Nov</label><input type="number" id="v-11" class="full" value="0" min="0"/></div>
-      <div><label class="lbl">Dic</label><input type="number" id="v-12" class="full" value="0" min="0"/></div>
-    </div>
-    <datalist id="prod-list-dl" id="venta-prod-dl"></datalist>
-    <div class="flex" style="justify-content:flex-end;gap:10px">
-      <button class="btn btn-ghost" onclick="closeModal('modal-venta')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveVentas()">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Detalle cotización -->
-<div class="modal-bg" id="modal-cot-detail">
+<div class="modal-bg" id="modal-pedido">
   <div class="modal" style="max-width:700px">
-    <h3 id="cot-detail-title">📋 Detalle de Cotización</h3>
-    <div id="cot-detail-body"></div>
-    <div class="flex" style="justify-content:flex-end;margin-top:20px">
-      <button class="btn btn-ghost" onclick="closeModal('modal-cot-detail')">Cerrar</button>
+    <h3 id="modal-pedido-title">🛒 Nuevo Pedido Mayorista</h3>
+    <input type="hidden" id="pedido-edit-id"/>
+    <div class="form-grid3 mb12">
+      <div class="form-row"><label>N° Pedido / Remito</label><input id="ped-numero" class="w100"/></div>
+      <div class="form-row"><label>Fecha</label><input type="date" id="ped-fecha" class="w100"/></div>
+      <div class="form-row"><label>Estado</label>
+        <select id="ped-estado" class="w100">
+          <option value="pendiente">Pendiente</option>
+          <option value="pagado">Pagado</option>
+          <option value="entregado">Entregado</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid mb12">
+      <div class="form-row"><label>Cliente</label><input id="ped-cliente" class="w100"/></div>
+      <div class="form-row"><label>Teléfono</label><input id="ped-telefono" class="w100"/></div>
+    </div>
+    <div class="form-grid3 mb12">
+      <div class="form-row"><label>Provincia</label><input id="ped-provincia" class="w100"/></div>
+      <div class="form-row"><label>Transporte</label><input id="ped-transporte" class="w100"/></div>
+      <div class="form-row"><label>Tipo de pago</label>
+        <select id="ped-pago" class="w100">
+          <option value="transferencia">Transferencia</option>
+          <option value="efectivo">Efectivo</option>
+        </select>
+      </div>
+    </div>
+    <div class="slbl">Productos del pedido</div>
+    <div id="ped-items"></div>
+    <button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="addPedidoItem()">+ Agregar producto</button>
+    <div style="margin-top:14px;padding:12px;background:#0a1520;border-radius:8px;text-align:right">
+      <span style="font-size:12px;color:var(--muted)">Total del pedido: </span>
+      <span style="font-size:20px;font-weight:800;color:var(--gold)" id="ped-total-display">$0</span>
+    </div>
+    <div class="form-row" style="margin-top:10px"><label>Observaciones</label><textarea id="ped-obs" class="w100" rows="2"></textarea></div>
+    <div class="flex" style="justify-content:flex-end;gap:8px;margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeModal('modal-pedido')">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePedido()">💾 Guardar Pedido</button>
     </div>
   </div>
 </div>
@@ -401,469 +579,800 @@
 <div id="toast"></div>
 
 <script>
-// ─── State ────────────────────────────────────────────────────────────────────
-let productos = [];
-let gastos = [];
-let cotizaciones = [];
-let ventas = {};
-let calcRows = [
-  {insumo:"Producto base", costo:920, qty:1},
-  {insumo:"Hoja", costo:70, qty:1},
-  {insumo:"Tinta", costo:50, qty:1},
-];
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let productos=[], insumos=[], gastos=[], pedidos=[], clientes=[];
+let config={}, recetaActual=null, productoActual=null;
+let recetasCache={}, preciosMin={}, preciosMay={};
+let calcRows=[], calcTipo='minorista';
 
-// ─── Utils ────────────────────────────────────────────────────────────────────
-const fmt = n => "$" + Math.round(n).toLocaleString("es-AR").replace(/,/g,".");
-const pct = n => (n*100).toFixed(1)+"%";
-const api = async (url, opts={}) => {
-  const r = await fetch(url, {headers:{"Content-Type":"application/json"}, ...opts});
-  return r.json();
-};
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+const fmt  = n => n==null||isNaN(n) ? "—" : "$"+Math.round(n).toLocaleString("es-AR");
+const pct  = n => n==null||isNaN(n) ? "—" : (n*100).toFixed(1)+"%";
+const api  = (url,opts={}) => fetch(url,{headers:{"Content-Type":"application/json"},...opts}).then(r=>r.json());
+const cfg  = k => parseFloat(config[k]||0);
 
-function toast(msg, err=false) {
-  const t = document.getElementById("toast");
-  t.textContent = msg;
-  t.className = "show" + (err?" error":"");
-  setTimeout(()=>t.className="", 2800);
+function factor() {
+  const ks = ["inflacion_q1_2025","inflacion_q2_2025","inflacion_q3_2025","inflacion_q4_2025",
+               "inflacion_q1_2026","inflacion_q2_2026"];
+  return ks.reduce((f,k) => f*(1+cfg(k)), 1);
 }
 
-function showTab(name) {
+function costoFinalMin(p) {
+  const rec = recetasCache[p.id] || [];
+  const base = (p.costo_base||0) * factor();
+  const ins  = rec.filter(r=>r.tipo==='ambos'||r.tipo==='minorista').reduce((s,r)=>s+r.insumo_costo,0);
+  return (base + ins) * (1 + cfg("pct_variables"));
+}
+
+function costoFinalMay(p) {
+  const rec = recetasCache[p.id] || [];
+  const base = (p.costo_base||0) * factor();
+  const ins  = rec.filter(r=>r.tipo==='ambos'||r.tipo==='mayorista').reduce((s,r)=>s+r.insumo_costo,0);
+  return (base + ins) * (1 + cfg("pct_variables"));
+}
+
+function semaforo(tuPrecio, minimo) {
+  if(!tuPrecio||tuPrecio===0) return '<span class="badge b-gray">Sin precio</span>';
+  const r = tuPrecio/minimo;
+  if(r>=1.05)  return '<span class="badge b-green">✅ Bien</span>';
+  if(r>=0.95)  return '<span class="badge b-gold">⚠️ Justo</span>';
+  return           '<span class="badge b-red">🔴 Barata</span>';
+}
+
+function semaforoMay(tuPrecio, sugerido) {
+  if(!tuPrecio||tuPrecio===0) return '<span class="badge b-gray">Sin precio</span>';
+  const r = tuPrecio/sugerido;
+  if(r>=0.95)  return '<span class="badge b-green">✅ Bien</span>';
+  if(r>=0.75)  return '<span class="badge b-gold">⚠️ Bajo</span>';
+  return           '<span class="badge b-red">🔴 Perdés</span>';
+}
+
+function toast(msg,err=false){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.className="show"+(err?" err":"");
+  setTimeout(()=>t.className="",3000);
+}
+function openModal(id){document.getElementById(id).classList.add("open");}
+function closeModal(id){document.getElementById(id).classList.remove("open");}
+document.querySelectorAll(".modal-bg").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("open");}));
+
+function showTab(name,btn){
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
   document.getElementById("tab-"+name).classList.add("active");
-  event.currentTarget.classList.add("active");
-  if(name==="dashboard") loadDashboard();
-  if(name==="productos") renderProductos();
-  if(name==="cotizaciones") renderCotizaciones();
-  if(name==="ventas") loadVentas();
-  if(name==="gastos") renderGastos();
+  if(btn) btn.classList.add("active");
+  const renders={
+    precios:renderPrecios, mayoristas:renderMayoristas,
+    recetas:renderRecetaProds, productos:renderProductosTab,
+    insumos:renderInsumos, gastos:renderGastos,
+    pedidos:renderPedidos, clientes:renderClientes,
+    config:renderConfig, calculadora:initCalc
+  };
+  if(renders[name]) renders[name]();
 }
 
-function openModal(id) { document.getElementById(id).classList.add("open"); }
-function closeModal(id) { document.getElementById(id).classList.remove("open"); }
-document.querySelectorAll(".modal-bg").forEach(m => m.addEventListener("click",e=>{ if(e.target===m) m.classList.remove("open"); }));
+// ─── LOGO + TIMESTAMP ─────────────────────────────────────────────────────────
+function uploadLogo(e){
+  const f=e.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    applyLogo(ev.target.result);
+    api("/api/config",{method:"POST",body:JSON.stringify({logo_data:ev.target.result})});
+  };
+  r.readAsDataURL(f);
+}
+function applyLogo(data){
+  const img=document.getElementById("logo-img");
+  const em=document.getElementById("logo-emoji");
+  img.src=data; img.style.display="block"; em.style.display="none";
+}
+function updateTs(){
+  const now=new Date().toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric"});
+  document.getElementById("ts-display").textContent=now;
+  api("/api/config",{method:"POST",body:JSON.stringify({last_update:now})});
+  toast("📅 Fecha actualizada");
+}
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-async function init() {
-  [productos, gastos, cotizaciones] = await Promise.all([
-    api("/api/productos"),
-    api("/api/gastos"),
-    api("/api/cotizaciones"),
+async function init(){
+  [config, productos, insumos, gastos, pedidos, clientes, preciosMin, preciosMay] = await Promise.all([
+    api("/api/config"), api("/api/productos"), api("/api/insumos"),
+    api("/api/gastos"), api("/api/pedidos"), api("/api/clientes"),
+    api("/api/precios_minoristas"), api("/api/precios_mayoristas")
   ]);
-  loadDashboard();
-  renderCalcRows();
-  populateProdDatalist();
+
+  // Load all recetas
+  await Promise.all(productos.map(async p=>{
+    recetasCache[p.id] = await api(`/api/recetas/${p.id}`);
+  }));
+
+  if(config.logo_data) applyLogo(config.logo_data);
+  if(config.last_update) document.getElementById("ts-display").textContent=config.last_update;
+
+  // Populate calculadora dropdown
+  const sel=document.getElementById("calc-producto");
+  productos.forEach(p=>{
+    const o=document.createElement("option");
+    o.value=p.id; o.textContent=p.nombre;
+    sel.appendChild(o);
+  });
+
+  renderPrecios();
+  renderConfig();
+  initCalc();
 }
 
-function populateProdDatalist() {
-  const dl = document.getElementById("prod-list-dl");
-  dl.innerHTML = productos.map(p=>`<option value="${p.nombre}">`).join("");
+// ─── PRECIOS MINORISTA ────────────────────────────────────────────────────────
+function renderPrecios(){
+  const q=(document.getElementById("precio-search")||{value:""}).value.toLowerCase();
+  const list=productos.filter(p=>p.nombre.toLowerCase().includes(q));
+  const vars=cfg("pct_variables"), trf=cfg("desc_transferencia"),
+        efe=cfg("desc_efectivo"), qrd=cfg("comision_qr_debito"),
+        qrc=cfg("comision_qr_credito"), c3q=cfg("comision_3cuotas");
+
+  document.getElementById("precios-tbody").innerHTML=list.map(p=>{
+    const cf=costoFinalMin(p);
+    const pmin=cf*2;
+    const tuP=preciosMin[p.id]||0;
+
+    return `<tr>
+      <td><strong>${p.nombre}</strong>${!p.costo_base?'<span class="badge b-red" style="margin-left:6px">⚠️ sin costo</span>':''}</td>
+      <td class="tr" style="color:var(--muted)">${fmt(p.costo_base)}</td>
+      <td class="tr">${fmt(cf)}</td>
+      <td class="tr" style="font-weight:700;color:var(--accent)">${fmt(pmin)}</td>
+      <td class="tr" style="color:var(--blue)">${fmt(pmin*(1-trf))}</td>
+      <td class="tr" style="color:var(--blue)">${fmt(pmin*(1-efe))}</td>
+      <td class="tr">${fmt(pmin*(1+qrd))}</td>
+      <td class="tr">${fmt(pmin/(1-qrc))}</td>
+      <td class="tr" style="color:var(--gold);font-weight:600">${fmt(pmin/(1-c3q))}</td>
+      <td class="tc">
+        <input class="price-inp" type="number" value="${tuP||""}" placeholder="0"
+          onchange="savePrecioMin(${p.id},this.value)"
+          title="Ingresá tu precio actual"/>
+      </td>
+      <td class="tc">${semaforo(tuP,pmin)}</td>
+    </tr>`;
+  }).join("");
 }
 
-// ─── DASHBOARD ────────────────────────────────────────────────────────────────
-async function loadDashboard() {
-  const stats = await api("/api/stats");
-  const totalFijos = gastos.reduce((s,g)=>s+g.monto,0);
+async function savePrecioMin(pid,val){
+  preciosMin[pid]=Number(val)||0;
+  await api(`/api/precios_minoristas/${pid}`,{method:"POST",body:JSON.stringify({precio:Number(val)||0})});
+  renderPrecios();
+}
 
-  document.getElementById("kpi-grid").innerHTML = `
-    <div class="kpi" style="border-color:#e9456044">
-      <div class="kpi-icon">📦</div>
-      <label>Productos activos</label>
-      <div class="val" style="color:var(--accent)">${stats.n_productos}</div>
-    </div>
-    <div class="kpi" style="border-color:#2980b944">
-      <div class="kpi-icon">📋</div>
-      <label>Cotizaciones totales</label>
-      <div class="val" style="color:var(--blue)">${stats.n_cotizaciones}</div>
-    </div>
-    <div class="kpi" style="border-color:#27ae6044">
-      <div class="kpi-icon">✅</div>
-      <label>Aprobadas · Vol. vendido</label>
-      <div class="val" style="color:var(--green)">${fmt(stats.vol_aprobado)}</div>
-    </div>
-    <div class="kpi" style="border-color:#f5a62344">
-      <div class="kpi-icon">💸</div>
-      <label>Gasto fijo mensual</label>
-      <div class="val" style="color:var(--gold)">${fmt(totalFijos)}</div>
-    </div>`;
+// ─── PRECIOS MAYORISTAS ───────────────────────────────────────────────────────
+function renderMayoristas(){
+  const q=(document.getElementById("mayor-search")||{value:""}).value.toLowerCase();
+  const list=productos.filter(p=>p.nombre.toLowerCase().includes(q));
 
-  const maxCost = Math.max(...productos.map(p=>p.costo));
-  const top = [...productos].sort((a,b)=>b.costo-a.costo).slice(0,8);
-  document.getElementById("dash-top-products").innerHTML = top.map(p=>`
-    <div style="margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-        <span style="font-size:13px;font-weight:600">${p.nombre}</span>
-        <span style="font-size:12px;color:var(--muted)">${fmt(p.costo)}</span>
+  document.getElementById("mayor-tbody").innerHTML=list.map(p=>{
+    const cf=costoFinalMay(p);
+    const s12=cf/(1-0.60), s36=cf/(1-0.50), s72=cf/(1-0.30);
+    const pm=preciosMay[p.id]||{};
+    const p12=pm["12"]||0, p36=pm["36"]||0, p72=pm["72"]||0;
+
+    return `<tr>
+      <td><strong>${p.nombre}</strong></td>
+      <td class="tr" style="color:var(--muted)">${fmt(cf)}</td>
+      <td class="tr" style="color:var(--blue);font-weight:600">${fmt(s12)}</td>
+      <td class="tc"><input class="price-inp" type="number" value="${p12||""}" placeholder="0"
+        onchange="savePrecioMay(${p.id},'12',this.value)"/></td>
+      <td class="tc">${p12?semaforoMay(p12,s12):'<span class="badge b-gray">—</span>'}</td>
+      <td class="tr" style="color:var(--green);font-weight:600">${fmt(s36)}</td>
+      <td class="tc"><input class="price-inp" type="number" value="${p36||""}" placeholder="0"
+        onchange="savePrecioMay(${p.id},'36',this.value)"/></td>
+      <td class="tc">${p36?semaforoMay(p36,s36):'<span class="badge b-gray">—</span>'}</td>
+      <td class="tr" style="color:var(--gold);font-weight:600">${fmt(s72)}</td>
+      <td class="tc"><input class="price-inp" type="number" value="${p72||""}" placeholder="0"
+        onchange="savePrecioMay(${p.id},'72',this.value)"/></td>
+      <td class="tc">${p72?semaforoMay(p72,s72):'<span class="badge b-gray">—</span>'}</td>
+    </tr>`;
+  }).join("");
+}
+
+async function savePrecioMay(pid,cantidad,val){
+  if(!preciosMay[pid]) preciosMay[pid]={};
+  preciosMay[pid][cantidad]=Number(val)||0;
+  await api(`/api/precios_mayoristas/${pid}`,{method:"POST",body:JSON.stringify({[cantidad]:Number(val)||0})});
+  renderMayoristas();
+}
+
+// ─── RECETAS ──────────────────────────────────────────────────────────────────
+function renderRecetaProds(){
+  filterRecetaProds();
+}
+
+function filterRecetaProds(){
+  const q=(document.getElementById("receta-search")||{value:""}).value.toLowerCase();
+  const list=productos.filter(p=>p.nombre.toLowerCase().includes(q));
+  document.getElementById("receta-prod-list").innerHTML=list.map(p=>{
+    const recLen=(recetasCache[p.id]||[]).length;
+    const activo=productoActual&&productoActual.id===p.id;
+    return `<div onclick="selRecetaProd(${p.id})"
+      style="padding:9px 12px;border-radius:7px;cursor:pointer;margin-bottom:4px;
+             background:${activo?"var(--accent)":"transparent"};
+             border:1px solid ${activo?"var(--accent)":"var(--border)"};
+             transition:all .2s"
+      onmouseover="if(${!activo})this.style.background='#1a2d44'"
+      onmouseout="if(${!activo})this.style.background='transparent'">
+      <div style="font-size:13px;font-weight:${activo?700:500}">${p.nombre}</div>
+      <div style="font-size:10px;color:${activo?"#fff":"var(--muted)"}">
+        ${p.costo_base?fmt(p.costo_base):"⚠️ sin costo"} · ${recLen} insumo${recLen!==1?"s":""}
       </div>
-      <div class="bar-bg"><div class="bar-fill" style="width:${(p.costo/maxCost*100).toFixed(1)}%;background:var(--accent)"></div></div>
-    </div>`).join("");
-
-  const recientes = cotizaciones.slice(0,5);
-  document.getElementById("dash-cotizaciones").innerHTML = recientes.length
-    ? recientes.map(c=>`
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)22">
-        <div>
-          <div style="font-size:13px;font-weight:600">${c.descripcion}</div>
-          <div style="font-size:11px;color:var(--muted)">${c.cliente||"Sin cliente"} · ${c.fecha}</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-weight:700;color:var(--green)">${fmt(c.precio_venta)}</div>
-          <span class="badge ${badgeEstado(c.estado)}">${c.estado}</span>
-        </div>
-      </div>`).join("")
-    : `<p style="color:var(--muted);font-size:13px">No hay cotizaciones aún.</p>`;
+    </div>`;
+  }).join("");
 }
 
-function badgeEstado(e) {
-  return {borrador:"badge-gray",enviada:"badge-blue",aprobada:"badge-green",rechazada:"badge-red"}[e]||"badge-gray";
+async function selRecetaProd(pid){
+  productoActual=productos.find(p=>p.id===pid);
+  recetasCache[pid]=await api(`/api/recetas/${pid}`);
+  renderRecetaInsumos();
+  filterRecetaProds();
+}
+
+function renderRecetaInsumos(){
+  if(!productoActual) return;
+  const p=productoActual;
+  const receta=recetasCache[p.id]||[];
+  const recMap={};
+  receta.forEach(r=>recMap[r.insumo_id]=r.tipo);
+
+  document.getElementById("receta-title").textContent=`🏭 Receta: ${p.nombre}`;
+  document.getElementById("receta-save-btn").style.display="flex";
+  document.getElementById("receta-empty").style.display="none";
+  document.getElementById("receta-costo-base").style.display="block";
+  document.getElementById("receta-base-val").textContent=fmt(p.costo_base);
+
+  // Calc totals preview
+  const base=(p.costo_base||0)*factor();
+  const insMin=receta.filter(r=>r.tipo==='ambos'||r.tipo==='minorista').reduce((s,r)=>s+r.insumo_costo,0);
+  const insMay=receta.filter(r=>r.tipo==='ambos'||r.tipo==='mayorista').reduce((s,r)=>s+r.insumo_costo,0);
+  document.getElementById("receta-total-min").textContent=fmt((base+insMin)*(1+cfg("pct_variables")));
+  document.getElementById("receta-total-may").textContent=fmt((base+insMay)*(1+cfg("pct_variables")));
+
+  document.getElementById("receta-insumos-grid").innerHTML=insumos.map(ins=>{
+    const tipo=recMap[ins.id]||null;
+    return `<div class="insumo-check ${tipo?'selected':''}" id="ins-card-${ins.id}">
+      <div>
+        <div style="font-size:13px;font-weight:600">${ins.nombre}</div>
+        <div style="font-size:11px;color:var(--muted)">${fmt(ins.costo)}</div>
+        ${tipo?`<div class="insumo-tipo">
+          <button class="tipo-btn ${tipo==='minorista'?'active-min':''}" onclick="setTipo(${ins.id},'minorista',event)">Min</button>
+          <button class="tipo-btn ${tipo==='ambos'?'active-both':''}" onclick="setTipo(${ins.id},'ambos',event)">Ambos</button>
+          <button class="tipo-btn ${tipo==='mayorista'?'active-may':''}" onclick="setTipo(${ins.id},'mayorista',event)">May</button>
+        </div>`:''}
+      </div>
+      <div>
+        <input type="checkbox" style="width:18px;height:18px;cursor:pointer;accent-color:var(--green)"
+          ${tipo?'checked':''} onchange="toggleInsumo(${ins.id},this.checked)"/>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function toggleInsumo(insId, checked){
+  if(!productoActual) return;
+  const pid=productoActual.id;
+  if(!recetasCache[pid]) recetasCache[pid]=[];
+  if(checked){
+    if(!recetasCache[pid].find(r=>r.insumo_id===insId)){
+      const ins=insumos.find(i=>i.id===insId);
+      recetasCache[pid].push({insumo_id:insId,tipo:'ambos',insumo_nombre:ins.nombre,insumo_costo:ins.costo});
+    }
+  } else {
+    recetasCache[pid]=recetasCache[pid].filter(r=>r.insumo_id!==insId);
+  }
+  renderRecetaInsumos();
+}
+
+function setTipo(insId, tipo, e){
+  e.stopPropagation();
+  if(!productoActual) return;
+  const pid=productoActual.id;
+  const rec=recetasCache[pid]||[];
+  const item=rec.find(r=>r.insumo_id===insId);
+  if(item) item.tipo=tipo;
+  renderRecetaInsumos();
+}
+
+async function saveReceta(){
+  if(!productoActual) return;
+  const pid=productoActual.id;
+  const items=(recetasCache[pid]||[]).map(r=>({insumo_id:r.insumo_id,tipo:r.tipo}));
+  await api(`/api/recetas/${pid}`,{method:"POST",body:JSON.stringify(items)});
+  toast("✅ Receta guardada");
+  // Refresh precios
+  renderPrecios(); renderMayoristas();
 }
 
 // ─── CALCULADORA ──────────────────────────────────────────────────────────────
-function addCalcRow() {
-  calcRows.push({insumo:"",costo:0,qty:1});
+function initCalc(){
+  calcRows=[{concepto:"",costo:0,qty:1}];
   renderCalcRows();
 }
 
-function renderCalcRows() {
-  const tbody = document.getElementById("calc-rows");
-  const prods = productos.map(p=>`<option value="${p.nombre}" data-costo="${p.costo}">`).join("");
-  tbody.innerHTML = calcRows.map((r,i)=>`
-    <tr>
-      <td><input list="calc-prod-dl" value="${r.insumo}" onchange="calcRowChange(${i},'insumo',this.value)" style="width:100%"/></td>
-      <td><input type="number" value="${r.costo}" oninput="calcRowChange(${i},'costo',this.value)" style="width:100px"/></td>
-      <td><input type="number" value="${r.qty}" min="1" oninput="calcRowChange(${i},'qty',this.value)" style="width:70px"/></td>
-      <td class="ta-right bold">${fmt(r.costo*r.qty)}</td>
-      <td><button class="btn-danger" onclick="removeCalcRow(${i})">×</button></td>
-    </tr>`).join("")+`<datalist id="calc-prod-dl">${prods}</datalist>`;
+function setCalcTipo(tipo){
+  calcTipo=tipo;
+  document.getElementById("calc-tipo-min").classList.toggle("active",tipo==="minorista");
+  document.getElementById("calc-tipo-may").classList.toggle("active",tipo==="mayorista");
+  document.getElementById("calc-tipo-label").textContent=tipo==="minorista"?"Minorista — con caja y bolsa":"Mayorista — sin caja ni bolsa";
   updateCalc();
 }
 
-function calcRowChange(i, field, val) {
-  // Auto-fill cost when product name matches
-  if(field==="insumo") {
-    const prod = productos.find(p=>p.nombre.toLowerCase()===val.toLowerCase());
-    if(prod) { calcRows[i].costo = prod.costo; }
-  }
-  calcRows[i][field] = field==="insumo" ? val : Number(val)||0;
+async function cargarRecetaCalc(){
+  const pid=parseInt(document.getElementById("calc-producto").value);
+  if(!pid){calcRows=[{concepto:"",costo:0,qty:1}];renderCalcRows();return;}
+  const p=productos.find(x=>x.id===pid);
+  const rec=await api(`/api/recetas/${pid}`);
+  recetasCache[pid]=rec;
+
+  // Filtrar según tipo
+  const recFiltrada=rec.filter(r=>
+    r.tipo==='ambos' ||
+    (calcTipo==='minorista'&&r.tipo==='minorista') ||
+    (calcTipo==='mayorista'&&r.tipo==='mayorista')
+  );
+
+  calcRows=[];
+  if(p.costo_base) calcRows.push({concepto:p.nombre+" (base)",costo:p.costo_base*factor(),qty:1});
+  recFiltrada.forEach(r=>calcRows.push({concepto:r.insumo_nombre,costo:r.insumo_costo,qty:1}));
+  if(calcRows.length===0) calcRows=[{concepto:"",costo:0,qty:1}];
   renderCalcRows();
 }
 
-function removeCalcRow(i) { calcRows.splice(i,1); renderCalcRows(); }
+function addCalcRow(){calcRows.push({concepto:"",costo:0,qty:1});renderCalcRows();}
+function removeCalcRow(i){calcRows.splice(i,1);if(!calcRows.length)calcRows=[{concepto:"",costo:0,qty:1}];renderCalcRows();}
 
-function updateCalc() {
-  const varPct = Number(document.getElementById("var-pct").value);
-  document.getElementById("var-pct-label").textContent = varPct+"%";
-  document.getElementById("r-varpct").textContent = varPct;
-
-  const subtotal = calcRows.reduce((s,r)=>s+r.costo*r.qty,0);
-  const variable = subtotal * varPct/100;
-  const costoFinal = subtotal + variable;
-
-  document.getElementById("r-subtotal").textContent = fmt(subtotal);
-  document.getElementById("r-variable").textContent = fmt(variable);
-  document.getElementById("r-costo").textContent = fmt(costoFinal);
-
-  const prices = [
-    {label:"+30%", mult:1.3, color:"var(--muted)"},
-    {label:"+40%", mult:1.4, color:"var(--blue)"},
-    {label:"+50%", mult:1.5, color:"var(--green)"},
-    {label:"Doble", mult:2.0, color:"var(--gold)"},
-  ];
-  document.getElementById("price-results").innerHTML = prices.map(p=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <span style="font-size:12px;color:var(--muted)">${p.label}</span>
-      <span style="font-size:16px;font-weight:700;color:${p.color}">${fmt(costoFinal*p.mult)}</span>
-    </div>`).join("");
-
-  const precioVenta = Number(document.getElementById("calc-precio").value)||0;
-  if(precioVenta>0) {
-    const ganancia = precioVenta - costoFinal;
-    const margen = ganancia/precioVenta;
-    const color = margen>0.4?"var(--green)":margen>0.2?"var(--gold)":"var(--accent)";
-    document.getElementById("r-margen").style.color = color;
-    document.getElementById("r-margen").textContent = pct(margen);
-  } else {
-    document.getElementById("r-margen").textContent = "—";
-  }
+function renderCalcRows(){
+  document.getElementById("calc-rows").innerHTML=calcRows.map((r,i)=>`<tr>
+    <td><input value="${r.concepto}" onchange="calcRows[${i}].concepto=this.value" style="width:180px"/></td>
+    <td><input type="number" value="${r.costo||""}" oninput="calcRows[${i}].costo=parseFloat(this.value)||0;updateCalc()" style="width:90px"/></td>
+    <td class="tc"><input type="number" value="${r.qty}" min="1" oninput="calcRows[${i}].qty=parseFloat(this.value)||1;updateCalc()" style="width:55px;text-align:center"/></td>
+    <td class="tr" style="font-weight:600">${fmt(r.costo*r.qty)}</td>
+    <td><button class="btn-icon" onclick="removeCalcRow(${i})">✕</button></td>
+  </tr>`).join("");
+  updateCalc();
 }
 
-async function guardarCotizacion() {
-  const varPct = Number(document.getElementById("var-pct").value);
-  const subtotal = calcRows.reduce((s,r)=>s+r.costo*r.qty,0);
-  const costoFinal = subtotal * (1+varPct/100);
-  const precio = Number(document.getElementById("calc-precio").value)||0;
-  const nombre = document.getElementById("calc-nombre").value.trim();
+function updateCalc(){
+  const sub=calcRows.reduce((s,r)=>s+(r.costo||0)*(r.qty||1),0);
+  const vars=cfg("pct_variables");
+  const variable=sub*vars;
+  const cf=sub+variable;
+  const pmin=cf*2;
+  const trf=cfg("desc_transferencia"), efe=cfg("desc_efectivo");
+  const qrd=cfg("comision_qr_debito"), qrc=cfg("comision_qr_credito");
+  const c3q=cfg("comision_3cuotas");
 
-  if(!nombre) { toast("Ingresá un nombre o descripción",true); return; }
-  if(precio===0) { toast("Ingresá el precio de venta",true); return; }
+  const esMin=calcTipo==='minorista';
 
-  const payload = {
-    fecha: new Date().toISOString().slice(0,10),
-    cliente: nombre,
-    descripcion: nombre,
-    detalle_json: calcRows,
-    subtotal, costo_final: costoFinal,
-    precio_venta: precio,
-    margen_pct: precio>0?(precio-costoFinal)/precio:0,
-    estado: "borrador"
-  };
-  const res = await api("/api/cotizaciones", {method:"POST",body:JSON.stringify(payload)});
-  if(res.ok) {
-    toast("✅ Cotización guardada!");
-    cotizaciones = await api("/api/cotizaciones");
-  } else toast("Error al guardar",true);
+  document.getElementById("calc-results").innerHTML=`
+    <div class="calc-result-row sub"><span>Subtotal costos</span><span>${fmt(sub)}</span></div>
+    <div class="calc-result-row sub"><span>Variables (${(vars*100).toFixed(0)}%)</span><span>${fmt(variable)}</span></div>
+    <div class="calc-result-row" style="font-weight:700;border-top:2px solid var(--border);margin-top:4px;padding-top:8px">
+      <span>Costo Final</span><span style="color:var(--text)">${fmt(cf)}</span>
+    </div>
+    <div class="calc-result-row highlight"><span>Precio mínimo (×2)</span><span>${fmt(pmin)}</span></div>
+    ${esMin?`
+    <div style="height:8px"></div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase">Precios minorista</div>
+    <div class="calc-result-row"><span style="color:var(--blue)">Transferencia (−${(trf*100).toFixed(0)}%)</span><span style="color:var(--blue);font-weight:600">${fmt(pmin*(1-trf))}</span></div>
+    <div class="calc-result-row"><span style="color:var(--blue)">Efectivo (−${(efe*100).toFixed(0)}%)</span><span style="color:var(--blue);font-weight:600">${fmt(pmin*(1-efe))}</span></div>
+    <div class="calc-result-row"><span>QR Débito (+${(qrd*100).toFixed(2)}%)</span><span>${fmt(pmin*(1+qrd))}</span></div>
+    <div class="calc-result-row"><span>QR Crédito (+${(qrc*100).toFixed(2)}%)</span><span>${fmt(pmin/(1-qrc))}</span></div>
+    <div class="calc-result-row" style="font-weight:700;color:var(--gold)"><span>3 Cuotas s/interés</span><span>${fmt(pmin/(1-c3q))}</span></div>
+    `:`
+    <div style="height:8px"></div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase">Precios mayorista</div>
+    <div class="calc-result-row"><span style="color:var(--blue)">Transferencia (sin desc.)</span><span style="color:var(--blue);font-weight:600">${fmt(pmin)}</span></div>
+    <div class="calc-result-row"><span style="color:var(--blue)">Efectivo (sin desc.)</span><span style="color:var(--blue);font-weight:600">${fmt(pmin)}</span></div>
+    <div class="calc-result-row" style="color:var(--green)"><span>Sugerido +12u (60%)</span><span style="font-weight:600">${fmt(cf/(1-0.60))}</span></div>
+    <div class="calc-result-row" style="color:var(--green)"><span>Sugerido +36u (50%)</span><span style="font-weight:600">${fmt(cf/(1-0.50))}</span></div>
+    <div class="calc-result-row" style="color:var(--gold)"><span>Sugerido +72u (30%)</span><span style="font-weight:600">${fmt(cf/(1-0.30))}</span></div>
+    `}
+  `;
 }
 
 // ─── PRODUCTOS ────────────────────────────────────────────────────────────────
-function renderProductos() {
-  const q = document.getElementById("prod-search").value.toLowerCase();
-  const sort = document.getElementById("prod-sort").value;
-  let list = productos.filter(p=>p.nombre.toLowerCase().includes(q));
-  if(sort==="costo_desc") list.sort((a,b)=>b.costo-a.costo);
-  else if(sort==="costo_asc") list.sort((a,b)=>a.costo-b.costo);
-  else list.sort((a,b)=>a.nombre.localeCompare(b.nombre));
-
-  document.getElementById("prod-tbody").innerHTML = list.map(p=>`
-    <tr>
-      <td class="bold">${p.nombre}</td>
-      <td class="ta-right text-muted">${fmt(p.costo)}</td>
-      <td class="ta-right">${fmt(p.costo*1.3)}</td>
-      <td class="ta-right" style="color:var(--blue)">${fmt(p.costo*1.4)}</td>
-      <td class="ta-right" style="color:var(--green);font-weight:700">${fmt(p.costo*1.5)}</td>
-      <td class="ta-right" style="color:var(--gold);font-weight:700">${fmt(p.costo*2)}</td>
-      <td class="ta-center">
-        <button class="btn-edit" onclick="editProducto(${p.id})">✏️</button>
-        <button class="btn-danger" onclick="deleteProducto(${p.id})">🗑️</button>
-      </td>
-    </tr>`).join("");
-  document.getElementById("prod-count").textContent = `${list.length} de ${productos.length} productos`;
+function renderProductosTab(){
+  const q=(document.getElementById("prod-search")||{value:""}).value.toLowerCase();
+  document.getElementById("prod-tbody").innerHTML=productos.filter(p=>p.nombre.toLowerCase().includes(q)).map(p=>`<tr>
+    <td><strong>${p.nombre}</strong></td>
+    <td class="tr">${p.costo_base?fmt(p.costo_base):'<span class="badge b-red">⚠️ sin costo</span>'}</td>
+    <td class="tc">${(recetasCache[p.id]||[]).length} insumos</td>
+    <td class="tc">
+      <button class="btn-icon" onclick="editProd(${p.id})">✏️</button>
+      <button class="btn-icon" onclick="deleteProd(${p.id})">🗑️</button>
+    </td>
+  </tr>`).join("");
 }
 
-function editProducto(id) {
-  const p = productos.find(x=>x.id===id);
-  document.getElementById("prod-edit-id").value = id;
-  document.getElementById("prod-nombre").value = p.nombre;
-  document.getElementById("prod-costo").value = p.costo;
-  document.getElementById("modal-prod-title").textContent = "✏️ Editar Producto";
+function abrirModalProd(){
+  document.getElementById("prod-edit-id").value="";
+  document.getElementById("prod-nombre").value="";
+  document.getElementById("prod-costo").value="";
+  document.getElementById("modal-prod-title").textContent="➕ Nuevo Producto";
   openModal("modal-prod");
 }
-
-async function saveProducto() {
-  const id = document.getElementById("prod-edit-id").value;
-  const nombre = document.getElementById("prod-nombre").value.trim();
-  const costo = Number(document.getElementById("prod-costo").value);
-  if(!nombre||!costo) { toast("Completá nombre y costo",true); return; }
-
-  let res;
-  if(id) res = await api(`/api/productos/${id}`,{method:"PUT",body:JSON.stringify({nombre,costo})});
-  else res = await api("/api/productos",{method:"POST",body:JSON.stringify({nombre,costo})});
-
-  if(res.ok) {
-    toast(id?"✅ Producto actualizado":"✅ Producto creado");
-    productos = await api("/api/productos");
-    populateProdDatalist();
-    renderProductos();
+function editProd(id){
+  const p=productos.find(x=>x.id===id);
+  document.getElementById("prod-edit-id").value=id;
+  document.getElementById("prod-nombre").value=p.nombre;
+  document.getElementById("prod-costo").value=p.costo_base||"";
+  document.getElementById("modal-prod-title").textContent="✏️ Editar Producto";
+  openModal("modal-prod");
+}
+async function saveProducto(){
+  const id=document.getElementById("prod-edit-id").value;
+  const nombre=document.getElementById("prod-nombre").value.trim();
+  const costo_base=parseFloat(document.getElementById("prod-costo").value)||null;
+  if(!nombre){toast("Completá el nombre",true);return;}
+  const res=id
+    ?await api(`/api/productos/${id}`,{method:"PUT",body:JSON.stringify({nombre,costo_base})})
+    :await api("/api/productos",{method:"POST",body:JSON.stringify({nombre,costo_base})});
+  if(res.ok){
+    toast(id?"✅ Actualizado":"✅ Creado");
+    productos=await api("/api/productos");
+    renderProductosTab(); renderPrecios(); renderMayoristas();
     closeModal("modal-prod");
-    document.getElementById("prod-edit-id").value="";
-    document.getElementById("modal-prod-title").textContent="➕ Nuevo Producto";
   } else toast(res.error||"Error",true);
 }
-
-async function deleteProducto(id) {
-  if(!confirm("¿Eliminar este producto?")) return;
+async function deleteProd(id){
+  if(!confirm("¿Eliminar?"))return;
   await api(`/api/productos/${id}`,{method:"DELETE"});
+  productos=await api("/api/productos");
+  renderProductosTab();
   toast("🗑️ Eliminado");
-  productos = await api("/api/productos");
-  renderProductos();
 }
 
-// ─── COTIZACIONES ──────────────────────────────────────────────────────────────
-function renderCotizaciones() {
-  const q = document.getElementById("cot-search").value.toLowerCase();
-  const filtro = document.getElementById("cot-filter").value;
-  let list = cotizaciones.filter(c=>{
-    const matchQ = c.descripcion.toLowerCase().includes(q)||(c.cliente||"").toLowerCase().includes(q);
-    const matchF = !filtro||c.estado===filtro;
-    return matchQ && matchF;
-  });
-
-  document.getElementById("cot-tbody").innerHTML = list.map(c=>`
-    <tr>
-      <td>${c.fecha}</td>
-      <td>${c.cliente||"—"}</td>
-      <td class="bold">${c.descripcion}</td>
-      <td class="ta-right text-muted">${fmt(c.costo_final)}</td>
-      <td class="ta-right" style="color:var(--green);font-weight:700">${fmt(c.precio_venta)}</td>
-      <td class="ta-right">${pct(c.margen_pct)}</td>
-      <td>
-        <select onchange="updateEstado(${c.id},this.value)" style="background:transparent;border:none;color:var(--text);font-size:12px;cursor:pointer">
-          ${["borrador","enviada","aprobada","rechazada"].map(e=>`<option value="${e}"${c.estado===e?" selected":""}>${e}</option>`).join("")}
-        </select>
-      </td>
-      <td class="ta-center">
-        <button class="btn-edit" onclick="verCotizacion(${c.id})">👁️</button>
-        <button class="btn-danger" onclick="deleteCotizacion(${c.id})">🗑️</button>
-      </td>
-    </tr>`).join("");
-  document.getElementById("cot-count").textContent = `${list.length} cotizaciones`;
+// ─── INSUMOS ──────────────────────────────────────────────────────────────────
+function renderInsumos(){
+  document.getElementById("insumos-tbody").innerHTML=insumos.map(i=>`<tr>
+    <td><strong>${i.nombre}</strong></td>
+    <td class="tr" style="color:var(--gold)">${fmt(i.costo)}</td>
+    <td style="color:var(--muted)">${i.descripcion||""}</td>
+    <td class="tc">
+      <button class="btn-icon" onclick="editInsumo(${i.id})">✏️</button>
+      <button class="btn-icon" onclick="deleteInsumo(${i.id})">🗑️</button>
+    </td>
+  </tr>`).join("");
+}
+function abrirModalInsumo(){
+  document.getElementById("insumo-edit-id").value="";
+  document.getElementById("insumo-nombre").value="";
+  document.getElementById("insumo-costo").value="";
+  document.getElementById("insumo-desc").value="";
+  document.getElementById("modal-insumo-title").textContent="➕ Nuevo Insumo";
+  openModal("modal-insumo");
+}
+function editInsumo(id){
+  const i=insumos.find(x=>x.id===id);
+  document.getElementById("insumo-edit-id").value=id;
+  document.getElementById("insumo-nombre").value=i.nombre;
+  document.getElementById("insumo-costo").value=i.costo;
+  document.getElementById("insumo-desc").value=i.descripcion||"";
+  document.getElementById("modal-insumo-title").textContent="✏️ Editar Insumo";
+  openModal("modal-insumo");
+}
+async function saveInsumo(){
+  const id=document.getElementById("insumo-edit-id").value;
+  const nombre=document.getElementById("insumo-nombre").value.trim();
+  const costo=parseFloat(document.getElementById("insumo-costo").value);
+  const descripcion=document.getElementById("insumo-desc").value.trim();
+  if(!nombre||!costo){toast("Completá nombre y costo",true);return;}
+  const res=id
+    ?await api(`/api/insumos/${id}`,{method:"PUT",body:JSON.stringify({nombre,costo,descripcion})})
+    :await api("/api/insumos",{method:"POST",body:JSON.stringify({nombre,costo,descripcion})});
+  if(res.ok){
+    toast("✅ Guardado");
+    insumos=await api("/api/insumos");
+    renderInsumos(); closeModal("modal-insumo");
+  } else toast(res.error||"Error",true);
+}
+async function deleteInsumo(id){
+  if(!confirm("¿Eliminar?"))return;
+  await api(`/api/insumos/${id}`,{method:"DELETE"});
+  insumos=await api("/api/insumos");
+  renderInsumos(); toast("🗑️ Eliminado");
 }
 
-async function updateEstado(id, estado) {
-  await api(`/api/cotizaciones/${id}/estado`,{method:"PUT",body:JSON.stringify({estado})});
-  cotizaciones = await api("/api/cotizaciones");
-  toast("Estado actualizado");
-}
-
-function verCotizacion(id) {
-  const c = cotizaciones.find(x=>x.id===id);
-  document.getElementById("cot-detail-title").textContent = `📋 ${c.descripcion}`;
-  document.getElementById("cot-detail-body").innerHTML = `
-    <div class="form-row cols2" style="margin-bottom:14px">
-      <div><label class="lbl">Cliente</label><div class="bold">${c.cliente||"—"}</div></div>
-      <div><label class="lbl">Fecha</label><div>${c.fecha}</div></div>
-      <div><label class="lbl">Costo final</label><div class="bold text-red">${fmt(c.costo_final)}</div></div>
-      <div><label class="lbl">Precio venta</label><div class="bold text-green">${fmt(c.precio_venta)}</div></div>
-    </div>
-    <div class="section-title">Detalle de insumos</div>
-    <table><thead><tr><th>Insumo</th><th class="ta-right">Costo</th><th class="ta-right">Cant.</th><th class="ta-right">Subtotal</th></tr></thead>
-    <tbody>${(c.detalle_json||[]).filter(r=>r.insumo).map(r=>`
-      <tr><td>${r.insumo}</td><td class="ta-right">${fmt(r.costo)}</td><td class="ta-right">${r.qty}</td><td class="ta-right bold">${fmt(r.costo*r.qty)}</td></tr>
-    `).join("")}</tbody></table>`;
-  openModal("modal-cot-detail");
-}
-
-async function deleteCotizacion(id) {
-  if(!confirm("¿Eliminar esta cotización?")) return;
-  await api(`/api/cotizaciones/${id}`,{method:"DELETE"});
-  toast("🗑️ Eliminada");
-  cotizaciones = await api("/api/cotizaciones");
-  renderCotizaciones();
-}
-
-// ─── VENTAS ────────────────────────────────────────────────────────────────────
-async function loadVentas() {
-  const anio = document.getElementById("ventas-anio").value;
-  const data = await api(`/api/ventas?anio=${anio}`);
-  const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
-  const MESES_FULL = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-
-  // Build pivot
-  const pivot = {};
-  data.forEach(r=>{
-    if(!pivot[r.producto]) pivot[r.producto]={};
-    const mi = MESES_FULL.indexOf(r.mes);
-    if(mi>=0) pivot[r.producto][mi+1] = r.cantidad;
-  });
-
-  const prods = Object.keys(pivot).sort();
-  if(!prods.length) {
-    document.getElementById("ventas-tbody").innerHTML = `<tr><td colspan="14" style="color:var(--muted);text-align:center;padding:30px">No hay ventas cargadas para ${anio}. Usá el botón "Cargar ventas".</td></tr>`;
-    return;
-  }
-
-  document.getElementById("ventas-tbody").innerHTML = prods.map(p=>{
-    const row = pivot[p];
-    const total = Object.values(row).reduce((s,v)=>s+v,0);
-    return `<tr>
-      <td class="bold">${p}</td>
-      ${Array.from({length:12},(_,i)=>`<td class="ta-right">${row[i+1]||"—"}</td>`).join("")}
-      <td class="ta-right bold text-green">${total}</td>
-    </tr>`;
-  }).join("");
-
-  // Populate datalist
-  document.getElementById("prod-list-dl").innerHTML = productos.map(p=>`<option value="${p.nombre}">`).join("");
-}
-
-async function saveVentas() {
-  const prod = document.getElementById("venta-prod").value.trim();
-  const anio = Number(document.getElementById("venta-anio").value);
-  const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-  if(!prod) { toast("Ingresá el nombre del producto",true); return; }
-
-  const promises = MESES.map((mes,i)=>{
-    const val = Number(document.getElementById(`v-${i+1}`).value)||0;
-    return api("/api/ventas",{method:"POST",body:JSON.stringify({producto:prod,mes,anio,cantidad:val})});
-  });
-  await Promise.all(promises);
-  toast("✅ Ventas guardadas");
-  closeModal("modal-venta");
-  loadVentas();
-}
-
-// ─── GASTOS FIJOS ─────────────────────────────────────────────────────────────
-function renderGastos() {
-  const total = gastos.reduce((s,g)=>s+g.monto,0);
-  document.getElementById("gastos-total").textContent = fmt(total);
-  document.getElementById("gastos-list").innerHTML = gastos.map(g=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+// ─── GASTOS ───────────────────────────────────────────────────────────────────
+function renderGastos(){
+  const total=gastos.reduce((s,g)=>s+g.monto,0);
+  document.getElementById("gastos-total").textContent=fmt(total);
+  document.getElementById("gastos-list").innerHTML=gastos.map(g=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <div style="flex:1;margin-right:12px">
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-          <span style="font-size:13px;font-weight:600">${g.item}</span>
+        <div class="flex-between" style="margin-bottom:3px">
+          <span style="font-weight:600">${g.item}</span>
           <div>
-            <button class="btn-edit" onclick="editGasto(${g.id})">✏️</button>
-            <button class="btn-danger" onclick="deleteGasto(${g.id})">🗑️</button>
+            <button class="btn-icon" onclick="editGasto(${g.id})">✏️</button>
+            <button class="btn-icon" onclick="deleteGasto(${g.id})">🗑️</button>
           </div>
         </div>
-        <div class="bar-bg"><div class="bar-fill" style="width:${(g.monto/total*100).toFixed(1)}%;background:var(--accent)"></div></div>
+        <div style="background:#1e2a3a;border-radius:3px;height:4px">
+          <div style="width:${Math.min(100,(g.monto/total*100)).toFixed(1)}%;height:100%;background:var(--accent);border-radius:3px"></div>
+        </div>
       </div>
-      <span style="font-size:14px;font-weight:700;color:var(--gold);min-width:100px;text-align:right">${fmt(g.monto)}</span>
+      <span style="font-weight:700;color:var(--gold);min-width:90px;text-align:right">${fmt(g.monto)}</span>
     </div>`).join("");
-
-  document.getElementById("gastos-dist").innerHTML = gastos.map(g=>`
-    <div style="margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
-        <span style="font-size:12px">${g.item}</span>
-        <span style="font-size:12px;color:var(--muted)">${(g.monto/total*100).toFixed(1)}%</span>
-      </div>
-      <div class="bar-bg"><div class="bar-fill" style="width:${(g.monto/total*100).toFixed(1)}%;background:var(--blue)"></div></div>
-    </div>`).join("");
-
-  document.getElementById("gastos-proy").innerHTML = [["Mensual",1],["Trimestral",3],["Semestral",6],["Anual",12]].map(([l,m])=>`
-    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)22">
-      <span style="color:var(--muted);font-size:13px">${l}</span>
-      <span style="font-weight:700;color:var(--gold)">${fmt(total*m)}</span>
-    </div>`).join("");
+  document.getElementById("gastos-proy").innerHTML=[
+    ["Mensual",1],["Trimestral",3],["Semestral",6],["Anual",12]
+  ].map(([l,m])=>`<div class="flex-between" style="padding:8px 0;border-bottom:1px solid #1e3a5f22">
+    <span style="color:var(--muted);font-size:13px">${l}</span>
+    <span style="font-weight:700;color:var(--gold)">${fmt(total*m)}</span>
+  </div>`).join("");
 }
-
-function editGasto(id) {
-  const g = gastos.find(x=>x.id===id);
-  document.getElementById("gasto-edit-id").value = id;
-  document.getElementById("gasto-item").value = g.item;
-  document.getElementById("gasto-monto").value = g.monto;
-  document.getElementById("modal-gasto-title").textContent = "✏️ Editar Gasto";
+function abrirModalGasto(){
+  document.getElementById("gasto-edit-id").value="";
+  document.getElementById("gasto-item").value="";
+  document.getElementById("gasto-monto").value="";
+  document.getElementById("modal-gasto-title").textContent="➕ Nuevo Gasto Fijo";
   openModal("modal-gasto");
 }
+function editGasto(id){
+  const g=gastos.find(x=>x.id===id);
+  document.getElementById("gasto-edit-id").value=id;
+  document.getElementById("gasto-item").value=g.item;
+  document.getElementById("gasto-monto").value=g.monto;
+  document.getElementById("modal-gasto-title").textContent="✏️ Editar Gasto";
+  openModal("modal-gasto");
+}
+async function saveGasto(){
+  const id=document.getElementById("gasto-edit-id").value;
+  const item=document.getElementById("gasto-item").value.trim();
+  const monto=parseFloat(document.getElementById("gasto-monto").value);
+  if(!item||!monto){toast("Completá concepto y monto",true);return;}
+  const res=id
+    ?await api(`/api/gastos/${id}`,{method:"PUT",body:JSON.stringify({item,monto})})
+    :await api("/api/gastos",{method:"POST",body:JSON.stringify({item,monto})});
+  if(res.ok){
+    toast("✅ Guardado");
+    gastos=await api("/api/gastos");
+    renderGastos(); closeModal("modal-gasto");
+  } else toast(res.error||"Error",true);
+}
+async function deleteGasto(id){
+  if(!confirm("¿Eliminar?"))return;
+  await api(`/api/gastos/${id}`,{method:"DELETE"});
+  gastos=await api("/api/gastos");
+  renderGastos(); toast("🗑️ Eliminado");
+}
 
-async function saveGasto() {
-  const id = document.getElementById("gasto-edit-id").value;
-  const item = document.getElementById("gasto-item").value.trim();
-  const monto = Number(document.getElementById("gasto-monto").value);
-  if(!item||!monto) { toast("Completá item y monto",true); return; }
+// ─── PEDIDOS ──────────────────────────────────────────────────────────────────
+function renderPedidos(){
+  const q=(document.getElementById("pedido-search")||{value:""}).value.toLowerCase();
+  const est=(document.getElementById("pedido-filtro-estado")||{value:""}).value;
+  const list=pedidos.filter(p=>
+    p.cliente.toLowerCase().includes(q) &&
+    (!est||p.estado===est)
+  );
+  document.getElementById("pedidos-tbody").innerHTML=list.map(p=>`<tr>
+    <td style="color:var(--muted)">${p.numero||"—"}</td>
+    <td>${p.fecha}</td>
+    <td><strong>${p.cliente}</strong></td>
+    <td style="color:var(--muted)">${p.provincia||"—"}</td>
+    <td style="color:var(--muted)">${p.transporte||"—"}</td>
+    <td>${p.tipo_pago}</td>
+    <td class="tr" style="font-weight:700;color:var(--gold)">${fmt(p.total)}</td>
+    <td class="tc"><span class="badge estado-${p.estado}">${p.estado}</span></td>
+    <td class="tc">
+      <button class="btn-icon" onclick="verPedido(${p.id})">👁️</button>
+      <button class="btn-icon" onclick="editPedido(${p.id})">✏️</button>
+      <button class="btn-icon" onclick="deletePedido(${p.id})">🗑️</button>
+    </td>
+  </tr>`).join("") || `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:30px">Sin pedidos</td></tr>`;
+}
 
-  let res;
-  if(id) res = await api(`/api/gastos/${id}`,{method:"PUT",body:JSON.stringify({item,monto})});
-  else res = await api("/api/gastos",{method:"POST",body:JSON.stringify({item,monto})});
+let pedidoItems=[];
 
-  if(res.ok) {
-    toast(id?"✅ Gasto actualizado":"✅ Gasto creado");
-    gastos = await api("/api/gastos");
-    renderGastos();
-    closeModal("modal-gasto");
-    document.getElementById("gasto-edit-id").value="";
-    document.getElementById("modal-gasto-title").textContent="➕ Nuevo Gasto Fijo";
+function abrirModalPedido(){
+  document.getElementById("pedido-edit-id").value="";
+  document.getElementById("ped-numero").value="";
+  document.getElementById("ped-fecha").value=new Date().toISOString().split("T")[0];
+  document.getElementById("ped-cliente").value="";
+  document.getElementById("ped-telefono").value="";
+  document.getElementById("ped-provincia").value="";
+  document.getElementById("ped-transporte").value="";
+  document.getElementById("ped-pago").value="transferencia";
+  document.getElementById("ped-estado").value="pendiente";
+  document.getElementById("ped-obs").value="";
+  pedidoItems=[{producto:"",cantidad:1,precio_unitario:0,subtotal:0}];
+  renderPedidoItems();
+  document.getElementById("modal-pedido-title").textContent="🛒 Nuevo Pedido Mayorista";
+  openModal("modal-pedido");
+}
+
+function editPedido(id){
+  const p=pedidos.find(x=>x.id===id);
+  document.getElementById("pedido-edit-id").value=id;
+  document.getElementById("ped-numero").value=p.numero||"";
+  document.getElementById("ped-fecha").value=p.fecha;
+  document.getElementById("ped-cliente").value=p.cliente;
+  document.getElementById("ped-telefono").value=p.telefono||"";
+  document.getElementById("ped-provincia").value=p.provincia||"";
+  document.getElementById("ped-transporte").value=p.transporte||"";
+  document.getElementById("ped-pago").value=p.tipo_pago;
+  document.getElementById("ped-estado").value=p.estado;
+  document.getElementById("ped-obs").value=p.observaciones||"";
+  pedidoItems=p.items.map(i=>({...i}));
+  if(!pedidoItems.length) pedidoItems=[{producto:"",cantidad:1,precio_unitario:0,subtotal:0}];
+  renderPedidoItems();
+  document.getElementById("modal-pedido-title").textContent="✏️ Editar Pedido";
+  openModal("modal-pedido");
+}
+
+function verPedido(id){
+  const p=pedidos.find(x=>x.id===id);
+  editPedido(id); // same modal, read mode would need more work
+}
+
+function addPedidoItem(){
+  pedidoItems.push({producto:"",cantidad:1,precio_unitario:0,subtotal:0});
+  renderPedidoItems();
+}
+function removePedidoItem(i){
+  pedidoItems.splice(i,1);
+  if(!pedidoItems.length) pedidoItems=[{producto:"",cantidad:1,precio_unitario:0,subtotal:0}];
+  renderPedidoItems();
+}
+function updatePedidoItem(i,field,val){
+  pedidoItems[i][field]=field==="producto"?val:(parseFloat(val)||0);
+  pedidoItems[i].subtotal=pedidoItems[i].cantidad*pedidoItems[i].precio_unitario;
+  renderPedidoItems();
+}
+
+function renderPedidoItems(){
+  const prodOpts='<option value="">— Producto —</option>'+productos.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join("");
+  document.getElementById("ped-items").innerHTML=pedidoItems.map((item,i)=>`
+    <div class="item-row">
+      <select onchange="updatePedidoItem(${i},'producto',this.value)">${prodOpts.replace(`value="${item.producto}"`,`value="${item.producto}" selected`)}</select>
+      <input type="number" value="${item.cantidad}" placeholder="Cant." min="1" onchange="updatePedidoItem(${i},'cantidad',this.value)" style="text-align:center"/>
+      <input type="number" value="${item.precio_unitario||""}" placeholder="Precio" onchange="updatePedidoItem(${i},'precio_unitario',this.value)"/>
+      <span style="font-weight:700;color:var(--gold);text-align:right">${fmt(item.subtotal)}</span>
+      <button class="btn-icon" onclick="removePedidoItem(${i})">✕</button>
+    </div>`).join("");
+  const total=pedidoItems.reduce((s,i)=>s+i.subtotal,0);
+  document.getElementById("ped-total-display").textContent=fmt(total);
+}
+
+async function savePedido(){
+  const id=document.getElementById("pedido-edit-id").value;
+  const data={
+    numero:document.getElementById("ped-numero").value,
+    fecha:document.getElementById("ped-fecha").value,
+    cliente:document.getElementById("ped-cliente").value.trim(),
+    telefono:document.getElementById("ped-telefono").value,
+    provincia:document.getElementById("ped-provincia").value,
+    transporte:document.getElementById("ped-transporte").value,
+    tipo_pago:document.getElementById("ped-pago").value,
+    estado:document.getElementById("ped-estado").value,
+    observaciones:document.getElementById("ped-obs").value,
+    items:pedidoItems.filter(i=>i.producto&&i.precio_unitario>0),
+  };
+  if(!data.cliente||!data.fecha){toast("Completá cliente y fecha",true);return;}
+  const res=id
+    ?await api(`/api/pedidos/${id}`,{method:"PUT",body:JSON.stringify(data)})
+    :await api("/api/pedidos",{method:"POST",body:JSON.stringify(data)});
+  if(res.ok){
+    toast("✅ Pedido guardado");
+    pedidos=await api("/api/pedidos");
+    clientes=await api("/api/clientes");
+    renderPedidos(); closeModal("modal-pedido");
   } else toast(res.error||"Error",true);
 }
 
-async function deleteGasto(id) {
-  if(!confirm("¿Eliminar este gasto?")) return;
-  await api(`/api/gastos/${id}`,{method:"DELETE"});
-  toast("🗑️ Eliminado");
-  gastos = await api("/api/gastos");
-  renderGastos();
+async function deletePedido(id){
+  if(!confirm("¿Eliminar este pedido?"))return;
+  await api(`/api/pedidos/${id}`,{method:"DELETE"});
+  pedidos=await api("/api/pedidos");
+  clientes=await api("/api/clientes");
+  renderPedidos(); toast("🗑️ Eliminado");
 }
 
-// Boot
+// ─── CLIENTES ─────────────────────────────────────────────────────────────────
+function renderClientes(){
+  const total2025=clientes.reduce((s,c)=>s+(c.total_2025||0),0);
+  const total2026=clientes.reduce((s,c)=>s+(c.total_2026||0),0);
+  document.getElementById("clientes-kpis").innerHTML=`
+    <div class="kpi"><label>Clientes activos</label><div class="kval" style="color:var(--blue)">${clientes.length}</div></div>
+    <div class="kpi"><label>Total pedidos</label><div class="kval" style="color:var(--green)">${pedidos.length}</div></div>
+    <div class="kpi"><label>Ventas 2025</label><div class="kval" style="color:var(--gold)">${fmt(total2025)}</div></div>
+    <div class="kpi"><label>Ventas 2026</label><div class="kval" style="color:var(--accent)">${fmt(total2026)}</div></div>
+  `;
+  document.getElementById("clientes-tbody").innerHTML=clientes.map(c=>`<tr>
+    <td><strong>${c.cliente}</strong></td>
+    <td style="color:var(--muted)">${c.telefono||"—"}</td>
+    <td style="color:var(--muted)">${c.provincia||"—"}</td>
+    <td class="tc">${c.num_pedidos}</td>
+    <td style="color:var(--muted)">${c.ultimo_pedido||"—"}</td>
+    <td class="tr">${fmt(c.total_2025)}</td>
+    <td class="tr">${fmt(c.total_2026)}</td>
+    <td class="tr" style="font-weight:700;color:var(--gold)">${fmt(c.total_acumulado)}</td>
+    <td class="tc"><button class="btn btn-blue btn-sm" onclick="verCliente('${encodeURIComponent(c.cliente)}')">Ver historial</button></td>
+  </tr>`).join("") || `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:30px">Sin clientes aún</td></tr>`;
+}
+
+async function verCliente(nombre){
+  const cli=decodeURIComponent(nombre);
+  const hist=await api(`/api/clientes/${encodeURIComponent(cli)}/pedidos`);
+  const card=document.getElementById("cliente-detalle-card");
+  document.getElementById("cliente-detalle-title").textContent=`📋 ${cli}`;
+  document.getElementById("cliente-detalle-content").innerHTML=hist.map(p=>`
+    <div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px">
+      <div class="flex-between" style="margin-bottom:6px">
+        <span style="font-weight:700">${p.fecha} ${p.numero?"· #"+p.numero:""}</span>
+        <span class="badge estado-${p.estado}">${p.estado}</span>
+      </div>
+      ${p.items.map(i=>`<div style="font-size:12px;color:var(--muted);padding:2px 0">${i.producto} × ${i.cantidad} = ${fmt(i.subtotal)}</div>`).join("")}
+      <div style="text-align:right;font-weight:700;color:var(--gold);margin-top:6px">${fmt(p.total)}</div>
+    </div>`).join("") || '<div style="color:var(--muted);text-align:center;padding:20px">Sin pedidos</div>';
+  card.style.display="block";
+}
+
+function cerrarDetalleCliente(){
+  document.getElementById("cliente-detalle-card").style.display="none";
+}
+
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+function renderConfig(){
+  document.getElementById("cfg-vars").value=cfg("pct_variables");
+  document.getElementById("cfg-trf").value=cfg("desc_transferencia");
+  document.getElementById("cfg-efe").value=cfg("desc_efectivo");
+  document.getElementById("cfg-qrd").value=cfg("comision_qr_debito");
+  document.getElementById("cfg-qrc").value=cfg("comision_qr_credito");
+  document.getElementById("cfg-3c").value=cfg("comision_3cuotas");
+
+  const trims=[
+    ["inflacion_q1_2025","Q1 2025 (Ene–Mar)"],["inflacion_q2_2025","Q2 2025 (Abr–Jun)"],
+    ["inflacion_q3_2025","Q3 2025 (Jul–Sep)"],["inflacion_q4_2025","Q4 2025 (Oct–Dic)"],
+    ["inflacion_q1_2026","Q1 2026 (Ene–Mar)"],["inflacion_q2_2026","Q2 2026 (Abr–Jun)"],
+  ];
+  document.getElementById("inf-grid").innerHTML=trims.map(([k,label])=>`
+    <div class="inf-card">
+      <label>${label}</label>
+      <input type="number" id="inf-${k}" value="${(cfg(k)*100).toFixed(1)}" step="0.1"
+        oninput="updateFactor()"/> <span style="font-size:14px;color:var(--muted)">%</span>
+    </div>`).join("");
+  updateFactor();
+}
+
+function updateFactor(){
+  const ks=["inflacion_q1_2025","inflacion_q2_2025","inflacion_q3_2025","inflacion_q4_2025",
+             "inflacion_q1_2026","inflacion_q2_2026"];
+  const f=ks.reduce((acc,k)=>{
+    const el=document.getElementById(`inf-${k}`);
+    return acc*(1+(el?parseFloat(el.value)||0:cfg(k)*100)/100);
+  },1);
+  document.getElementById("factor-display").textContent=f.toFixed(3);
+}
+
+async function saveConfig(){
+  const ks=["inflacion_q1_2025","inflacion_q2_2025","inflacion_q3_2025","inflacion_q4_2025",
+             "inflacion_q1_2026","inflacion_q2_2026"];
+  const data={
+    pct_variables:parseFloat(document.getElementById("cfg-vars").value)||0.44,
+    desc_transferencia:parseFloat(document.getElementById("cfg-trf").value)||0.05,
+    desc_efectivo:parseFloat(document.getElementById("cfg-efe").value)||0.10,
+    comision_qr_debito:parseFloat(document.getElementById("cfg-qrd").value)||0.0135,
+    comision_qr_credito:parseFloat(document.getElementById("cfg-qrc").value)||0.0629,
+    comision_3cuotas:parseFloat(document.getElementById("cfg-3c").value)||0.086,
+  };
+  ks.forEach(k=>{
+    const el=document.getElementById(`inf-${k}`);
+    if(el) data[k]=(parseFloat(el.value)||0)/100;
+  });
+  await api("/api/config",{method:"POST",body:JSON.stringify(data)});
+  config={...config,...data};
+  // Update string values back
+  Object.keys(data).forEach(k=>config[k]=String(data[k]));
+  toast("✅ Configuración guardada");
+  updateFactor();
+  renderPrecios(); renderMayoristas();
+}
+
+// ─── START ────────────────────────────────────────────────────────────────────
 init();
 </script>
 </body>
