@@ -13,8 +13,6 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;}
-
-/* HEADER */
 header{background:#0a1520;border-bottom:2px solid var(--border);padding:0 20px;position:sticky;top:0;z-index:50;}
 .header-top{display:flex;align-items:center;gap:14px;padding:12px 0 0;}
 .logo-wrap{width:46px;height:46px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--gold));display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;overflow:hidden;flex-shrink:0;border:2px solid var(--accent);}
@@ -27,41 +25,31 @@ header{background:#0a1520;border-bottom:2px solid var(--border);padding:0 20px;p
 .last-update button{background:none;border:none;color:var(--accent);cursor:pointer;font-size:10px;}
 .btn-logout{background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 11px;border-radius:6px;cursor:pointer;font-size:11px;}
 #logo-upload{display:none;}
-
 nav{display:flex;gap:2px;padding-top:10px;overflow-x:auto;}
 nav button{background:transparent;border:none;color:var(--muted);padding:8px 14px;border-radius:7px 7px 0 0;cursor:pointer;font-size:12px;font-weight:500;white-space:nowrap;transition:all .2s;}
 nav button.active{background:var(--accent);color:#fff;font-weight:700;}
 nav button:hover:not(.active){color:var(--text);background:#1a2d44;}
-
-/* LAYOUT */
 main{max-width:1400px;margin:0 auto;padding:18px 16px;}
 .tab{display:none;}.tab.active{display:block;}
-
-/* CARDS */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:18px;margin-bottom:14px;}
 .card-title{font-size:13px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-
-/* INFO BOX */
 .info-box{background:#162236;border-left:3px solid var(--blue);border-radius:6px;padding:10px 14px;font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.7;}
 .info-box strong{color:var(--text);}
-
-/* TABLES */
 .tbl-wrap{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:12px;}
-th{padding:8px 10px;font-size:10px;color:var(--muted);text-align:left;border-bottom:2px solid var(--border);font-weight:600;white-space:nowrap;background:#0a1520;position:sticky;top:0;}
+th{padding:8px 10px;font-size:10px;color:var(--muted);text-align:left;border-bottom:2px solid var(--border);font-weight:600;white-space:nowrap;background:#0a1520;}
 td{padding:8px 10px;border-bottom:1px solid #1e3a5f18;white-space:nowrap;}
 tr:hover td{background:#1a2d4418;}
+tr.hidden-prod td{opacity:0.35;}
 .tr{text-align:right;}.tc{text-align:center;}
-
-/* INPUTS */
 input,select,textarea{background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:12px;font-family:inherit;}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);}
 input[type=number]{text-align:right;}
 .w100{width:100%;}
 .price-inp{width:100px;background:#0d1b2a;border:1px solid #1e3a5f44;border-radius:5px;padding:4px 8px;color:var(--gold);font-size:12px;text-align:right;font-weight:700;}
 .price-inp:focus{border-color:var(--gold);outline:none;}
-
-/* BUTTONS */
+.pct-inp{width:60px;background:#0d1b2a;border:1px solid #1e3a5f44;border-radius:5px;padding:4px 6px;color:var(--blue);font-size:11px;text-align:center;font-weight:700;}
+.pct-inp:focus{border-color:var(--blue);outline:none;}
 .btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:7px;border:none;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;}
 .btn-primary{background:var(--accent);color:#fff;}
 .btn-blue{background:var(--blue);color:#fff;}
@@ -70,21 +58,17 @@ input[type=number]{text-align:right;}
 .btn-sm{padding:4px 10px;font-size:11px;}
 .btn-icon{background:transparent;border:none;cursor:pointer;padding:2px 6px;font-size:13px;color:var(--muted);}
 .btn-icon:hover{color:var(--text);}
-
-/* BADGES / SEMAFORO */
+.eye-btn{background:transparent;border:none;cursor:pointer;padding:2px 6px;font-size:15px;transition:opacity .2s;}
+.eye-btn.hidden{opacity:0.3;}
 .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;}
 .b-green{background:#27ae6022;color:var(--green);}
 .b-gold{background:#f5a62322;color:var(--gold);}
 .b-red{background:#e9456022;color:var(--red);}
 .b-blue{background:#2980b922;color:var(--blue);}
 .b-gray{background:#6b8cae18;color:var(--muted);}
-
-/* TOGGLE tipo venta */
 .toggle-group{display:flex;background:#0a1520;border-radius:8px;padding:3px;border:1px solid var(--border);}
 .toggle-group button{flex:1;padding:6px 14px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;background:transparent;color:var(--muted);transition:all .2s;}
 .toggle-group button.active{background:var(--accent);color:#fff;}
-
-/* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:#000c;z-index:200;align-items:center;justify-content:center;}
 .modal-bg.open{display:flex;}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:24px;min-width:360px;max-width:600px;width:95%;max-height:92vh;overflow-y:auto;}
@@ -93,59 +77,40 @@ input[type=number]{text-align:right;}
 .form-row label{font-size:10px;color:var(--muted);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px;}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .form-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-
-/* FLEX UTILS */
 .flex{display:flex;gap:8px;align-items:center;}
 .flex-between{display:flex;justify-content:space-between;align-items:center;}
 .mb12{margin-bottom:12px;}
-.gap12{gap:12px;}
-
-/* RECETA checkboxes */
 .insumo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-top:10px;}
 .insumo-check{background:#0a1520;border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:space-between;}
 .insumo-check.selected{border-color:var(--green);background:#27ae6012;}
-.insumo-check.selected-mayor{border-color:var(--blue);background:#2980b912;}
-.insumo-tipo{display:flex;gap:4px;margin-top:6px;}
 .tipo-btn{font-size:10px;padding:2px 7px;border-radius:10px;border:1px solid var(--border);cursor:pointer;background:transparent;color:var(--muted);}
 .tipo-btn.active-min{background:#e9456022;border-color:var(--accent);color:var(--accent);}
 .tipo-btn.active-may{background:#2980b922;border-color:var(--blue);color:var(--blue);}
 .tipo-btn.active-both{background:#27ae6022;border-color:var(--green);color:var(--green);}
-
-/* CALCULADORA */
 .calc-result-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #1e3a5f22;font-size:13px;}
 .calc-result-row.highlight{font-weight:700;font-size:15px;color:var(--accent);}
 .calc-result-row.sub{color:var(--muted);font-size:12px;}
-
-/* PEDIDO items */
 .item-row{display:grid;grid-template-columns:2fr 80px 100px 100px 30px;gap:8px;align-items:center;margin-bottom:6px;}
-
-/* TOAST */
 #toast{position:fixed;bottom:20px;right:20px;background:var(--green);color:#fff;padding:10px 18px;border-radius:9px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;z-index:999;pointer-events:none;}
-#toast.show{opacity:1;}
-#toast.err{background:var(--accent);}
-
-/* Estado badges */
+#toast.show{opacity:1;}#toast.err{background:var(--accent);}
 .estado-pendiente{background:#f5a62322;color:var(--gold);}
 .estado-pagado{background:#27ae6022;color:var(--green);}
 .estado-entregado{background:#2980b922;color:var(--blue);}
 .estado-cancelado{background:#e9456022;color:var(--red);}
-
-/* INFLACIÓN grid */
 .inf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
 .inf-card{background:#0a1520;border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;}
 .inf-card label{font-size:10px;color:var(--muted);display:block;margin-bottom:6px;}
 .inf-card input{width:80px;text-align:center;background:transparent;border:none;border-bottom:2px solid var(--border);border-radius:0;color:var(--gold);font-size:20px;font-weight:700;padding:2px 4px;}
 .inf-card input:focus{outline:none;border-bottom-color:var(--gold);}
-
-/* SECTION LABEL */
 .slbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border);}
-
-/* KPI grid */
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
 .kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
 .kpi label{font-size:10px;color:var(--muted);display:block;margin-bottom:5px;}
 .kpi .kval{font-size:20px;font-weight:800;}
-
+/* Markup input inline */
+.markup-cell{display:flex;align-items:center;gap:4px;justify-content:center;}
+.markup-cell input{width:50px;text-align:center;}
+.markup-cell span{font-size:11px;color:var(--muted);}
 @media(max-width:768px){
   .kpi-grid{grid-template-columns:1fr 1fr;}
   .inf-grid{grid-template-columns:1fr 1fr;}
@@ -155,12 +120,10 @@ input[type=number]{text-align:right;}
 </style>
 </head>
 <body>
-
 <header>
   <div class="header-top">
     <div class="logo-wrap" id="logo-btn" onclick="document.getElementById('logo-upload').click()" title="Clic para subir logo">
-      <span id="logo-emoji">🏪</span>
-      <img id="logo-img"/>
+      <span id="logo-emoji">🏪</span><img id="logo-img"/>
     </div>
     <input type="file" id="logo-upload" accept="image/*" onchange="uploadLogo(event)"/>
     <div>
@@ -189,25 +152,31 @@ input[type=number]{text-align:right;}
     <button onclick="showTab('config',this)">⚙️ Config</button>
   </nav>
 </header>
-
 <main>
 
 <!-- ══ PRECIOS MINORISTA ══════════════════════════════════════════════════════ -->
 <div id="tab-precios" class="tab active">
   <div class="info-box">
-    💰 <strong>Minorista</strong> &nbsp;·&nbsp; Margen mínimo <strong>100%</strong> sobre costo final
-    &nbsp;·&nbsp; Transferencia <strong>−5%</strong> &nbsp;·&nbsp; Efectivo <strong>−10%</strong>
-    &nbsp;·&nbsp; QR Débito <strong>+1.35%</strong> &nbsp;·&nbsp; QR Crédito <strong>+6.29%</strong>
-    &nbsp;·&nbsp; 3 Cuotas <strong>+8.60%</strong>
+    💰 <strong>Minorista</strong> · Margen mínimo <strong>100%</strong> sobre costo final
+    · Transferencia <strong>−5%</strong> · Efectivo <strong>−10%</strong>
+    · QR Débito <strong>+1.35%</strong> · QR Crédito <strong>+6.29%</strong> · 3 Cuotas <strong>+8.60%</strong>
+    · 👁️ Ocultá los productos sin stock
   </div>
   <div class="card">
     <div class="flex-between mb12">
-      <span class="card-title">💰 Lista de Precios Minorista</span>
+      <div class="flex">
+        <span class="card-title" style="margin-bottom:0">💰 Lista de Precios Minorista</span>
+        <label style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px;cursor:pointer">
+          <input type="checkbox" id="show-hidden" onchange="renderPrecios()" style="width:14px;height:14px"/>
+          Mostrar ocultos
+        </label>
+      </div>
       <input id="precio-search" placeholder="🔍 Buscar..." style="width:180px" oninput="renderPrecios()"/>
     </div>
     <div class="tbl-wrap">
       <table>
         <thead><tr>
+          <th style="width:30px"></th>
           <th>Producto</th>
           <th class="tr">Costo Base</th>
           <th class="tr">Costo Final Min.</th>
@@ -236,8 +205,8 @@ input[type=number]{text-align:right;}
 <!-- ══ MAYORISTAS ══════════════════════════════════════════════════════════════ -->
 <div id="tab-mayoristas" class="tab">
   <div class="info-box">
-    📦 <strong>Mayorista</strong> &nbsp;·&nbsp; Solo efectivo o transferencia (sin descuento)
-    &nbsp;·&nbsp; Márgenes objetivo: <strong>+12u = 60%</strong> · <strong>+36u = 50%</strong> · <strong>+72u = 30%</strong>
+    📦 <strong>Mayorista</strong> · Solo efectivo o transferencia (sin descuento)
+    · Markup = ganancia sobre el costo · Podés editar el % por producto y cantidad
   </div>
   <div class="card">
     <div class="flex-between mb12">
@@ -249,18 +218,27 @@ input[type=number]{text-align:right;}
         <thead><tr>
           <th>Producto</th>
           <th class="tr">Costo Final May.</th>
-          <th class="tr" style="color:var(--blue)">Sugerido +12u<br/><small style="font-weight:400">(60% margen)</small></th>
-          <th class="tr">Tu precio +12u</th>
-          <th class="tc">Estado</th>
-          <th class="tr" style="color:var(--green)">Sugerido +36u<br/><small style="font-weight:400">(50% margen)</small></th>
-          <th class="tr">Tu precio +36u</th>
-          <th class="tc">Estado</th>
-          <th class="tr" style="color:var(--gold)">Sugerido +72u<br/><small style="font-weight:400">(30% margen)</small></th>
-          <th class="tr">Tu precio +72u</th>
-          <th class="tc">Estado</th>
+          <th class="tc" colspan="3" style="color:var(--blue);border-left:2px solid var(--border)">+12 unidades</th>
+          <th class="tc" colspan="3" style="color:var(--green);border-left:2px solid var(--border)">+36 unidades</th>
+          <th class="tc" colspan="3" style="color:var(--gold);border-left:2px solid var(--border)">+72 unidades</th>
+        </tr>
+        <tr>
+          <th></th><th></th>
+          <th class="tc" style="border-left:2px solid var(--border)">Markup %</th>
+          <th class="tr">Precio sugerido</th>
+          <th class="tr">Tu precio</th>
+          <th class="tc" style="border-left:2px solid var(--border)">Markup %</th>
+          <th class="tr">Precio sugerido</th>
+          <th class="tr">Tu precio</th>
+          <th class="tc" style="border-left:2px solid var(--border)">Markup %</th>
+          <th class="tr">Precio sugerido</th>
+          <th class="tr">Tu precio</th>
         </tr></thead>
         <tbody id="mayor-tbody"></tbody>
       </table>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:var(--muted)">
+      💡 Markup sobre el costo: precio sugerido = costo × (1 + markup%). Podés cambiar el % por fila.
     </div>
   </div>
 </div>
@@ -306,8 +284,8 @@ input[type=number]{text-align:right;}
 <!-- ══ RECETAS ══════════════════════════════════════════════════════════════════ -->
 <div id="tab-recetas" class="tab">
   <div class="info-box">
-    🏭 Definí qué insumos lleva cada producto. <strong>Ambos</strong> = aplica a minorista y mayorista.
-    <strong>Solo minorista</strong> = caja, bolsa (no va en mayorista). <strong>Solo mayorista</strong> = algún insumo exclusivo.
+    🏭 Definí qué insumos lleva cada producto. <strong>Ambos</strong> = minorista y mayorista.
+    <strong>Solo minorista</strong> = caja, bolsa. <strong>Solo mayorista</strong> = insumo exclusivo.
   </div>
   <div style="display:grid;grid-template-columns:280px 1fr;gap:16px">
     <div class="card" style="align-self:start">
@@ -316,7 +294,7 @@ input[type=number]{text-align:right;}
       <div id="receta-prod-list" style="max-height:500px;overflow-y:auto"></div>
     </div>
     <div class="card">
-      <div id="receta-header" class="flex-between mb12">
+      <div class="flex-between mb12">
         <span class="card-title" id="receta-title">Seleccioná un producto</span>
         <button class="btn btn-green btn-sm" id="receta-save-btn" style="display:none" onclick="saveReceta()">💾 Guardar receta</button>
       </div>
@@ -338,7 +316,7 @@ input[type=number]{text-align:right;}
       </div>
       <div id="receta-insumos-grid" class="insumo-grid"></div>
       <div id="receta-empty" style="color:var(--muted);font-size:12px;text-align:center;padding:40px">
-        Seleccioná un producto de la lista para ver y editar su receta
+        Seleccioná un producto de la lista
       </div>
     </div>
   </div>
@@ -452,12 +430,7 @@ input[type=number]{text-align:right;}
         <span style="font-size:20px;font-weight:800;color:var(--accent)" id="gastos-total">$0</span>
       </div>
     </div>
-    <div>
-      <div class="card">
-        <div class="card-title">📅 Proyección</div>
-        <div id="gastos-proy"></div>
-      </div>
-    </div>
+    <div><div class="card"><div class="card-title">📅 Proyección</div><div id="gastos-proy"></div></div></div>
   </div>
 </div>
 
@@ -472,11 +445,18 @@ input[type=number]{text-align:right;}
       <div class="form-row"><label>Comisión QR Débito</label><input type="number" id="cfg-qrd" step="0.001" class="w100"/></div>
       <div class="form-row"><label>Comisión QR Crédito</label><input type="number" id="cfg-qrc" step="0.001" class="w100"/></div>
       <div class="form-row"><label>Comisión 3 cuotas sin interés</label><input type="number" id="cfg-3c" step="0.001" class="w100"/></div>
+      <div class="slbl" style="margin-top:14px">Markup default mayoristas</div>
+      <div class="form-grid3" style="margin-bottom:12px">
+        <div class="form-row"><label>+12 unidades (%)</label><input type="number" id="cfg-m12" step="1" class="w100"/></div>
+        <div class="form-row"><label>+36 unidades (%)</label><input type="number" id="cfg-m36" step="1" class="w100"/></div>
+        <div class="form-row"><label>+72 unidades (%)</label><input type="number" id="cfg-m72" step="1" class="w100"/></div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:10px">Estos son los % por defecto. Podés cambiarlos por producto en la pestaña Mayoristas.</div>
       <button class="btn btn-primary w100" onclick="saveConfig()">💾 Guardar parámetros</button>
     </div>
     <div class="card">
       <div class="card-title">📈 Inflación Trimestral</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:14px">Ingresá el % de inflación de cada trimestre. Se aplica a todos los costos y gastos.</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:14px">Ingresá el % de inflación de cada trimestre. Se aplica a todos los costos.</div>
       <div class="inf-grid" id="inf-grid"></div>
       <div style="margin-top:14px;padding:12px;background:#0a1520;border-radius:8px;text-align:center">
         <div style="font-size:10px;color:var(--muted)">Factor acumulado</div>
@@ -487,7 +467,6 @@ input[type=number]{text-align:right;}
     </div>
   </div>
 </div>
-
 </main>
 
 <!-- MODALS -->
@@ -496,7 +475,7 @@ input[type=number]{text-align:right;}
     <h3 id="modal-prod-title">➕ Nuevo Producto</h3>
     <input type="hidden" id="prod-edit-id"/>
     <div class="form-row"><label>Nombre del producto</label><input id="prod-nombre" class="w100"/></div>
-    <div class="form-row"><label>Costo base ($) — pieza en blanco terminada</label><input type="number" id="prod-costo" class="w100"/></div>
+    <div class="form-row"><label>Costo base ($)</label><input type="number" id="prod-costo" class="w100"/></div>
     <div class="flex" style="justify-content:flex-end;gap:8px;margin-top:16px">
       <button class="btn btn-ghost" onclick="closeModal('modal-prod')">Cancelar</button>
       <button class="btn btn-primary" onclick="saveProducto()">Guardar</button>
@@ -536,14 +515,12 @@ input[type=number]{text-align:right;}
     <h3 id="modal-pedido-title">🛒 Nuevo Pedido Mayorista</h3>
     <input type="hidden" id="pedido-edit-id"/>
     <div class="form-grid3 mb12">
-      <div class="form-row"><label>N° Pedido / Remito</label><input id="ped-numero" class="w100"/></div>
+      <div class="form-row"><label>N° Pedido</label><input id="ped-numero" class="w100"/></div>
       <div class="form-row"><label>Fecha</label><input type="date" id="ped-fecha" class="w100"/></div>
       <div class="form-row"><label>Estado</label>
         <select id="ped-estado" class="w100">
-          <option value="pendiente">Pendiente</option>
-          <option value="pagado">Pagado</option>
-          <option value="entregado">Entregado</option>
-          <option value="cancelado">Cancelado</option>
+          <option value="pendiente">Pendiente</option><option value="pagado">Pagado</option>
+          <option value="entregado">Entregado</option><option value="cancelado">Cancelado</option>
         </select>
       </div>
     </div>
@@ -556,8 +533,7 @@ input[type=number]{text-align:right;}
       <div class="form-row"><label>Transporte</label><input id="ped-transporte" class="w100"/></div>
       <div class="form-row"><label>Tipo de pago</label>
         <select id="ped-pago" class="w100">
-          <option value="transferencia">Transferencia</option>
-          <option value="efectivo">Efectivo</option>
+          <option value="transferencia">Transferencia</option><option value="efectivo">Efectivo</option>
         </select>
       </div>
     </div>
@@ -565,7 +541,7 @@ input[type=number]{text-align:right;}
     <div id="ped-items"></div>
     <button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="addPedidoItem()">+ Agregar producto</button>
     <div style="margin-top:14px;padding:12px;background:#0a1520;border-radius:8px;text-align:right">
-      <span style="font-size:12px;color:var(--muted)">Total del pedido: </span>
+      <span style="font-size:12px;color:var(--muted)">Total: </span>
       <span style="font-size:20px;font-weight:800;color:var(--gold)" id="ped-total-display">$0</span>
     </div>
     <div class="form-row" style="margin-top:10px"><label>Observaciones</label><textarea id="ped-obs" class="w100" rows="2"></textarea></div>
@@ -579,52 +555,48 @@ input[type=number]{text-align:right;}
 <div id="toast"></div>
 
 <script>
-// ─── STATE ────────────────────────────────────────────────────────────────────
 let productos=[], insumos=[], gastos=[], pedidos=[], clientes=[];
-let config={}, recetaActual=null, productoActual=null;
-let recetasCache={}, preciosMin={}, preciosMay={};
+let config={}, recetasCache={}, preciosMin={}, preciosMay={};
 let calcRows=[], calcTipo='minorista';
+let productoActual=null;
 
-// ─── UTILS ────────────────────────────────────────────────────────────────────
 const fmt  = n => n==null||isNaN(n) ? "—" : "$"+Math.round(n).toLocaleString("es-AR");
-const pct  = n => n==null||isNaN(n) ? "—" : (n*100).toFixed(1)+"%";
 const api  = (url,opts={}) => fetch(url,{headers:{"Content-Type":"application/json"},...opts}).then(r=>r.json());
 const cfg  = k => parseFloat(config[k]||0);
 
-function factor() {
-  const ks = ["inflacion_q1_2025","inflacion_q2_2025","inflacion_q3_2025","inflacion_q4_2025",
-               "inflacion_q1_2026","inflacion_q2_2026"];
-  return ks.reduce((f,k) => f*(1+cfg(k)), 1);
+function factor(){
+  const ks=["inflacion_q1_2025","inflacion_q2_2025","inflacion_q3_2025","inflacion_q4_2025","inflacion_q1_2026","inflacion_q2_2026"];
+  return ks.reduce((f,k)=>f*(1+cfg(k)),1);
 }
 
-function costoFinalMin(p) {
-  const rec = recetasCache[p.id] || [];
-  const base = (p.costo_base||0) * factor();
-  const ins  = rec.filter(r=>r.tipo==='ambos'||r.tipo==='minorista').reduce((s,r)=>s+r.insumo_costo,0);
-  return (base + ins) * (1 + cfg("pct_variables"));
+function costoFinalMin(p){
+  const rec=recetasCache[p.id]||[];
+  const base=(p.costo_base||0)*factor();
+  const ins=rec.filter(r=>r.tipo==='ambos'||r.tipo==='minorista').reduce((s,r)=>s+r.insumo_costo,0);
+  return (base+ins)*(1+cfg("pct_variables"));
 }
 
-function costoFinalMay(p) {
-  const rec = recetasCache[p.id] || [];
-  const base = (p.costo_base||0) * factor();
-  const ins  = rec.filter(r=>r.tipo==='ambos'||r.tipo==='mayorista').reduce((s,r)=>s+r.insumo_costo,0);
-  return (base + ins) * (1 + cfg("pct_variables"));
+function costoFinalMay(p){
+  const rec=recetasCache[p.id]||[];
+  const base=(p.costo_base||0)*factor();
+  const ins=rec.filter(r=>r.tipo==='ambos'||r.tipo==='mayorista').reduce((s,r)=>s+r.insumo_costo,0);
+  return (base+ins)*(1+cfg("pct_variables"));
 }
 
-function semaforo(tuPrecio, minimo) {
+function semaforo(tuPrecio,minimo){
   if(!tuPrecio||tuPrecio===0) return '<span class="badge b-gray">Sin precio</span>';
-  const r = tuPrecio/minimo;
-  if(r>=1.05)  return '<span class="badge b-green">✅ Bien</span>';
-  if(r>=0.95)  return '<span class="badge b-gold">⚠️ Justo</span>';
-  return           '<span class="badge b-red">🔴 Barata</span>';
+  const r=tuPrecio/minimo;
+  if(r>=1.05) return '<span class="badge b-green">✅ Bien</span>';
+  if(r>=0.95) return '<span class="badge b-gold">⚠️ Justo</span>';
+  return '<span class="badge b-red">🔴 Barata</span>';
 }
 
-function semaforoMay(tuPrecio, sugerido) {
-  if(!tuPrecio||tuPrecio===0) return '<span class="badge b-gray">Sin precio</span>';
-  const r = tuPrecio/sugerido;
-  if(r>=0.95)  return '<span class="badge b-green">✅ Bien</span>';
-  if(r>=0.75)  return '<span class="badge b-gold">⚠️ Bajo</span>';
-  return           '<span class="badge b-red">🔴 Perdés</span>';
+function semaforoMay(tuPrecio,sugerido){
+  if(!tuPrecio||tuPrecio===0) return '<span class="badge b-gray">—</span>';
+  const r=tuPrecio/sugerido;
+  if(r>=0.95) return '<span class="badge b-green">✅</span>';
+  if(r>=0.75) return '<span class="badge b-gold">⚠️</span>';
+  return '<span class="badge b-red">🔴</span>';
 }
 
 function toast(msg,err=false){
@@ -641,29 +613,20 @@ function showTab(name,btn){
   document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
   document.getElementById("tab-"+name).classList.add("active");
   if(btn) btn.classList.add("active");
-  const renders={
-    precios:renderPrecios, mayoristas:renderMayoristas,
-    recetas:renderRecetaProds, productos:renderProductosTab,
-    insumos:renderInsumos, gastos:renderGastos,
-    pedidos:renderPedidos, clientes:renderClientes,
-    config:renderConfig, calculadora:initCalc
-  };
+  const renders={precios:renderPrecios,mayoristas:renderMayoristas,recetas:renderRecetaProds,
+    productos:renderProductosTab,insumos:renderInsumos,gastos:renderGastos,
+    pedidos:renderPedidos,clientes:renderClientes,config:renderConfig,calculadora:initCalc};
   if(renders[name]) renders[name]();
 }
 
-// ─── LOGO + TIMESTAMP ─────────────────────────────────────────────────────────
 function uploadLogo(e){
-  const f=e.target.files[0]; if(!f)return;
+  const f=e.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=ev=>{
-    applyLogo(ev.target.result);
-    api("/api/config",{method:"POST",body:JSON.stringify({logo_data:ev.target.result})});
-  };
+  r.onload=ev=>{applyLogo(ev.target.result); api("/api/config",{method:"POST",body:JSON.stringify({logo_data:ev.target.result})});};
   r.readAsDataURL(f);
 }
 function applyLogo(data){
-  const img=document.getElementById("logo-img");
-  const em=document.getElementById("logo-emoji");
+  const img=document.getElementById("logo-img"); const em=document.getElementById("logo-emoji");
   img.src=data; img.style.display="block"; em.style.display="none";
 }
 function updateTs(){
@@ -673,50 +636,39 @@ function updateTs(){
   toast("📅 Fecha actualizada");
 }
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
 async function init(){
-  [config, productos, insumos, gastos, pedidos, clientes, preciosMin, preciosMay] = await Promise.all([
-    api("/api/config"), api("/api/productos"), api("/api/insumos"),
-    api("/api/gastos"), api("/api/pedidos"), api("/api/clientes"),
-    api("/api/precios_minoristas"), api("/api/precios_mayoristas")
+  [config,productos,insumos,gastos,pedidos,clientes,preciosMin,preciosMay]=await Promise.all([
+    api("/api/config"),api("/api/productos"),api("/api/insumos"),
+    api("/api/gastos"),api("/api/pedidos"),api("/api/clientes"),
+    api("/api/precios_minoristas"),api("/api/precios_mayoristas")
   ]);
-
-  // Load all recetas
-  await Promise.all(productos.map(async p=>{
-    recetasCache[p.id] = await api(`/api/recetas/${p.id}`);
-  }));
-
+  await Promise.all(productos.map(async p=>{recetasCache[p.id]=await api(`/api/recetas/${p.id}`);}));
   if(config.logo_data) applyLogo(config.logo_data);
   if(config.last_update) document.getElementById("ts-display").textContent=config.last_update;
-
-  // Populate calculadora dropdown
   const sel=document.getElementById("calc-producto");
-  productos.forEach(p=>{
-    const o=document.createElement("option");
-    o.value=p.id; o.textContent=p.nombre;
-    sel.appendChild(o);
-  });
-
-  renderPrecios();
-  renderConfig();
-  initCalc();
+  productos.forEach(p=>{const o=document.createElement("option");o.value=p.id;o.textContent=p.nombre;sel.appendChild(o);});
+  renderPrecios(); renderConfig(); initCalc();
 }
 
-// ─── PRECIOS MINORISTA ────────────────────────────────────────────────────────
+// ─── PRECIOS MINORISTA con ojito ──────────────────────────────────────────────
 function renderPrecios(){
   const q=(document.getElementById("precio-search")||{value:""}).value.toLowerCase();
-  const list=productos.filter(p=>p.nombre.toLowerCase().includes(q));
-  const vars=cfg("pct_variables"), trf=cfg("desc_transferencia"),
-        efe=cfg("desc_efectivo"), qrd=cfg("comision_qr_debito"),
-        qrc=cfg("comision_qr_credito"), c3q=cfg("comision_3cuotas");
+  const showHidden=document.getElementById("show-hidden")?.checked;
+  const list=productos.filter(p=>p.nombre.toLowerCase().includes(q)&&(showHidden||p.visible!==0));
+  const vars=cfg("pct_variables"),trf=cfg("desc_transferencia"),efe=cfg("desc_efectivo"),
+        qrd=cfg("comision_qr_debito"),qrc=cfg("comision_qr_credito"),c3q=cfg("comision_3cuotas");
 
   document.getElementById("precios-tbody").innerHTML=list.map(p=>{
-    const cf=costoFinalMin(p);
-    const pmin=cf*2;
-    const tuP=preciosMin[p.id]||0;
-
-    return `<tr>
-      <td><strong>${p.nombre}</strong>${!p.costo_base?'<span class="badge b-red" style="margin-left:6px">⚠️ sin costo</span>':''}</td>
+    const cf=costoFinalMin(p); const pmin=cf*2; const tuP=preciosMin[p.id]||0;
+    const isVisible=p.visible!==0;
+    return `<tr class="${isVisible?'':'hidden-prod'}">
+      <td class="tc">
+        <button class="eye-btn ${isVisible?'':'hidden'}" onclick="toggleVisible(${p.id},${isVisible?0:1})"
+          title="${isVisible?'Ocultar (sin stock)':'Mostrar'}">
+          ${isVisible?'👁️':'🙈'}
+        </button>
+      </td>
+      <td><strong>${p.nombre}</strong>${!p.costo_base?'<span class="badge b-red" style="margin-left:6px">⚠️</span>':''}</td>
       <td class="tr" style="color:var(--muted)">${fmt(p.costo_base)}</td>
       <td class="tr">${fmt(cf)}</td>
       <td class="tr" style="font-weight:700;color:var(--accent)">${fmt(pmin)}</td>
@@ -727,12 +679,19 @@ function renderPrecios(){
       <td class="tr" style="color:var(--gold);font-weight:600">${fmt(pmin/(1-c3q))}</td>
       <td class="tc">
         <input class="price-inp" type="number" value="${tuP||""}" placeholder="0"
-          onchange="savePrecioMin(${p.id},this.value)"
-          title="Ingresá tu precio actual"/>
+          onchange="savePrecioMin(${p.id},this.value)"/>
       </td>
       <td class="tc">${semaforo(tuP,pmin)}</td>
     </tr>`;
   }).join("");
+}
+
+async function toggleVisible(pid, visible){
+  await api(`/api/productos/${pid}/visible`,{method:"POST",body:JSON.stringify({visible})});
+  const p=productos.find(x=>x.id===pid);
+  if(p) p.visible=visible;
+  renderPrecios();
+  toast(visible?'👁️ Producto visible':'🙈 Producto oculto');
 }
 
 async function savePrecioMin(pid,val){
@@ -741,149 +700,88 @@ async function savePrecioMin(pid,val){
   renderPrecios();
 }
 
-// ─── PRECIOS MAYORISTAS ───────────────────────────────────────────────────────
+// ─── MAYORISTAS con markup editable ───────────────────────────────────────────
+function getMarkup(pid, cantidad){
+  const pm=preciosMay[pid];
+  if(pm&&pm[cantidad]&&pm[cantidad].markup!=null) return pm[cantidad].markup;
+  const defaults={"12":cfg("markup_12")||0.60,"36":cfg("markup_36")||0.50,"72":cfg("markup_72")||0.30};
+  return defaults[cantidad]||0.60;
+}
+
 function renderMayoristas(){
   const q=(document.getElementById("mayor-search")||{value:""}).value.toLowerCase();
-  const list=productos.filter(p=>p.nombre.toLowerCase().includes(q));
+  const list=productos.filter(p=>p.nombre.toLowerCase().includes(q)&&p.visible!==0);
 
   document.getElementById("mayor-tbody").innerHTML=list.map(p=>{
     const cf=costoFinalMay(p);
-    const s12=cf/(1-0.60), s36=cf/(1-0.50), s72=cf/(1-0.30);
+    const m12=getMarkup(p.id,"12"), m36=getMarkup(p.id,"36"), m72=getMarkup(p.id,"72");
+    const s12=cf*(1+m12), s36=cf*(1+m36), s72=cf*(1+m72);
     const pm=preciosMay[p.id]||{};
-    const p12=pm["12"]||0, p36=pm["36"]||0, p72=pm["72"]||0;
+    const p12=(pm["12"]||{}).precio||0, p36=(pm["36"]||{}).precio||0, p72=(pm["72"]||{}).precio||0;
 
     return `<tr>
       <td><strong>${p.nombre}</strong></td>
       <td class="tr" style="color:var(--muted)">${fmt(cf)}</td>
-      <td class="tr" style="color:var(--blue);font-weight:600">${fmt(s12)}</td>
-      <td class="tc"><input class="price-inp" type="number" value="${p12||""}" placeholder="0"
-        onchange="savePrecioMay(${p.id},'12',this.value)"/></td>
-      <td class="tc">${p12?semaforoMay(p12,s12):'<span class="badge b-gray">—</span>'}</td>
-      <td class="tr" style="color:var(--green);font-weight:600">${fmt(s36)}</td>
-      <td class="tc"><input class="price-inp" type="number" value="${p36||""}" placeholder="0"
-        onchange="savePrecioMay(${p.id},'36',this.value)"/></td>
-      <td class="tc">${p36?semaforoMay(p36,s36):'<span class="badge b-gray">—</span>'}</td>
-      <td class="tr" style="color:var(--gold);font-weight:600">${fmt(s72)}</td>
-      <td class="tc"><input class="price-inp" type="number" value="${p72||""}" placeholder="0"
-        onchange="savePrecioMay(${p.id},'72',this.value)"/></td>
-      <td class="tc">${p72?semaforoMay(p72,s72):'<span class="badge b-gray">—</span>'}</td>
+      <td class="tc" style="border-left:2px solid var(--border)">
+        <div class="markup-cell">
+          <input class="pct-inp" type="number" value="${Math.round(m12*100)}" min="0" max="999"
+            onchange="saveMarkup(${p.id},'12',this.value/100,'p12_${p.id}',${cf})"/>
+          <span>%</span>
+        </div>
+      </td>
+      <td class="tr" style="color:var(--blue);font-weight:600" id="s12_${p.id}">${fmt(s12)}</td>
+      <td class="tc">
+        <input class="price-inp" type="number" value="${p12||""}" placeholder="0"
+          onchange="savePrecioMay(${p.id},'12',this.value,${cf})"/>
+        ${p12?semaforoMay(p12,s12):''}
+      </td>
+      <td class="tc" style="border-left:2px solid var(--border)">
+        <div class="markup-cell">
+          <input class="pct-inp" type="number" value="${Math.round(m36*100)}" min="0" max="999"
+            onchange="saveMarkup(${p.id},'36',this.value/100,'s36_${p.id}',${cf})"/>
+          <span>%</span>
+        </div>
+      </td>
+      <td class="tr" style="color:var(--green);font-weight:600" id="s36_${p.id}">${fmt(s36)}</td>
+      <td class="tc">
+        <input class="price-inp" type="number" value="${p36||""}" placeholder="0"
+          onchange="savePrecioMay(${p.id},'36',this.value,${cf})"/>
+        ${p36?semaforoMay(p36,s36):''}
+      </td>
+      <td class="tc" style="border-left:2px solid var(--border)">
+        <div class="markup-cell">
+          <input class="pct-inp" type="number" value="${Math.round(m72*100)}" min="0" max="999"
+            onchange="saveMarkup(${p.id},'72',this.value/100,'s72_${p.id}',${cf})"/>
+          <span>%</span>
+        </div>
+      </td>
+      <td class="tr" style="color:var(--gold);font-weight:600" id="s72_${p.id}">${fmt(s72)}</td>
+      <td class="tc">
+        <input class="price-inp" type="number" value="${p72||""}" placeholder="0"
+          onchange="savePrecioMay(${p.id},'72',this.value,${cf})"/>
+        ${p72?semaforoMay(p72,s72):''}
+      </td>
     </tr>`;
   }).join("");
 }
 
-async function savePrecioMay(pid,cantidad,val){
+async function saveMarkup(pid, cantidad, markup, sugeridoId, costo){
   if(!preciosMay[pid]) preciosMay[pid]={};
-  preciosMay[pid][cantidad]=Number(val)||0;
-  await api(`/api/precios_mayoristas/${pid}`,{method:"POST",body:JSON.stringify({[cantidad]:Number(val)||0})});
+  if(!preciosMay[pid][cantidad]) preciosMay[pid][cantidad]={};
+  preciosMay[pid][cantidad].markup=markup;
+  const sugerido=costo*(1+markup);
+  const el=document.getElementById(sugeridoId);
+  if(el) el.textContent=fmt(sugerido);
+  await api(`/api/precios_mayoristas/${pid}`,{method:"POST",body:JSON.stringify({[cantidad]:{precio:preciosMay[pid][cantidad].precio||null,markup}})});
+}
+
+async function savePrecioMay(pid, cantidad, val, costo){
+  if(!preciosMay[pid]) preciosMay[pid]={};
+  if(!preciosMay[pid][cantidad]) preciosMay[pid][cantidad]={};
+  preciosMay[pid][cantidad].precio=Number(val)||0;
+  const markup=preciosMay[pid][cantidad].markup||getMarkup(pid,cantidad);
+  await api(`/api/precios_mayoristas/${pid}`,{method:"POST",body:JSON.stringify({[cantidad]:{precio:Number(val)||0,markup}})});
   renderMayoristas();
-}
-
-// ─── RECETAS ──────────────────────────────────────────────────────────────────
-function renderRecetaProds(){
-  filterRecetaProds();
-}
-
-function filterRecetaProds(){
-  const q=(document.getElementById("receta-search")||{value:""}).value.toLowerCase();
-  const list=productos.filter(p=>p.nombre.toLowerCase().includes(q));
-  document.getElementById("receta-prod-list").innerHTML=list.map(p=>{
-    const recLen=(recetasCache[p.id]||[]).length;
-    const activo=productoActual&&productoActual.id===p.id;
-    return `<div onclick="selRecetaProd(${p.id})"
-      style="padding:9px 12px;border-radius:7px;cursor:pointer;margin-bottom:4px;
-             background:${activo?"var(--accent)":"transparent"};
-             border:1px solid ${activo?"var(--accent)":"var(--border)"};
-             transition:all .2s"
-      onmouseover="if(${!activo})this.style.background='#1a2d44'"
-      onmouseout="if(${!activo})this.style.background='transparent'">
-      <div style="font-size:13px;font-weight:${activo?700:500}">${p.nombre}</div>
-      <div style="font-size:10px;color:${activo?"#fff":"var(--muted)"}">
-        ${p.costo_base?fmt(p.costo_base):"⚠️ sin costo"} · ${recLen} insumo${recLen!==1?"s":""}
-      </div>
-    </div>`;
-  }).join("");
-}
-
-async function selRecetaProd(pid){
-  productoActual=productos.find(p=>p.id===pid);
-  recetasCache[pid]=await api(`/api/recetas/${pid}`);
-  renderRecetaInsumos();
-  filterRecetaProds();
-}
-
-function renderRecetaInsumos(){
-  if(!productoActual) return;
-  const p=productoActual;
-  const receta=recetasCache[p.id]||[];
-  const recMap={};
-  receta.forEach(r=>recMap[r.insumo_id]=r.tipo);
-
-  document.getElementById("receta-title").textContent=`🏭 Receta: ${p.nombre}`;
-  document.getElementById("receta-save-btn").style.display="flex";
-  document.getElementById("receta-empty").style.display="none";
-  document.getElementById("receta-costo-base").style.display="block";
-  document.getElementById("receta-base-val").textContent=fmt(p.costo_base);
-
-  // Calc totals preview
-  const base=(p.costo_base||0)*factor();
-  const insMin=receta.filter(r=>r.tipo==='ambos'||r.tipo==='minorista').reduce((s,r)=>s+r.insumo_costo,0);
-  const insMay=receta.filter(r=>r.tipo==='ambos'||r.tipo==='mayorista').reduce((s,r)=>s+r.insumo_costo,0);
-  document.getElementById("receta-total-min").textContent=fmt((base+insMin)*(1+cfg("pct_variables")));
-  document.getElementById("receta-total-may").textContent=fmt((base+insMay)*(1+cfg("pct_variables")));
-
-  document.getElementById("receta-insumos-grid").innerHTML=insumos.map(ins=>{
-    const tipo=recMap[ins.id]||null;
-    return `<div class="insumo-check ${tipo?'selected':''}" id="ins-card-${ins.id}">
-      <div>
-        <div style="font-size:13px;font-weight:600">${ins.nombre}</div>
-        <div style="font-size:11px;color:var(--muted)">${fmt(ins.costo)}</div>
-        ${tipo?`<div class="insumo-tipo">
-          <button class="tipo-btn ${tipo==='minorista'?'active-min':''}" onclick="setTipo(${ins.id},'minorista',event)">Min</button>
-          <button class="tipo-btn ${tipo==='ambos'?'active-both':''}" onclick="setTipo(${ins.id},'ambos',event)">Ambos</button>
-          <button class="tipo-btn ${tipo==='mayorista'?'active-may':''}" onclick="setTipo(${ins.id},'mayorista',event)">May</button>
-        </div>`:''}
-      </div>
-      <div>
-        <input type="checkbox" style="width:18px;height:18px;cursor:pointer;accent-color:var(--green)"
-          ${tipo?'checked':''} onchange="toggleInsumo(${ins.id},this.checked)"/>
-      </div>
-    </div>`;
-  }).join("");
-}
-
-function toggleInsumo(insId, checked){
-  if(!productoActual) return;
-  const pid=productoActual.id;
-  if(!recetasCache[pid]) recetasCache[pid]=[];
-  if(checked){
-    if(!recetasCache[pid].find(r=>r.insumo_id===insId)){
-      const ins=insumos.find(i=>i.id===insId);
-      recetasCache[pid].push({insumo_id:insId,tipo:'ambos',insumo_nombre:ins.nombre,insumo_costo:ins.costo});
-    }
-  } else {
-    recetasCache[pid]=recetasCache[pid].filter(r=>r.insumo_id!==insId);
-  }
-  renderRecetaInsumos();
-}
-
-function setTipo(insId, tipo, e){
-  e.stopPropagation();
-  if(!productoActual) return;
-  const pid=productoActual.id;
-  const rec=recetasCache[pid]||[];
-  const item=rec.find(r=>r.insumo_id===insId);
-  if(item) item.tipo=tipo;
-  renderRecetaInsumos();
-}
-
-async function saveReceta(){
-  if(!productoActual) return;
-  const pid=productoActual.id;
-  const items=(recetasCache[pid]||[]).map(r=>({insumo_id:r.insumo_id,tipo:r.tipo}));
-  await api(`/api/recetas/${pid}`,{method:"POST",body:JSON.stringify(items)});
-  toast("✅ Receta guardada");
-  // Refresh precios
-  renderPrecios(); renderMayoristas();
 }
 
 // ─── CALCULADORA ──────────────────────────────────────────────────────────────
@@ -906,18 +804,11 @@ async function cargarRecetaCalc(){
   const p=productos.find(x=>x.id===pid);
   const rec=await api(`/api/recetas/${pid}`);
   recetasCache[pid]=rec;
-
-  // Filtrar según tipo
-  const recFiltrada=rec.filter(r=>
-    r.tipo==='ambos' ||
-    (calcTipo==='minorista'&&r.tipo==='minorista') ||
-    (calcTipo==='mayorista'&&r.tipo==='mayorista')
-  );
-
+  const recFiltrada=rec.filter(r=>r.tipo==='ambos'||(calcTipo==='minorista'&&r.tipo==='minorista')||(calcTipo==='mayorista'&&r.tipo==='mayorista'));
   calcRows=[];
   if(p.costo_base) calcRows.push({concepto:p.nombre+" (base)",costo:p.costo_base*factor(),qty:1});
   recFiltrada.forEach(r=>calcRows.push({concepto:r.insumo_nombre,costo:r.insumo_costo,qty:1}));
-  if(calcRows.length===0) calcRows=[{concepto:"",costo:0,qty:1}];
+  if(!calcRows.length) calcRows=[{concepto:"",costo:0,qty:1}];
   renderCalcRows();
 }
 
@@ -937,48 +828,130 @@ function renderCalcRows(){
 
 function updateCalc(){
   const sub=calcRows.reduce((s,r)=>s+(r.costo||0)*(r.qty||1),0);
-  const vars=cfg("pct_variables");
-  const variable=sub*vars;
-  const cf=sub+variable;
-  const pmin=cf*2;
-  const trf=cfg("desc_transferencia"), efe=cfg("desc_efectivo");
-  const qrd=cfg("comision_qr_debito"), qrc=cfg("comision_qr_credito");
-  const c3q=cfg("comision_3cuotas");
-
+  const vars=cfg("pct_variables"); const variable=sub*vars; const cf=sub+variable; const pmin=cf*2;
+  const trf=cfg("desc_transferencia"),efe=cfg("desc_efectivo"),qrd=cfg("comision_qr_debito"),qrc=cfg("comision_qr_credito"),c3q=cfg("comision_3cuotas");
+  const m12=cfg("markup_12")||0.60, m36=cfg("markup_36")||0.50, m72=cfg("markup_72")||0.30;
   const esMin=calcTipo==='minorista';
 
   document.getElementById("calc-results").innerHTML=`
     <div class="calc-result-row sub"><span>Subtotal costos</span><span>${fmt(sub)}</span></div>
     <div class="calc-result-row sub"><span>Variables (${(vars*100).toFixed(0)}%)</span><span>${fmt(variable)}</span></div>
     <div class="calc-result-row" style="font-weight:700;border-top:2px solid var(--border);margin-top:4px;padding-top:8px">
-      <span>Costo Final</span><span style="color:var(--text)">${fmt(cf)}</span>
+      <span>Costo Final</span><span>${fmt(cf)}</span>
     </div>
     <div class="calc-result-row highlight"><span>Precio mínimo (×2)</span><span>${fmt(pmin)}</span></div>
-    ${esMin?`
     <div style="height:8px"></div>
+    ${esMin?`
     <div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase">Precios minorista</div>
-    <div class="calc-result-row"><span style="color:var(--blue)">Transferencia (−${(trf*100).toFixed(0)}%)</span><span style="color:var(--blue);font-weight:600">${fmt(pmin*(1-trf))}</span></div>
-    <div class="calc-result-row"><span style="color:var(--blue)">Efectivo (−${(efe*100).toFixed(0)}%)</span><span style="color:var(--blue);font-weight:600">${fmt(pmin*(1-efe))}</span></div>
-    <div class="calc-result-row"><span>QR Débito (+${(qrd*100).toFixed(2)}%)</span><span>${fmt(pmin*(1+qrd))}</span></div>
-    <div class="calc-result-row"><span>QR Crédito (+${(qrc*100).toFixed(2)}%)</span><span>${fmt(pmin/(1-qrc))}</span></div>
+    <div class="calc-result-row"><span style="color:var(--blue)">Transferencia −${(trf*100).toFixed(0)}%</span><span style="color:var(--blue);font-weight:600">${fmt(pmin*(1-trf))}</span></div>
+    <div class="calc-result-row"><span style="color:var(--blue)">Efectivo −${(efe*100).toFixed(0)}%</span><span style="color:var(--blue);font-weight:600">${fmt(pmin*(1-efe))}</span></div>
+    <div class="calc-result-row"><span>QR Débito +${(qrd*100).toFixed(2)}%</span><span>${fmt(pmin*(1+qrd))}</span></div>
+    <div class="calc-result-row"><span>QR Crédito +${(qrc*100).toFixed(2)}%</span><span>${fmt(pmin/(1-qrc))}</span></div>
     <div class="calc-result-row" style="font-weight:700;color:var(--gold)"><span>3 Cuotas s/interés</span><span>${fmt(pmin/(1-c3q))}</span></div>
     `:`
-    <div style="height:8px"></div>
-    <div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase">Precios mayorista</div>
-    <div class="calc-result-row"><span style="color:var(--blue)">Transferencia (sin desc.)</span><span style="color:var(--blue);font-weight:600">${fmt(pmin)}</span></div>
-    <div class="calc-result-row"><span style="color:var(--blue)">Efectivo (sin desc.)</span><span style="color:var(--blue);font-weight:600">${fmt(pmin)}</span></div>
-    <div class="calc-result-row" style="color:var(--green)"><span>Sugerido +12u (60%)</span><span style="font-weight:600">${fmt(cf/(1-0.60))}</span></div>
-    <div class="calc-result-row" style="color:var(--green)"><span>Sugerido +36u (50%)</span><span style="font-weight:600">${fmt(cf/(1-0.50))}</span></div>
-    <div class="calc-result-row" style="color:var(--gold)"><span>Sugerido +72u (30%)</span><span style="font-weight:600">${fmt(cf/(1-0.30))}</span></div>
-    `}
-  `;
+    <div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase">Precios mayorista (markup sobre costo)</div>
+    <div class="calc-result-row" style="color:var(--blue)"><span>+12u (${(m12*100).toFixed(0)}% markup)</span><span style="font-weight:600">${fmt(cf*(1+m12))}</span></div>
+    <div class="calc-result-row" style="color:var(--green)"><span>+36u (${(m36*100).toFixed(0)}% markup)</span><span style="font-weight:600">${fmt(cf*(1+m36))}</span></div>
+    <div class="calc-result-row" style="color:var(--gold)"><span>+72u (${(m72*100).toFixed(0)}% markup)</span><span style="font-weight:600">${fmt(cf*(1+m72))}</span></div>
+    `}`;
+}
+
+// ─── RECETAS ──────────────────────────────────────────────────────────────────
+function renderRecetaProds(){filterRecetaProds();}
+
+function filterRecetaProds(){
+  const q=(document.getElementById("receta-search")||{value:""}).value.toLowerCase();
+  const list=productos.filter(p=>p.nombre.toLowerCase().includes(q));
+  document.getElementById("receta-prod-list").innerHTML=list.map(p=>{
+    const recLen=(recetasCache[p.id]||[]).length;
+    const activo=productoActual&&productoActual.id===p.id;
+    return `<div onclick="selRecetaProd(${p.id})"
+      style="padding:9px 12px;border-radius:7px;cursor:pointer;margin-bottom:4px;
+             background:${activo?"var(--accent)":"transparent"};
+             border:1px solid ${activo?"var(--accent)":"var(--border)"}">
+      <div style="font-size:13px;font-weight:${activo?700:500}">${p.nombre}</div>
+      <div style="font-size:10px;color:${activo?"#fff":"var(--muted)"}">
+        ${p.costo_base?fmt(p.costo_base):"⚠️ sin costo"} · ${recLen} insumo${recLen!==1?"s":""}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+async function selRecetaProd(pid){
+  productoActual=productos.find(p=>p.id===pid);
+  recetasCache[pid]=await api(`/api/recetas/${pid}`);
+  renderRecetaInsumos(); filterRecetaProds();
+}
+
+function renderRecetaInsumos(){
+  if(!productoActual) return;
+  const p=productoActual; const receta=recetasCache[p.id]||[];
+  const recMap={}; receta.forEach(r=>recMap[r.insumo_id]=r.tipo);
+  document.getElementById("receta-title").textContent=`🏭 Receta: ${p.nombre}`;
+  document.getElementById("receta-save-btn").style.display="flex";
+  document.getElementById("receta-empty").style.display="none";
+  document.getElementById("receta-costo-base").style.display="block";
+  document.getElementById("receta-base-val").textContent=fmt(p.costo_base);
+  const base=(p.costo_base||0)*factor();
+  const insMin=receta.filter(r=>r.tipo==='ambos'||r.tipo==='minorista').reduce((s,r)=>s+r.insumo_costo,0);
+  const insMay=receta.filter(r=>r.tipo==='ambos'||r.tipo==='mayorista').reduce((s,r)=>s+r.insumo_costo,0);
+  document.getElementById("receta-total-min").textContent=fmt((base+insMin)*(1+cfg("pct_variables")));
+  document.getElementById("receta-total-may").textContent=fmt((base+insMay)*(1+cfg("pct_variables")));
+  document.getElementById("receta-insumos-grid").innerHTML=insumos.map(ins=>{
+    const tipo=recMap[ins.id]||null;
+    return `<div class="insumo-check ${tipo?'selected':''}" id="ins-card-${ins.id}">
+      <div>
+        <div style="font-size:13px;font-weight:600">${ins.nombre}</div>
+        <div style="font-size:11px;color:var(--muted)">${fmt(ins.costo)}</div>
+        ${tipo?`<div style="display:flex;gap:4px;margin-top:6px">
+          <button class="tipo-btn ${tipo==='minorista'?'active-min':''}" onclick="setTipo(${ins.id},'minorista',event)">Min</button>
+          <button class="tipo-btn ${tipo==='ambos'?'active-both':''}" onclick="setTipo(${ins.id},'ambos',event)">Ambos</button>
+          <button class="tipo-btn ${tipo==='mayorista'?'active-may':''}" onclick="setTipo(${ins.id},'mayorista',event)">May</button>
+        </div>`:''}
+      </div>
+      <input type="checkbox" style="width:18px;height:18px;cursor:pointer;accent-color:var(--green)"
+        ${tipo?'checked':''} onchange="toggleInsumo(${ins.id},this.checked)"/>
+    </div>`;
+  }).join("");
+}
+
+function toggleInsumo(insId,checked){
+  if(!productoActual) return;
+  const pid=productoActual.id;
+  if(!recetasCache[pid]) recetasCache[pid]=[];
+  if(checked){
+    if(!recetasCache[pid].find(r=>r.insumo_id===insId)){
+      const ins=insumos.find(i=>i.id===insId);
+      recetasCache[pid].push({insumo_id:insId,tipo:'ambos',insumo_nombre:ins.nombre,insumo_costo:ins.costo});
+    }
+  } else {
+    recetasCache[pid]=recetasCache[pid].filter(r=>r.insumo_id!==insId);
+  }
+  renderRecetaInsumos();
+}
+
+function setTipo(insId,tipo,e){
+  e.stopPropagation(); if(!productoActual) return;
+  const rec=recetasCache[productoActual.id]||[];
+  const item=rec.find(r=>r.insumo_id===insId);
+  if(item) item.tipo=tipo;
+  renderRecetaInsumos();
+}
+
+async function saveReceta(){
+  if(!productoActual) return;
+  const pid=productoActual.id;
+  const items=(recetasCache[pid]||[]).map(r=>({insumo_id:r.insumo_id,tipo:r.tipo}));
+  await api(`/api/recetas/${pid}`,{method:"POST",body:JSON.stringify(items)});
+  toast("✅ Receta guardada");
+  renderPrecios(); renderMayoristas();
 }
 
 // ─── PRODUCTOS ────────────────────────────────────────────────────────────────
 function renderProductosTab(){
   const q=(document.getElementById("prod-search")||{value:""}).value.toLowerCase();
   document.getElementById("prod-tbody").innerHTML=productos.filter(p=>p.nombre.toLowerCase().includes(q)).map(p=>`<tr>
-    <td><strong>${p.nombre}</strong></td>
+    <td><strong>${p.nombre}</strong>${p.visible===0?'<span class="badge b-gray" style="margin-left:6px">oculto</span>':''}</td>
     <td class="tr">${p.costo_base?fmt(p.costo_base):'<span class="badge b-red">⚠️ sin costo</span>'}</td>
     <td class="tc">${(recetasCache[p.id]||[]).length} insumos</td>
     <td class="tc">
@@ -1008,22 +981,18 @@ async function saveProducto(){
   const nombre=document.getElementById("prod-nombre").value.trim();
   const costo_base=parseFloat(document.getElementById("prod-costo").value)||null;
   if(!nombre){toast("Completá el nombre",true);return;}
-  const res=id
-    ?await api(`/api/productos/${id}`,{method:"PUT",body:JSON.stringify({nombre,costo_base})})
-    :await api("/api/productos",{method:"POST",body:JSON.stringify({nombre,costo_base})});
+  const res=id?await api(`/api/productos/${id}`,{method:"PUT",body:JSON.stringify({nombre,costo_base})}):await api("/api/productos",{method:"POST",body:JSON.stringify({nombre,costo_base})});
   if(res.ok){
     toast(id?"✅ Actualizado":"✅ Creado");
     productos=await api("/api/productos");
-    renderProductosTab(); renderPrecios(); renderMayoristas();
-    closeModal("modal-prod");
+    renderProductosTab(); renderPrecios(); closeModal("modal-prod");
   } else toast(res.error||"Error",true);
 }
 async function deleteProd(id){
   if(!confirm("¿Eliminar?"))return;
   await api(`/api/productos/${id}`,{method:"DELETE"});
   productos=await api("/api/productos");
-  renderProductosTab();
-  toast("🗑️ Eliminado");
+  renderProductosTab(); toast("🗑️ Eliminado");
 }
 
 // ─── INSUMOS ──────────────────────────────────────────────────────────────────
@@ -1032,10 +1001,7 @@ function renderInsumos(){
     <td><strong>${i.nombre}</strong></td>
     <td class="tr" style="color:var(--gold)">${fmt(i.costo)}</td>
     <td style="color:var(--muted)">${i.descripcion||""}</td>
-    <td class="tc">
-      <button class="btn-icon" onclick="editInsumo(${i.id})">✏️</button>
-      <button class="btn-icon" onclick="deleteInsumo(${i.id})">🗑️</button>
-    </td>
+    <td class="tc"><button class="btn-icon" onclick="editInsumo(${i.id})">✏️</button><button class="btn-icon" onclick="deleteInsumo(${i.id})">🗑️</button></td>
   </tr>`).join("");
 }
 function abrirModalInsumo(){
@@ -1061,20 +1027,14 @@ async function saveInsumo(){
   const costo=parseFloat(document.getElementById("insumo-costo").value);
   const descripcion=document.getElementById("insumo-desc").value.trim();
   if(!nombre||!costo){toast("Completá nombre y costo",true);return;}
-  const res=id
-    ?await api(`/api/insumos/${id}`,{method:"PUT",body:JSON.stringify({nombre,costo,descripcion})})
-    :await api("/api/insumos",{method:"POST",body:JSON.stringify({nombre,costo,descripcion})});
-  if(res.ok){
-    toast("✅ Guardado");
-    insumos=await api("/api/insumos");
-    renderInsumos(); closeModal("modal-insumo");
-  } else toast(res.error||"Error",true);
+  const res=id?await api(`/api/insumos/${id}`,{method:"PUT",body:JSON.stringify({nombre,costo,descripcion})}):await api("/api/insumos",{method:"POST",body:JSON.stringify({nombre,costo,descripcion})});
+  if(res.ok){toast("✅ Guardado");insumos=await api("/api/insumos");renderInsumos();closeModal("modal-insumo");}
+  else toast(res.error||"Error",true);
 }
 async function deleteInsumo(id){
   if(!confirm("¿Eliminar?"))return;
   await api(`/api/insumos/${id}`,{method:"DELETE"});
-  insumos=await api("/api/insumos");
-  renderInsumos(); toast("🗑️ Eliminado");
+  insumos=await api("/api/insumos");renderInsumos();toast("🗑️ Eliminado");
 }
 
 // ─── GASTOS ───────────────────────────────────────────────────────────────────
@@ -1086,23 +1046,19 @@ function renderGastos(){
       <div style="flex:1;margin-right:12px">
         <div class="flex-between" style="margin-bottom:3px">
           <span style="font-weight:600">${g.item}</span>
-          <div>
-            <button class="btn-icon" onclick="editGasto(${g.id})">✏️</button>
-            <button class="btn-icon" onclick="deleteGasto(${g.id})">🗑️</button>
-          </div>
+          <div><button class="btn-icon" onclick="editGasto(${g.id})">✏️</button><button class="btn-icon" onclick="deleteGasto(${g.id})">🗑️</button></div>
         </div>
         <div style="background:#1e2a3a;border-radius:3px;height:4px">
-          <div style="width:${Math.min(100,(g.monto/total*100)).toFixed(1)}%;height:100%;background:var(--accent);border-radius:3px"></div>
+          <div style="width:${Math.min(100,g.monto/total*100).toFixed(1)}%;height:100%;background:var(--accent);border-radius:3px"></div>
         </div>
       </div>
       <span style="font-weight:700;color:var(--gold);min-width:90px;text-align:right">${fmt(g.monto)}</span>
     </div>`).join("");
-  document.getElementById("gastos-proy").innerHTML=[
-    ["Mensual",1],["Trimestral",3],["Semestral",6],["Anual",12]
-  ].map(([l,m])=>`<div class="flex-between" style="padding:8px 0;border-bottom:1px solid #1e3a5f22">
-    <span style="color:var(--muted);font-size:13px">${l}</span>
-    <span style="font-weight:700;color:var(--gold)">${fmt(total*m)}</span>
-  </div>`).join("");
+  document.getElementById("gastos-proy").innerHTML=[["Mensual",1],["Trimestral",3],["Semestral",6],["Anual",12]].map(([l,m])=>`
+    <div class="flex-between" style="padding:8px 0;border-bottom:1px solid #1e3a5f22">
+      <span style="color:var(--muted);font-size:13px">${l}</span>
+      <span style="font-weight:700;color:var(--gold)">${fmt(total*m)}</span>
+    </div>`).join("");
 }
 function abrirModalGasto(){
   document.getElementById("gasto-edit-id").value="";
@@ -1124,49 +1080,37 @@ async function saveGasto(){
   const item=document.getElementById("gasto-item").value.trim();
   const monto=parseFloat(document.getElementById("gasto-monto").value);
   if(!item||!monto){toast("Completá concepto y monto",true);return;}
-  const res=id
-    ?await api(`/api/gastos/${id}`,{method:"PUT",body:JSON.stringify({item,monto})})
-    :await api("/api/gastos",{method:"POST",body:JSON.stringify({item,monto})});
-  if(res.ok){
-    toast("✅ Guardado");
-    gastos=await api("/api/gastos");
-    renderGastos(); closeModal("modal-gasto");
-  } else toast(res.error||"Error",true);
+  const res=id?await api(`/api/gastos/${id}`,{method:"PUT",body:JSON.stringify({item,monto})}):await api("/api/gastos",{method:"POST",body:JSON.stringify({item,monto})});
+  if(res.ok){toast("✅ Guardado");gastos=await api("/api/gastos");renderGastos();closeModal("modal-gasto");}
+  else toast(res.error||"Error",true);
 }
 async function deleteGasto(id){
   if(!confirm("¿Eliminar?"))return;
   await api(`/api/gastos/${id}`,{method:"DELETE"});
-  gastos=await api("/api/gastos");
-  renderGastos(); toast("🗑️ Eliminado");
+  gastos=await api("/api/gastos");renderGastos();toast("🗑️ Eliminado");
 }
 
 // ─── PEDIDOS ──────────────────────────────────────────────────────────────────
 function renderPedidos(){
   const q=(document.getElementById("pedido-search")||{value:""}).value.toLowerCase();
   const est=(document.getElementById("pedido-filtro-estado")||{value:""}).value;
-  const list=pedidos.filter(p=>
-    p.cliente.toLowerCase().includes(q) &&
-    (!est||p.estado===est)
-  );
+  const list=pedidos.filter(p=>p.cliente.toLowerCase().includes(q)&&(!est||p.estado===est));
   document.getElementById("pedidos-tbody").innerHTML=list.map(p=>`<tr>
     <td style="color:var(--muted)">${p.numero||"—"}</td>
-    <td>${p.fecha}</td>
-    <td><strong>${p.cliente}</strong></td>
+    <td>${p.fecha}</td><td><strong>${p.cliente}</strong></td>
     <td style="color:var(--muted)">${p.provincia||"—"}</td>
     <td style="color:var(--muted)">${p.transporte||"—"}</td>
     <td>${p.tipo_pago}</td>
     <td class="tr" style="font-weight:700;color:var(--gold)">${fmt(p.total)}</td>
     <td class="tc"><span class="badge estado-${p.estado}">${p.estado}</span></td>
     <td class="tc">
-      <button class="btn-icon" onclick="verPedido(${p.id})">👁️</button>
       <button class="btn-icon" onclick="editPedido(${p.id})">✏️</button>
       <button class="btn-icon" onclick="deletePedido(${p.id})">🗑️</button>
     </td>
-  </tr>`).join("") || `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:30px">Sin pedidos</td></tr>`;
+  </tr>`).join("")||`<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:30px">Sin pedidos</td></tr>`;
 }
 
 let pedidoItems=[];
-
 function abrirModalPedido(){
   document.getElementById("pedido-edit-id").value="";
   document.getElementById("ped-numero").value="";
@@ -1183,7 +1127,6 @@ function abrirModalPedido(){
   document.getElementById("modal-pedido-title").textContent="🛒 Nuevo Pedido Mayorista";
   openModal("modal-pedido");
 }
-
 function editPedido(id){
   const p=pedidos.find(x=>x.id===id);
   document.getElementById("pedido-edit-id").value=id;
@@ -1202,41 +1145,25 @@ function editPedido(id){
   document.getElementById("modal-pedido-title").textContent="✏️ Editar Pedido";
   openModal("modal-pedido");
 }
-
-function verPedido(id){
-  const p=pedidos.find(x=>x.id===id);
-  editPedido(id); // same modal, read mode would need more work
-}
-
-function addPedidoItem(){
-  pedidoItems.push({producto:"",cantidad:1,precio_unitario:0,subtotal:0});
-  renderPedidoItems();
-}
-function removePedidoItem(i){
-  pedidoItems.splice(i,1);
-  if(!pedidoItems.length) pedidoItems=[{producto:"",cantidad:1,precio_unitario:0,subtotal:0}];
-  renderPedidoItems();
-}
+function addPedidoItem(){pedidoItems.push({producto:"",cantidad:1,precio_unitario:0,subtotal:0});renderPedidoItems();}
+function removePedidoItem(i){pedidoItems.splice(i,1);if(!pedidoItems.length)pedidoItems=[{producto:"",cantidad:1,precio_unitario:0,subtotal:0}];renderPedidoItems();}
 function updatePedidoItem(i,field,val){
   pedidoItems[i][field]=field==="producto"?val:(parseFloat(val)||0);
   pedidoItems[i].subtotal=pedidoItems[i].cantidad*pedidoItems[i].precio_unitario;
   renderPedidoItems();
 }
-
 function renderPedidoItems(){
   const prodOpts='<option value="">— Producto —</option>'+productos.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join("");
   document.getElementById("ped-items").innerHTML=pedidoItems.map((item,i)=>`
     <div class="item-row">
       <select onchange="updatePedidoItem(${i},'producto',this.value)">${prodOpts.replace(`value="${item.producto}"`,`value="${item.producto}" selected`)}</select>
-      <input type="number" value="${item.cantidad}" placeholder="Cant." min="1" onchange="updatePedidoItem(${i},'cantidad',this.value)" style="text-align:center"/>
+      <input type="number" value="${item.cantidad}" min="1" onchange="updatePedidoItem(${i},'cantidad',this.value)" style="text-align:center"/>
       <input type="number" value="${item.precio_unitario||""}" placeholder="Precio" onchange="updatePedidoItem(${i},'precio_unitario',this.value)"/>
       <span style="font-weight:700;color:var(--gold);text-align:right">${fmt(item.subtotal)}</span>
       <button class="btn-icon" onclick="removePedidoItem(${i})">✕</button>
     </div>`).join("");
-  const total=pedidoItems.reduce((s,i)=>s+i.subtotal,0);
-  document.getElementById("ped-total-display").textContent=fmt(total);
+  document.getElementById("ped-total-display").textContent=fmt(pedidoItems.reduce((s,i)=>s+i.subtotal,0));
 }
-
 async function savePedido(){
   const id=document.getElementById("pedido-edit-id").value;
   const data={
@@ -1252,23 +1179,18 @@ async function savePedido(){
     items:pedidoItems.filter(i=>i.producto&&i.precio_unitario>0),
   };
   if(!data.cliente||!data.fecha){toast("Completá cliente y fecha",true);return;}
-  const res=id
-    ?await api(`/api/pedidos/${id}`,{method:"PUT",body:JSON.stringify(data)})
-    :await api("/api/pedidos",{method:"POST",body:JSON.stringify(data)});
+  const res=id?await api(`/api/pedidos/${id}`,{method:"PUT",body:JSON.stringify(data)}):await api("/api/pedidos",{method:"POST",body:JSON.stringify(data)});
   if(res.ok){
     toast("✅ Pedido guardado");
-    pedidos=await api("/api/pedidos");
-    clientes=await api("/api/clientes");
-    renderPedidos(); closeModal("modal-pedido");
+    pedidos=await api("/api/pedidos");clientes=await api("/api/clientes");
+    renderPedidos();closeModal("modal-pedido");
   } else toast(res.error||"Error",true);
 }
-
 async function deletePedido(id){
   if(!confirm("¿Eliminar este pedido?"))return;
   await api(`/api/pedidos/${id}`,{method:"DELETE"});
-  pedidos=await api("/api/pedidos");
-  clientes=await api("/api/clientes");
-  renderPedidos(); toast("🗑️ Eliminado");
+  pedidos=await api("/api/pedidos");clientes=await api("/api/clientes");
+  renderPedidos();toast("🗑️ Eliminado");
 }
 
 // ─── CLIENTES ─────────────────────────────────────────────────────────────────
@@ -1279,8 +1201,7 @@ function renderClientes(){
     <div class="kpi"><label>Clientes activos</label><div class="kval" style="color:var(--blue)">${clientes.length}</div></div>
     <div class="kpi"><label>Total pedidos</label><div class="kval" style="color:var(--green)">${pedidos.length}</div></div>
     <div class="kpi"><label>Ventas 2025</label><div class="kval" style="color:var(--gold)">${fmt(total2025)}</div></div>
-    <div class="kpi"><label>Ventas 2026</label><div class="kval" style="color:var(--accent)">${fmt(total2026)}</div></div>
-  `;
+    <div class="kpi"><label>Ventas 2026</label><div class="kval" style="color:var(--accent)">${fmt(total2026)}</div></div>`;
   document.getElementById("clientes-tbody").innerHTML=clientes.map(c=>`<tr>
     <td><strong>${c.cliente}</strong></td>
     <td style="color:var(--muted)">${c.telefono||"—"}</td>
@@ -1290,14 +1211,12 @@ function renderClientes(){
     <td class="tr">${fmt(c.total_2025)}</td>
     <td class="tr">${fmt(c.total_2026)}</td>
     <td class="tr" style="font-weight:700;color:var(--gold)">${fmt(c.total_acumulado)}</td>
-    <td class="tc"><button class="btn btn-blue btn-sm" onclick="verCliente('${encodeURIComponent(c.cliente)}')">Ver historial</button></td>
-  </tr>`).join("") || `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:30px">Sin clientes aún</td></tr>`;
+    <td class="tc"><button class="btn btn-blue btn-sm" onclick="verCliente('${encodeURIComponent(c.cliente)}')">Ver</button></td>
+  </tr>`).join("")||`<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:30px">Sin clientes aún</td></tr>`;
 }
-
 async function verCliente(nombre){
   const cli=decodeURIComponent(nombre);
   const hist=await api(`/api/clientes/${encodeURIComponent(cli)}/pedidos`);
-  const card=document.getElementById("cliente-detalle-card");
   document.getElementById("cliente-detalle-title").textContent=`📋 ${cli}`;
   document.getElementById("cliente-detalle-content").innerHTML=hist.map(p=>`
     <div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px">
@@ -1305,15 +1224,12 @@ async function verCliente(nombre){
         <span style="font-weight:700">${p.fecha} ${p.numero?"· #"+p.numero:""}</span>
         <span class="badge estado-${p.estado}">${p.estado}</span>
       </div>
-      ${p.items.map(i=>`<div style="font-size:12px;color:var(--muted);padding:2px 0">${i.producto} × ${i.cantidad} = ${fmt(i.subtotal)}</div>`).join("")}
+      ${p.items.map(i=>`<div style="font-size:12px;color:var(--muted)">${i.producto} × ${i.cantidad} = ${fmt(i.subtotal)}</div>`).join("")}
       <div style="text-align:right;font-weight:700;color:var(--gold);margin-top:6px">${fmt(p.total)}</div>
-    </div>`).join("") || '<div style="color:var(--muted);text-align:center;padding:20px">Sin pedidos</div>';
-  card.style.display="block";
+    </div>`).join("")||'<div style="color:var(--muted);text-align:center;padding:20px">Sin pedidos</div>';
+  document.getElementById("cliente-detalle-card").style.display="block";
 }
-
-function cerrarDetalleCliente(){
-  document.getElementById("cliente-detalle-card").style.display="none";
-}
+function cerrarDetalleCliente(){document.getElementById("cliente-detalle-card").style.display="none";}
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 function renderConfig(){
@@ -1323,34 +1239,26 @@ function renderConfig(){
   document.getElementById("cfg-qrd").value=cfg("comision_qr_debito");
   document.getElementById("cfg-qrc").value=cfg("comision_qr_credito");
   document.getElementById("cfg-3c").value=cfg("comision_3cuotas");
-
-  const trims=[
-    ["inflacion_q1_2025","Q1 2025 (Ene–Mar)"],["inflacion_q2_2025","Q2 2025 (Abr–Jun)"],
+  document.getElementById("cfg-m12").value=Math.round((cfg("markup_12")||0.60)*100);
+  document.getElementById("cfg-m36").value=Math.round((cfg("markup_36")||0.50)*100);
+  document.getElementById("cfg-m72").value=Math.round((cfg("markup_72")||0.30)*100);
+  const trims=[["inflacion_q1_2025","Q1 2025 (Ene–Mar)"],["inflacion_q2_2025","Q2 2025 (Abr–Jun)"],
     ["inflacion_q3_2025","Q3 2025 (Jul–Sep)"],["inflacion_q4_2025","Q4 2025 (Oct–Dic)"],
-    ["inflacion_q1_2026","Q1 2026 (Ene–Mar)"],["inflacion_q2_2026","Q2 2026 (Abr–Jun)"],
-  ];
+    ["inflacion_q1_2026","Q1 2026 (Ene–Mar)"],["inflacion_q2_2026","Q2 2026 (Abr–Jun)"]];
   document.getElementById("inf-grid").innerHTML=trims.map(([k,label])=>`
-    <div class="inf-card">
-      <label>${label}</label>
-      <input type="number" id="inf-${k}" value="${(cfg(k)*100).toFixed(1)}" step="0.1"
-        oninput="updateFactor()"/> <span style="font-size:14px;color:var(--muted)">%</span>
+    <div class="inf-card"><label>${label}</label>
+      <input type="number" id="inf-${k}" value="${(cfg(k)*100).toFixed(1)}" step="0.1" oninput="updateFactor()"/>
+      <span style="font-size:14px;color:var(--muted)">%</span>
     </div>`).join("");
   updateFactor();
 }
-
 function updateFactor(){
-  const ks=["inflacion_q1_2025","inflacion_q2_2025","inflacion_q3_2025","inflacion_q4_2025",
-             "inflacion_q1_2026","inflacion_q2_2026"];
-  const f=ks.reduce((acc,k)=>{
-    const el=document.getElementById(`inf-${k}`);
-    return acc*(1+(el?parseFloat(el.value)||0:cfg(k)*100)/100);
-  },1);
+  const ks=["inflacion_q1_2025","inflacion_q2_2025","inflacion_q3_2025","inflacion_q4_2025","inflacion_q1_2026","inflacion_q2_2026"];
+  const f=ks.reduce((acc,k)=>{const el=document.getElementById(`inf-${k}`);return acc*(1+(el?parseFloat(el.value)||0:cfg(k)*100)/100);},1);
   document.getElementById("factor-display").textContent=f.toFixed(3);
 }
-
 async function saveConfig(){
-  const ks=["inflacion_q1_2025","inflacion_q2_2025","inflacion_q3_2025","inflacion_q4_2025",
-             "inflacion_q1_2026","inflacion_q2_2026"];
+  const ks=["inflacion_q1_2025","inflacion_q2_2025","inflacion_q3_2025","inflacion_q4_2025","inflacion_q1_2026","inflacion_q2_2026"];
   const data={
     pct_variables:parseFloat(document.getElementById("cfg-vars").value)||0.44,
     desc_transferencia:parseFloat(document.getElementById("cfg-trf").value)||0.05,
@@ -1358,21 +1266,16 @@ async function saveConfig(){
     comision_qr_debito:parseFloat(document.getElementById("cfg-qrd").value)||0.0135,
     comision_qr_credito:parseFloat(document.getElementById("cfg-qrc").value)||0.0629,
     comision_3cuotas:parseFloat(document.getElementById("cfg-3c").value)||0.086,
+    markup_12:(parseFloat(document.getElementById("cfg-m12").value)||60)/100,
+    markup_36:(parseFloat(document.getElementById("cfg-m36").value)||50)/100,
+    markup_72:(parseFloat(document.getElementById("cfg-m72").value)||30)/100,
   };
-  ks.forEach(k=>{
-    const el=document.getElementById(`inf-${k}`);
-    if(el) data[k]=(parseFloat(el.value)||0)/100;
-  });
+  ks.forEach(k=>{const el=document.getElementById(`inf-${k}`);if(el) data[k]=(parseFloat(el.value)||0)/100;});
   await api("/api/config",{method:"POST",body:JSON.stringify(data)});
-  config={...config,...data};
-  // Update string values back
-  Object.keys(data).forEach(k=>config[k]=String(data[k]));
-  toast("✅ Configuración guardada");
-  updateFactor();
-  renderPrecios(); renderMayoristas();
+  config={...config};Object.keys(data).forEach(k=>config[k]=String(data[k]));
+  toast("✅ Configuración guardada");updateFactor();renderPrecios();renderMayoristas();
 }
 
-// ─── START ────────────────────────────────────────────────────────────────────
 init();
 </script>
 </body>
