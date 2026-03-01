@@ -128,6 +128,7 @@ def init_db():
         try: db.execute("ALTER TABLE productos ADD COLUMN visible INTEGER DEFAULT 1"); db.commit()
         except: pass
         try: db.execute("ALTER TABLE precios_mayoristas ADD COLUMN markup REAL"); db.commit()
+        except: pass
         try: db.execute("ALTER TABLE precios_minoristas ADD COLUMN markup REAL"); db.commit()
         except: pass
     # Seed if empty
