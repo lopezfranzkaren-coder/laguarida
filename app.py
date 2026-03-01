@@ -107,6 +107,7 @@ def init_db():
             "CREATE TABLE IF NOT EXISTS precios_minoristas (id SERIAL PRIMARY KEY, producto_id INTEGER NOT NULL UNIQUE, precio REAL)",
             "ALTER TABLE productos ADD COLUMN IF NOT EXISTS visible INTEGER DEFAULT 1",
             "ALTER TABLE precios_mayoristas ADD COLUMN IF NOT EXISTS markup REAL",
+            "ALTER TABLE precios_minoristas ADD COLUMN IF NOT EXISTS markup REAL",
         ]
         for s in stmts:
             try: cur.execute(s)
@@ -127,8 +128,8 @@ def init_db():
         try: db.execute("ALTER TABLE productos ADD COLUMN visible INTEGER DEFAULT 1"); db.commit()
         except: pass
         try: db.execute("ALTER TABLE precios_mayoristas ADD COLUMN markup REAL"); db.commit()
+        try: db.execute("ALTER TABLE precios_minoristas ADD COLUMN markup REAL"); db.commit()
         except: pass
-
     # Seed if empty
     cnt = q("SELECT COUNT(*) as n FROM productos")[0]["n"]
     if int(cnt) == 0:
@@ -305,15 +306,16 @@ def save_receta(pid):
 
 @app.route("/api/precios_minoristas", methods=["GET"])
 def get_precios_min():
-    return jsonify({r["producto_id"]:r["precio"] for r in q("SELECT * FROM precios_minoristas")})
+    return jsonify({r["producto_id"]:{"precio":r["precio"],"markup":r["markup"]} for r in q("SELECT * FROM precios_minoristas")})
 
 @app.route("/api/precios_minoristas/<int:pid>", methods=["POST"])
 def set_precio_min(pid):
     precio = request.json.get("precio")
+    markup = request.json.get("markup")
     if USE_PG:
-        cur = get_db().cursor(); cur.execute("INSERT INTO precios_minoristas (producto_id,precio) VALUES (%s,%s) ON CONFLICT (producto_id) DO UPDATE SET precio=EXCLUDED.precio",(pid,precio)); get_db().commit()
+        cur = get_db().cursor(); cur.execute("INSERT INTO precios_minoristas (producto_id,precio,markup) VALUES (%s,%s,%s) ON CONFLICT (producto_id) DO UPDATE SET precio=EXCLUDED.precio,markup=EXCLUDED.markup",(pid,precio,markup)); get_db().commit()
     else:
-        get_db().execute("INSERT OR REPLACE INTO precios_minoristas (producto_id,precio) VALUES (?,?)",(pid,precio)); get_db().commit()
+        get_db().execute("INSERT OR REPLACE INTO precios_minoristas (producto_id,precio,markup) VALUES (?,?,?)",(pid,precio,markup)); get_db().commit()
     return jsonify({"ok":True})
 
 @app.route("/api/precios_mayoristas", methods=["GET"])
