@@ -118,6 +118,7 @@ input[type=number]{text-align:right;}
   .form-grid3{grid-template-columns:1fr 1fr;}
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 <header>
@@ -150,6 +151,7 @@ input[type=number]{text-align:right;}
     <button onclick="showTab('insumos',this)">🔧 Insumos</button>
     <button onclick="showTab('gastos',this)">🏢 Gastos</button>
     <button onclick="showTab('config',this)">⚙️ Config</button>
+    <button onclick="showTab('presupuestos',this)">📋 Presupuestos</button>
   </nav>
 </header>
 <main>
@@ -157,9 +159,8 @@ input[type=number]{text-align:right;}
 <!-- ══ PRECIOS MINORISTA ══════════════════════════════════════════════════════ -->
 <div id="tab-precios" class="tab active">
   <div class="info-box">
-    💰 <strong>Minorista</strong> · Margen mínimo <strong>100%</strong> sobre costo final
-    · Transferencia <strong>−5%</strong> · Efectivo <strong>−10%</strong>
-    · QR Débito <strong>+1.35%</strong> · QR Crédito <strong>+6.29%</strong> · 3 Cuotas <strong>+8.60%</strong>
+    💰 <strong>Minorista</strong> · Ingresá tu precio real y ves cuánto <strong>recibís vos</strong> según el medio de pago
+    · Transferencia/Efectivo: descuentos que le das al cliente · QR y Cuotas: comisiones que te cobran a vos
     · 👁️ Ocultá los productos sin stock
   </div>
   <div class="card">
@@ -183,12 +184,12 @@ input[type=number]{text-align:right;}
           <th class="tc">Ganancia %</th>
           <th class="tr" style="color:var(--accent)">Precio Mínimo</th>
           <th class="tr" style="color:var(--green)">$ Ganancia neta</th>
-          <th class="tr" style="color:var(--blue)">Transferencia −5%</th>
-          <th class="tr" style="color:var(--blue)">Efectivo −10%</th>
-          <th class="tr">QR Débito</th>
-          <th class="tr">QR Crédito</th>
-          <th class="tr" style="color:var(--gold)">3 Cuotas</th>
           <th class="tc">Tu precio actual</th>
+          <th class="tr" style="color:var(--blue)">Recibís (Transf. −5%)</th>
+          <th class="tr" style="color:var(--blue)">Recibís (Efect. −10%)</th>
+          <th class="tr">Recibís (QR Déb.)</th>
+          <th class="tr">Recibís (QR Cré.)</th>
+          <th class="tr" style="color:var(--gold)">Recibís (3 Cuotas)</th>
           <th class="tc">Estado</th>
         </tr></thead>
         <tbody id="precios-tbody"></tbody>
@@ -197,9 +198,10 @@ input[type=number]{text-align:right;}
   </div>
   <div class="card" style="padding:12px 16px">
     <div class="flex" style="gap:20px;flex-wrap:wrap;font-size:12px">
-      <span>🟢 <strong style="color:var(--green)">Bien</strong> — sobre el mínimo</span>
+      <span>🟢 <strong style="color:var(--green)">Bien</strong> — precio sobre el mínimo</span>
       <span>🟡 <strong style="color:var(--gold)">Justo</strong> — dentro del ±5% del mínimo</span>
       <span>🔴 <strong style="color:var(--red)">Barata</strong> — por debajo del mínimo</span>
+      <span style="color:var(--muted)">· Las columnas "Recibís" muestran lo que te queda a vos neto según medio de pago</span>
     </div>
   </div>
 </div>
@@ -468,6 +470,139 @@ input[type=number]{text-align:right;}
       <button class="btn btn-primary w100" style="margin-top:12px" onclick="saveConfig()">💾 Guardar inflación</button>
     </div>
   </div>
+  <div class="card" style="margin-top:0;border:2px solid var(--gold)">
+    <div class="card-title" style="color:var(--gold)">⚡ Actualizador de precios por inflación</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">
+      Aplicá el aumento de inflación a los costos base de todos los productos de una sola vez.
+      Ingresá el % de aumento del trimestre y hacé clic en el botón.
+    </div>
+    <div class="flex" style="gap:12px;align-items:flex-end;flex-wrap:wrap">
+      <div class="form-row" style="margin:0">
+        <label>% de aumento a aplicar</label>
+        <div class="markup-cell">
+          <input type="number" id="inf-aplicar-pct" value="10" min="0" max="999" step="0.1" style="width:80px;text-align:center;font-size:18px;font-weight:700;color:var(--gold);background:#0a1520;border:2px solid var(--gold);border-radius:8px;padding:8px"/>
+          <span style="font-size:16px">%</span>
+        </div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">
+          Ejemplo: si ponés 10% → todos los costos base se multiplican × 1.10
+        </div>
+        <div style="font-size:11px;color:var(--muted)">
+          Vista previa: costo $10.000 → <strong style="color:var(--gold)" id="inf-preview">$11.000</strong>
+        </div>
+      </div>
+      <button class="btn btn-gold" style="background:var(--gold);color:#0d1b2a;font-weight:800;padding:10px 20px" onclick="aplicarInflacion()">
+        ⚡ Aplicar a todos los productos
+      </button>
+    </div>
+    <div id="inf-resultado" style="margin-top:12px;display:none"></div>
+  </div>
+</div>
+
+<!-- ══ PRESUPUESTOS / REMITOS ══════════════════════════════════════════════════ -->
+<div id="tab-presupuestos" class="tab">
+  <div style="display:grid;grid-template-columns:1fr 420px;gap:16px">
+    <div>
+      <div class="card">
+        <div class="flex-between mb12">
+          <span class="card-title">📋 Nuevo Presupuesto / Remito</span>
+          <div class="flex gap-8">
+            <select id="pres-tipo" style="width:160px">
+              <option value="presupuesto">Presupuesto</option>
+              <option value="remito">Remito</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Número y fecha -->
+        <div class="form-grid3 mb12">
+          <div class="form-row"><label>N° Documento</label><input id="pres-numero" class="w100" placeholder="001"/></div>
+          <div class="form-row"><label>Fecha</label><input type="date" id="pres-fecha" class="w100"/></div>
+          <div class="form-row"><label>Tipo de pago</label>
+            <select id="pres-pago" class="w100">
+              <option value="transferencia">Transferencia</option>
+              <option value="efectivo">Efectivo</option>
+              <option value="mercadopago">MercadoPago</option>
+              <option value="a_convenir">A convenir</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Destinatario -->
+        <div class="slbl">Datos del destinatario</div>
+        <div class="flex mb12" style="gap:8px">
+          <select id="pres-cliente-sel" style="flex:1" onchange="cargarClientePres(this.value)">
+            <option value="">— Cargar desde clientes guardados —</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="limpiarDestinatario()">✕ Limpiar</button>
+        </div>
+        <div class="form-grid mb12">
+          <div class="form-row"><label>Nombre y Apellido</label><input id="pres-dest-nombre" class="w100"/></div>
+          <div class="form-row"><label>DNI / CUIT</label><input id="pres-dest-dni" class="w100"/></div>
+        </div>
+        <div class="form-grid mb12">
+          <div class="form-row"><label>Teléfono</label><input id="pres-dest-tel" class="w100"/></div>
+          <div class="form-row"><label>Dirección</label><input id="pres-dest-dir" class="w100"/></div>
+        </div>
+        <div class="form-grid3 mb12">
+          <div class="form-row"><label>Localidad</label><input id="pres-dest-loc" class="w100"/></div>
+          <div class="form-row"><label>Provincia</label><input id="pres-dest-prov" class="w100"/></div>
+          <div class="form-row"><label>Código Postal</label><input id="pres-dest-cp" class="w100"/></div>
+        </div>
+
+        <!-- Productos -->
+        <div class="slbl">Detalle de productos</div>
+        <table style="margin-bottom:8px">
+          <thead><tr>
+            <th>Producto</th><th class="tc">Cant.</th><th class="tr">Precio unit.</th><th class="tr">Subtotal</th><th></th>
+          </tr></thead>
+          <tbody id="pres-items"></tbody>
+        </table>
+        <button class="btn btn-ghost w100" onclick="addPresItem()">+ Agregar producto</button>
+
+        <!-- Totales -->
+        <div style="margin-top:14px;background:#0a1520;border-radius:8px;padding:14px">
+          <div class="flex-between" style="margin-bottom:8px">
+            <span style="color:var(--muted)">Subtotal</span>
+            <span id="pres-subtotal" style="font-weight:700">$0</span>
+          </div>
+          <div class="flex-between mb12">
+            <label style="color:var(--muted);font-size:12px">Suma asegurada (envío)</label>
+            <input type="number" id="pres-seguro" value="0" style="width:130px;text-align:right" oninput="calcPresTotal()"/>
+          </div>
+          <div class="flex-between" style="border-top:2px solid var(--accent);padding-top:10px">
+            <span style="font-weight:800;font-size:15px">TOTAL</span>
+            <span id="pres-total" style="font-size:22px;font-weight:800;color:var(--gold)">$0</span>
+          </div>
+        </div>
+
+        <!-- Observaciones -->
+        <div class="form-row" style="margin-top:12px">
+          <label>Observaciones</label>
+          <textarea id="pres-obs" class="w100" rows="2" placeholder="Ej: Pago contra entrega, incluye flete, etc."></textarea>
+        </div>
+
+        <!-- Botones -->
+        <div class="flex" style="gap:10px;margin-top:14px">
+          <button class="btn btn-primary" style="flex:1" onclick="generarPDF()">📄 Descargar PDF</button>
+          <button class="btn btn-green" style="flex:1" onclick="generarImagen()">📱 Imagen WhatsApp</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div>
+      <div class="card" style="position:sticky;top:80px">
+        <div class="card-title">👁️ Vista previa</div>
+        <div id="pres-preview" style="background:#fff;border-radius:8px;padding:20px;color:#111;font-size:11px;min-height:400px">
+          <!-- Preview se genera dinámicamente -->
+          <div style="text-align:center;color:#999;padding:40px">Completá los datos para ver la vista previa</div>
+        </div>
+        <button class="btn btn-ghost w100" style="margin-top:8px" onclick="actualizarPreview()">🔄 Actualizar vista previa</button>
+      </div>
+    </div>
+  </div>
 </div>
 </main>
 
@@ -617,7 +752,7 @@ function showTab(name,btn){
   if(btn) btn.classList.add("active");
   const renders={precios:renderPrecios,mayoristas:renderMayoristas,recetas:renderRecetaProds,
     productos:renderProductosTab,insumos:renderInsumos,gastos:renderGastos,
-    pedidos:renderPedidos,clientes:renderClientes,config:renderConfig,calculadora:initCalc};
+    pedidos:renderPedidos,clientes:renderClientes,config:renderConfig,calculadora:initCalc,presupuestos:initPresupuestos};
   if(renders[name]) renders[name]();
 }
 
@@ -693,15 +828,15 @@ function renderPrecios(){
       </td>
       <td class="tr" style="font-weight:700;color:var(--accent)">${fmt(pmin)}</td>
       <td class="tr" style="font-weight:700;color:var(--green)">${fmt(ganancia)}</td>
-      <td class="tr" style="color:var(--blue)">${fmt(pmin*(1-trf))}</td>
-      <td class="tr" style="color:var(--blue)">${fmt(pmin*(1-efe))}</td>
-      <td class="tr">${fmt(pmin*(1+qrd))}</td>
-      <td class="tr">${fmt(pmin/(1-qrc))}</td>
-      <td class="tr" style="color:var(--gold);font-weight:600">${fmt(pmin/(1-c3q))}</td>
       <td class="tc">
         <input class="price-inp" type="number" value="${tuP||""}" placeholder="0"
-          onchange="savePrecioMin(${p.id},this.value)"/>
+          onchange="savePrecioMin(${p.id},this.value)" style="width:110px"/>
       </td>
+      <td class="tr" style="color:var(--blue)">${tuP?fmt(tuP*(1-trf)):'—'}</td>
+      <td class="tr" style="color:var(--blue)">${tuP?fmt(tuP*(1-efe)):'—'}</td>
+      <td class="tr">${tuP?fmt(tuP*(1-qrd)):'—'}</td>
+      <td class="tr">${tuP?fmt(tuP*(1-qrc)):'—'}</td>
+      <td class="tr" style="color:var(--gold);font-weight:600">${tuP?fmt(tuP*(1-c3q)):'—'}</td>
       <td class="tc">${semaforo(tuP,pmin)}</td>
     </tr>`;
   }).join("");
@@ -1304,6 +1439,310 @@ async function saveConfig(){
   await api("/api/config",{method:"POST",body:JSON.stringify(data)});
   config={...config};Object.keys(data).forEach(k=>config[k]=String(data[k]));
   toast("✅ Configuración guardada");updateFactor();renderPrecios();renderMayoristas();
+}
+
+// Update preview on input
+document.addEventListener('input', function(e){
+  if(e.target.id==='inf-aplicar-pct'){
+    const pct=parseFloat(e.target.value)||0;
+    const preview=document.getElementById('inf-preview');
+    if(preview) preview.textContent=fmt(10000*(1+pct/100));
+  }
+});
+
+async function aplicarInflacion(){
+  const pct=parseFloat(document.getElementById('inf-aplicar-pct').value)||0;
+  if(pct<=0){toast('Ingresá un % mayor a 0',true);return;}
+  if(!confirm(`¿Aplicar +${pct}% a los costos base de TODOS los productos? Esta acción no se puede deshacer.`)) return;
+  
+  const factor=1+pct/100;
+  let ok=0, fail=0;
+  
+  for(const p of productos){
+    if(!p.costo_base) continue;
+    const nuevoCosto=Math.round(p.costo_base*factor);
+    try{
+      await api(`/api/productos/${p.id}`,{method:'PUT',body:JSON.stringify({nombre:p.nombre,costo_base:nuevoCosto})});
+      p.costo_base=nuevoCosto;
+      ok++;
+    }catch(e){fail++;}
+  }
+  
+  const res=document.getElementById('inf-resultado');
+  res.style.display='block';
+  res.innerHTML=`<div style="background:#27ae6022;border:1px solid var(--green);border-radius:8px;padding:12px;font-size:13px">
+    ✅ <strong>${ok} productos actualizados</strong> con +${pct}% en sus costos base.
+    ${fail?`<span style="color:var(--red)"> ${fail} fallaron.</span>`:''}
+    <br><span style="font-size:11px;color:var(--muted)">Los precios mínimos se recalcularon automáticamente.</span>
+  </div>`;
+  
+  toast(`✅ ${ok} productos actualizados con +${pct}%`);
+  renderPrecios();
+  renderMayoristas();
+}
+
+
+// ─── PRESUPUESTOS ─────────────────────────────────────────────────────────────
+let presItems = [];
+const REMITENTE = {
+  nombre: "Karen Lopez Franz",
+  direccion: "Avenida Medrano 708",
+  localidad: "Almagro",
+  cp: "1179",
+  tel: "1133765153",
+  dni: "35460443",
+  negocio: "La Guarida"
+};
+
+function initPresupuestos(){
+  document.getElementById('pres-fecha').value = new Date().toISOString().split('T')[0];
+  // Generar número automático
+  const n = String(Date.now()).slice(-4);
+  document.getElementById('pres-numero').value = n;
+  // Cargar clientes en select
+  const sel = document.getElementById('pres-cliente-sel');
+  sel.innerHTML = '<option value="">— Cargar desde clientes guardados —</option>';
+  clientes.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.cliente;
+    o.textContent = c.cliente + (c.provincia ? ' — ' + c.provincia : '');
+    sel.appendChild(o);
+  });
+  presItems = [{producto:'',cantidad:1,precio:0}];
+  renderPresItems();
+}
+
+function cargarClientePres(nombre){
+  if(!nombre) return;
+  const c = clientes.find(x => x.cliente === nombre);
+  if(!c) return;
+  document.getElementById('pres-dest-nombre').value = c.cliente || '';
+  document.getElementById('pres-dest-tel').value = c.telefono || '';
+  document.getElementById('pres-dest-prov').value = c.provincia || '';
+}
+
+function limpiarDestinatario(){
+  ['pres-dest-nombre','pres-dest-dni','pres-dest-tel','pres-dest-dir','pres-dest-loc','pres-dest-prov','pres-dest-cp'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('pres-cliente-sel').value = '';
+}
+
+function addPresItem(){
+  presItems.push({producto:'',cantidad:1,precio:0});
+  renderPresItems();
+}
+
+function removePresItem(i){
+  presItems.splice(i,1);
+  if(!presItems.length) presItems=[{producto:'',cantidad:1,precio:0}];
+  renderPresItems();
+}
+
+function updatePresItem(i, field, val){
+  presItems[i][field] = field==='producto' ? val : (parseFloat(val)||0);
+  calcPresTotal();
+  renderPresItems();
+}
+
+function renderPresItems(){
+  const prodOpts = '<option value="">— Producto —</option>' + productos.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join('');
+  document.getElementById('pres-items').innerHTML = presItems.map((item,i) => `
+    <tr>
+      <td><select onchange="updatePresItem(${i},'producto',this.value)" style="width:160px">${prodOpts.replace(`value="${item.producto}"`,`value="${item.producto}" selected`)}</select></td>
+      <td class="tc"><input type="number" value="${item.cantidad}" min="1" style="width:55px;text-align:center" onchange="updatePresItem(${i},'cantidad',this.value)"/></td>
+      <td><input type="number" value="${item.precio||''}" placeholder="$" style="width:100px;text-align:right" onchange="updatePresItem(${i},'precio',this.value)"/></td>
+      <td class="tr" style="font-weight:700;color:var(--gold)">${fmt(item.cantidad*(item.precio||0))}</td>
+      <td><button class="btn-icon" onclick="removePresItem(${i})">✕</button></td>
+    </tr>`).join('');
+  calcPresTotal();
+}
+
+function calcPresTotal(){
+  const sub = presItems.reduce((s,i) => s + i.cantidad*(i.precio||0), 0);
+  const seg = parseFloat(document.getElementById('pres-seguro').value)||0;
+  document.getElementById('pres-subtotal').textContent = fmt(sub);
+  document.getElementById('pres-total').textContent = fmt(sub+seg);
+}
+
+function getPresData(){
+  return {
+    tipo: document.getElementById('pres-tipo').value,
+    numero: document.getElementById('pres-numero').value,
+    fecha: document.getElementById('pres-fecha').value,
+    pago: document.getElementById('pres-pago').value,
+    dest: {
+      nombre: document.getElementById('pres-dest-nombre').value,
+      dni: document.getElementById('pres-dest-dni').value,
+      tel: document.getElementById('pres-dest-tel').value,
+      dir: document.getElementById('pres-dest-dir').value,
+      loc: document.getElementById('pres-dest-loc').value,
+      prov: document.getElementById('pres-dest-prov').value,
+      cp: document.getElementById('pres-dest-cp').value,
+    },
+    items: presItems.filter(i => i.producto && i.precio>0),
+    subtotal: presItems.reduce((s,i) => s+i.cantidad*(i.precio||0),0),
+    seguro: parseFloat(document.getElementById('pres-seguro').value)||0,
+    obs: document.getElementById('pres-obs').value,
+    logo: config.logo_data || ''
+  };
+}
+
+function buildDocHTML(d, forPDF=false){
+  const total = d.subtotal + d.seguro;
+  const tipoLabel = d.tipo === 'remito' ? 'REMITO' : 'PRESUPUESTO';
+  const logoHTML = d.logo ? `<img src="${d.logo}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:2px solid #e94560"/>` : `<div style="width:60px;height:60px;background:linear-gradient(135deg,#e94560,#f5a623);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px">🏪</div>`;
+
+  return `<div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;color:#1a1a2e;${forPDF?'padding:30px':''}">
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:3px solid #e94560;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:12px">
+        ${logoHTML}
+        <div>
+          <div style="font-size:20px;font-weight:800;color:#e94560">LA GUARIDA</div>
+          <div style="font-size:11px;color:#666">${REMITENTE.direccion} · ${REMITENTE.localidad}</div>
+          <div style="font-size:11px;color:#666">Tel: ${REMITENTE.tel} · DNI: ${REMITENTE.dni}</div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:22px;font-weight:900;color:#e94560">${tipoLabel}</div>
+        <div style="font-size:13px;font-weight:700">N° ${d.numero}</div>
+        <div style="font-size:12px;color:#666">${d.fecha}</div>
+        <div style="font-size:11px;color:#666;margin-top:2px">Pago: ${d.pago}</div>
+      </div>
+    </div>
+
+    <!-- Remitente / Destinatario -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div style="background:#f8f9fa;border-radius:8px;padding:12px;border-left:3px solid #e94560">
+        <div style="font-size:10px;font-weight:700;color:#e94560;text-transform:uppercase;margin-bottom:6px">Remitente</div>
+        <div style="font-weight:700">${REMITENTE.nombre}</div>
+        <div style="font-size:11px;color:#555">${REMITENTE.direccion}</div>
+        <div style="font-size:11px;color:#555">${REMITENTE.localidad} · CP ${REMITENTE.cp}</div>
+        <div style="font-size:11px;color:#555">Tel: ${REMITENTE.tel}</div>
+        <div style="font-size:11px;color:#555">DNI: ${REMITENTE.dni}</div>
+      </div>
+      <div style="background:#f8f9fa;border-radius:8px;padding:12px;border-left:3px solid #2980b9">
+        <div style="font-size:10px;font-weight:700;color:#2980b9;text-transform:uppercase;margin-bottom:6px">Destinatario</div>
+        <div style="font-weight:700">${d.dest.nombre||'—'}</div>
+        ${d.dest.dni?`<div style="font-size:11px;color:#555">DNI/CUIT: ${d.dest.dni}</div>`:''}
+        ${d.dest.dir?`<div style="font-size:11px;color:#555">${d.dest.dir}</div>`:''}
+        <div style="font-size:11px;color:#555">${[d.dest.loc,d.dest.prov,d.dest.cp?'CP '+d.dest.cp:''].filter(Boolean).join(' · ')||'—'}</div>
+        ${d.dest.tel?`<div style="font-size:11px;color:#555">Tel: ${d.dest.tel}</div>`:''}
+      </div>
+    </div>
+
+    <!-- Tabla productos -->
+    <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:12px">
+      <thead>
+        <tr style="background:#e94560;color:#fff">
+          <th style="padding:8px 10px;text-align:left">Producto</th>
+          <th style="padding:8px 10px;text-align:center">Cant.</th>
+          <th style="padding:8px 10px;text-align:right">Precio unit.</th>
+          <th style="padding:8px 10px;text-align:right">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${d.items.map((item,i)=>`
+        <tr style="background:${i%2===0?'#f8f9fa':'#fff'}">
+          <td style="padding:7px 10px;font-weight:600">${item.producto}</td>
+          <td style="padding:7px 10px;text-align:center">${item.cantidad}</td>
+          <td style="padding:7px 10px;text-align:right">${fmt(item.precio)}</td>
+          <td style="padding:7px 10px;text-align:right;font-weight:700">${fmt(item.cantidad*item.precio)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+
+    <!-- Totales -->
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+      <div style="min-width:220px">
+        <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px">
+          <span style="color:#666">Subtotal</span><span style="font-weight:600">${fmt(d.subtotal)}</span>
+        </div>
+        ${d.seguro>0?`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px">
+          <span style="color:#666">Suma asegurada</span><span style="font-weight:600">${fmt(d.seguro)}</span>
+        </div>`:''}
+        <div style="display:flex;justify-content:space-between;padding:8px 10px;background:#e94560;border-radius:6px;margin-top:6px">
+          <span style="font-weight:800;color:#fff;font-size:14px">TOTAL</span>
+          <span style="font-weight:900;color:#fff;font-size:18px">${fmt(total)}</span>
+        </div>
+      </div>
+    </div>
+
+    ${d.obs?`<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:10px;font-size:11px;margin-bottom:14px">
+      <strong>Observaciones:</strong> ${d.obs}
+    </div>`:''}
+
+    <!-- Footer -->
+    <div style="border-top:2px solid #eee;padding-top:12px;text-align:center;font-size:10px;color:#999">
+      La Guarida · ${REMITENTE.direccion}, ${REMITENTE.localidad} · Tel: ${REMITENTE.tel}
+    </div>
+  </div>`;
+}
+
+function actualizarPreview(){
+  const d = getPresData();
+  document.getElementById('pres-preview').innerHTML = buildDocHTML(d, false);
+}
+
+async function generarPDF(){
+  const d = getPresData();
+  if(!d.dest.nombre){toast('Completá el nombre del destinatario',true);return;}
+  if(!d.items.length){toast('Agregá al menos un producto',true);return;}
+
+  const html = buildDocHTML(d, true);
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head>
+    <title>${d.tipo.toUpperCase()} N° ${d.numero}</title>
+    <style>
+      body{margin:0;padding:20px;background:#fff;}
+      @media print{body{padding:0;}}
+      @page{margin:15mm;}
+    </style>
+</head><body>${html}
+
+  </body></html>`);
+  win.document.close();
+  toast('📄 PDF abierto — usá Ctrl+P para guardar como PDF');
+}
+
+async function generarImagen(){
+  const d = getPresData();
+  if(!d.dest.nombre){toast('Completá el nombre del destinatario',true);return;}
+  if(!d.items.length){toast('Agregá al menos un producto',true);return;}
+
+  // Actualizar preview primero
+  actualizarPreview();
+  
+  // Usar html2canvas si está disponible, sino abrir ventana de impresión
+  const preview = document.getElementById('pres-preview');
+  
+  if(typeof html2canvas !== 'undefined'){
+    try{
+      const canvas = await html2canvas(preview, {scale:2,backgroundColor:'#ffffff',useCORS:true});
+      const link = document.createElement('a');
+      link.download = `${d.tipo}-${d.numero}-${d.dest.nombre||'cliente'}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      toast('📱 Imagen descargada — lista para WhatsApp!');
+    }catch(e){
+      toast('Error al generar imagen',true);
+    }
+  } else {
+    // Fallback: abrir ventana para captura manual
+    const win = window.open('','_blank','width=650,height=900');
+    win.document.write(`<!DOCTYPE html><html><head>
+      <title>Captura para WhatsApp</title>
+      <style>body{margin:20px;background:#fff;font-family:Segoe UI,Arial,sans-serif;}</style>
+</head><body>
+      <div style="background:#fffde7;border:2px solid #ffc107;border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;text-align:center">
+        📱 Para compartir por WhatsApp: tomá una captura de pantalla de este documento
+      </div>
+      ${buildDocHTML(d,true)}
+    </body></html>`);
+    win.document.close();
+    toast('📱 Ventana abierta — tomá captura de pantalla para WhatsApp');
+  }
 }
 
 init();
