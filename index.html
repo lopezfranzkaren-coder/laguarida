@@ -180,7 +180,9 @@ input[type=number]{text-align:right;}
           <th>Producto</th>
           <th class="tr">Costo Base</th>
           <th class="tr">Costo Final Min.</th>
-          <th class="tr" style="color:var(--accent)">Precio Mínimo ×2</th>
+          <th class="tc">Ganancia %</th>
+          <th class="tr" style="color:var(--accent)">Precio Mínimo</th>
+          <th class="tr" style="color:var(--green)">$ Ganancia neta</th>
           <th class="tr" style="color:var(--blue)">Transferencia −5%</th>
           <th class="tr" style="color:var(--blue)">Efectivo −10%</th>
           <th class="tr">QR Débito</th>
@@ -651,15 +653,26 @@ async function init(){
 }
 
 // ─── PRECIOS MINORISTA con ojito ──────────────────────────────────────────────
+function getMarkupMin(pid){
+  const pm=preciosMin[pid];
+  if(pm&&typeof pm==="object"&&pm.markup!=null) return pm.markup;
+  return 1.0;
+}
+
 function renderPrecios(){
   const q=(document.getElementById("precio-search")||{value:""}).value.toLowerCase();
   const showHidden=document.getElementById("show-hidden")?.checked;
   const list=productos.filter(p=>p.nombre.toLowerCase().includes(q)&&(showHidden||p.visible!==0));
-  const vars=cfg("pct_variables"),trf=cfg("desc_transferencia"),efe=cfg("desc_efectivo"),
+  const trf=cfg("desc_transferencia"),efe=cfg("desc_efectivo"),
         qrd=cfg("comision_qr_debito"),qrc=cfg("comision_qr_credito"),c3q=cfg("comision_3cuotas");
 
   document.getElementById("precios-tbody").innerHTML=list.map(p=>{
-    const cf=costoFinalMin(p); const pmin=cf*2; const tuP=preciosMin[p.id]||0;
+    const cf=costoFinalMin(p);
+    const markup=getMarkupMin(p.id);
+    const pmin=cf*(1+markup);
+    const ganancia=pmin-cf;
+    const pm=preciosMin[p.id]||{};
+    const tuP=(typeof pm==="object"?pm.precio:pm)||0;
     const isVisible=p.visible!==0;
     return `<tr class="${isVisible?'':'hidden-prod'}">
       <td class="tc">
@@ -671,7 +684,15 @@ function renderPrecios(){
       <td><strong>${p.nombre}</strong>${!p.costo_base?'<span class="badge b-red" style="margin-left:6px">⚠️</span>':''}</td>
       <td class="tr" style="color:var(--muted)">${fmt(p.costo_base)}</td>
       <td class="tr">${fmt(cf)}</td>
+      <td class="tc">
+        <div class="markup-cell">
+          <input class="pct-inp" type="number" value="${Math.round(markup*100)}" min="0" max="999"
+            onchange="saveMarkupMin(${p.id},this.value/100)"/>
+          <span>%</span>
+        </div>
+      </td>
       <td class="tr" style="font-weight:700;color:var(--accent)">${fmt(pmin)}</td>
+      <td class="tr" style="font-weight:700;color:var(--green)">${fmt(ganancia)}</td>
       <td class="tr" style="color:var(--blue)">${fmt(pmin*(1-trf))}</td>
       <td class="tr" style="color:var(--blue)">${fmt(pmin*(1-efe))}</td>
       <td class="tr">${fmt(pmin*(1+qrd))}</td>
@@ -694,9 +715,18 @@ async function toggleVisible(pid, visible){
   toast(visible?'👁️ Producto visible':'🙈 Producto oculto');
 }
 
+async function saveMarkupMin(pid, markup, costo){
+  if(!preciosMin[pid]||typeof preciosMin[pid]!=="object") preciosMin[pid]={precio:0,markup:1.0};
+  preciosMin[pid].markup=markup;
+  await api(`/api/precios_minoristas/${pid}`,{method:"POST",body:JSON.stringify({precio:preciosMin[pid].precio||0,markup})});
+  renderPrecios();
+}
+
 async function savePrecioMin(pid,val){
-  preciosMin[pid]=Number(val)||0;
-  await api(`/api/precios_minoristas/${pid}`,{method:"POST",body:JSON.stringify({precio:Number(val)||0})});
+  if(!preciosMin[pid]||typeof preciosMin[pid]!=="object") preciosMin[pid]={precio:0,markup:1.0};
+  preciosMin[pid].precio=Number(val)||0;
+  const markup=preciosMin[pid].markup||1.0;
+  await api(`/api/precios_minoristas/${pid}`,{method:"POST",body:JSON.stringify({precio:Number(val)||0,markup})});
   renderPrecios();
 }
 
