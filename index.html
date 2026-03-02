@@ -358,27 +358,57 @@ input[type=number]{text-align:right;}
 <!-- ══ CLIENTES ══════════════════════════════════════════════════════════════════ -->
 <div id="tab-clientes" class="tab">
   <div class="kpi-grid" id="clientes-kpis"></div>
-  <div style="display:grid;grid-template-columns:1fr 400px;gap:16px">
+  <div style="display:grid;grid-template-columns:1fr 420px;gap:16px">
     <div class="card">
-      <div class="card-title">👥 Clientes Mayoristas</div>
+      <div class="flex-between mb12">
+        <span class="card-title">👥 Clientes Mayoristas</span>
+        <input id="cli-search" placeholder="🔍 Buscar..." style="width:180px" oninput="renderClientes()"/>
+      </div>
       <div class="tbl-wrap">
         <table>
           <thead><tr>
             <th>Cliente</th><th>Teléfono</th><th>Provincia</th>
             <th class="tc">Pedidos</th><th>Último Pedido</th>
             <th class="tr">Total 2025</th><th class="tr">Total 2026</th>
-            <th class="tr">Acumulado</th><th class="tc">Ver</th>
+            <th class="tr">Acumulado</th><th class="tc">Acciones</th>
           </tr></thead>
           <tbody id="clientes-tbody"></tbody>
         </table>
       </div>
     </div>
-    <div class="card" id="cliente-detalle-card" style="display:none;align-self:start">
+    <div class="card" id="cliente-detalle-card" style="display:none;align-self:start;max-height:80vh;overflow-y:auto">
       <div class="flex-between mb12">
         <span class="card-title" id="cliente-detalle-title">Historial</span>
         <button class="btn-icon" onclick="cerrarDetalleCliente()">✕</button>
       </div>
+      <!-- Filtro por mes -->
+      <div class="flex mb12" style="gap:8px">
+        <select id="cli-filtro-mes" style="flex:1" onchange="filtrarPedidosMes()">
+          <option value="">Todos los meses</option>
+        </select>
+        <span id="cli-total-mes" style="font-size:12px;color:var(--gold);font-weight:700;align-self:center"></span>
+      </div>
       <div id="cliente-detalle-content"></div>
+      <!-- Ficha del cliente -->
+      <div style="border-top:2px solid var(--border);margin-top:14px;padding-top:14px">
+        <div class="flex-between mb12">
+          <span style="font-size:12px;font-weight:700;color:var(--blue)">📋 Ficha completa</span>
+          <button class="btn btn-blue btn-sm" onclick="guardarFicha()">💾 Guardar ficha</button>
+        </div>
+        <div class="form-grid mb12">
+          <div class="form-row"><label>DNI / CUIT</label><input id="ficha-dni" class="w100" placeholder="Sin datos"/></div>
+          <div class="form-row"><label>Dirección</label><input id="ficha-dir" class="w100" placeholder="Sin datos"/></div>
+        </div>
+        <div class="form-grid3 mb12">
+          <div class="form-row"><label>Localidad</label><input id="ficha-loc" class="w100" placeholder="Sin datos"/></div>
+          <div class="form-row"><label>Provincia</label><input id="ficha-prov" class="w100" placeholder="Sin datos"/></div>
+          <div class="form-row"><label>CP</label><input id="ficha-cp" class="w100" placeholder="Sin datos"/></div>
+        </div>
+        <div class="form-row">
+          <label>Notas</label>
+          <textarea id="ficha-notas" class="w100" rows="2" placeholder="Ej: Paga siempre a 30 días..."></textarea>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -779,6 +809,7 @@ async function init(){
     api("/api/gastos"),api("/api/pedidos"),api("/api/clientes"),
     api("/api/precios_minoristas"),api("/api/precios_mayoristas")
   ]);
+  await cargarFichas();
   await Promise.all(productos.map(async p=>{recetasCache[p.id]=await api(`/api/recetas/${p.id}`);}));
   if(config.logo_data) applyLogo(config.logo_data);
   if(config.last_update) document.getElementById("ts-display").textContent=config.last_update;
@@ -1359,16 +1390,24 @@ async function deletePedido(id){
 }
 
 // ─── CLIENTES ─────────────────────────────────────────────────────────────────
+let clienteActualHist=[], clienteActualNombre='', fichasCache={};
+
+async function cargarFichas(){
+  try{ fichasCache = await api('/api/clientes_fichas'); } catch(e){ fichasCache={}; }
+}
+
 function renderClientes(){
-  const total2025=clientes.reduce((s,c)=>s+(c.total_2025||0),0);
-  const total2026=clientes.reduce((s,c)=>s+(c.total_2026||0),0);
+  const q=(document.getElementById("cli-search")||{value:""}).value.toLowerCase();
+  const list=clientes.filter(c=>c.cliente.toLowerCase().includes(q));
+  const total2025=list.reduce((s,c)=>s+(c.total_2025||0),0);
+  const total2026=list.reduce((s,c)=>s+(c.total_2026||0),0);
   document.getElementById("clientes-kpis").innerHTML=`
-    <div class="kpi"><label>Clientes activos</label><div class="kval" style="color:var(--blue)">${clientes.length}</div></div>
+    <div class="kpi"><label>Clientes activos</label><div class="kval" style="color:var(--blue)">${list.length}</div></div>
     <div class="kpi"><label>Total pedidos</label><div class="kval" style="color:var(--green)">${pedidos.length}</div></div>
     <div class="kpi"><label>Ventas 2025</label><div class="kval" style="color:var(--gold)">${fmt(total2025)}</div></div>
     <div class="kpi"><label>Ventas 2026</label><div class="kval" style="color:var(--accent)">${fmt(total2026)}</div></div>`;
-  document.getElementById("clientes-tbody").innerHTML=clientes.map(c=>`<tr>
-    <td><strong>${c.cliente}</strong></td>
+  document.getElementById("clientes-tbody").innerHTML=list.map(c=>`<tr>
+    <td><strong>${c.cliente}</strong>${fichasCache[c.cliente]?'<span class="badge b-blue" style="margin-left:5px">ficha</span>':''}</td>
     <td style="color:var(--muted)">${c.telefono||"—"}</td>
     <td style="color:var(--muted)">${c.provincia||"—"}</td>
     <td class="tc">${c.num_pedidos}</td>
@@ -1376,24 +1415,78 @@ function renderClientes(){
     <td class="tr">${fmt(c.total_2025)}</td>
     <td class="tr">${fmt(c.total_2026)}</td>
     <td class="tr" style="font-weight:700;color:var(--gold)">${fmt(c.total_acumulado)}</td>
-    <td class="tc"><button class="btn btn-blue btn-sm" onclick="verCliente('${encodeURIComponent(c.cliente)}')">Ver</button></td>
+    <td class="tc" style="display:flex;gap:4px;justify-content:center">
+      <button class="btn btn-blue btn-sm" onclick="verCliente('${encodeURIComponent(c.cliente)}')">📋 Ver</button>
+    </td>
   </tr>`).join("")||`<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:30px">Sin clientes aún</td></tr>`;
 }
+
 async function verCliente(nombre){
   const cli=decodeURIComponent(nombre);
+  clienteActualNombre=cli;
   const hist=await api(`/api/clientes/${encodeURIComponent(cli)}/pedidos`);
+  clienteActualHist=hist;
   document.getElementById("cliente-detalle-title").textContent=`📋 ${cli}`;
+  
+  // Cargar ficha si existe
+  const ficha=fichasCache[cli]||{};
+  document.getElementById("ficha-dni").value=ficha.dni_cuit||"";
+  document.getElementById("ficha-dir").value=ficha.direccion||"";
+  document.getElementById("ficha-loc").value=ficha.localidad||"";
+  document.getElementById("ficha-prov").value=ficha.provincia||"";
+  document.getElementById("ficha-cp").value=ficha.cp||"";
+  document.getElementById("ficha-notas").value=ficha.notas||"";
+  
+  // Armar filtro de meses
+  const meses=[...new Set(hist.map(p=>p.fecha.slice(0,7)))].sort().reverse();
+  const sel=document.getElementById("cli-filtro-mes");
+  sel.innerHTML='<option value="">Todos los meses</option>'+meses.map(m=>{
+    const [y,mo]=m.split("-");
+    const nombre=new Date(y,parseInt(mo)-1).toLocaleString("es-AR",{month:"long",year:"numeric"});
+    return `<option value="${m}">${nombre.charAt(0).toUpperCase()+nombre.slice(1)}</option>`;
+  }).join("");
+  
+  renderHistorial(hist);
+  document.getElementById("cliente-detalle-card").style.display="block";
+}
+
+function filtrarPedidosMes(){
+  const mes=document.getElementById("cli-filtro-mes").value;
+  const filtrado=mes?clienteActualHist.filter(p=>p.fecha.startsWith(mes)):clienteActualHist;
+  renderHistorial(filtrado);
+}
+
+function renderHistorial(hist){
+  const total=hist.reduce((s,p)=>s+p.total,0);
+  document.getElementById("cli-total-mes").textContent=hist.length?`${hist.length} pedidos · ${fmt(total)}`:"";
   document.getElementById("cliente-detalle-content").innerHTML=hist.map(p=>`
-    <div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px">
+    <div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
       <div class="flex-between" style="margin-bottom:6px">
-        <span style="font-weight:700">${p.fecha} ${p.numero?"· #"+p.numero:""}</span>
+        <span style="font-weight:700;font-size:13px">${p.fecha}${p.numero?" · #"+p.numero:""}</span>
         <span class="badge estado-${p.estado}">${p.estado}</span>
       </div>
       ${p.items.map(i=>`<div style="font-size:12px;color:var(--muted)">${i.producto} × ${i.cantidad} = ${fmt(i.subtotal)}</div>`).join("")}
       <div style="text-align:right;font-weight:700;color:var(--gold);margin-top:6px">${fmt(p.total)}</div>
-    </div>`).join("")||'<div style="color:var(--muted);text-align:center;padding:20px">Sin pedidos</div>';
-  document.getElementById("cliente-detalle-card").style.display="block";
+    </div>`).join("")||'<div style="color:var(--muted);text-align:center;padding:20px">Sin pedidos en este período</div>';
 }
+
+async function guardarFicha(){
+  if(!clienteActualNombre){toast("Seleccioná un cliente primero",true);return;}
+  const data={
+    dni_cuit:document.getElementById("ficha-dni").value,
+    direccion:document.getElementById("ficha-dir").value,
+    localidad:document.getElementById("ficha-loc").value,
+    provincia:document.getElementById("ficha-prov").value,
+    cp:document.getElementById("ficha-cp").value,
+    notas:document.getElementById("ficha-notas").value,
+    telefono:(clientes.find(c=>c.cliente===clienteActualNombre)||{}).telefono||""
+  };
+  await api(`/api/clientes_fichas/${encodeURIComponent(clienteActualNombre)}`,{method:"POST",body:JSON.stringify(data)});
+  fichasCache[clienteActualNombre]={...data,cliente:clienteActualNombre};
+  toast("✅ Ficha guardada");
+  renderClientes();
+}
+
 function cerrarDetalleCliente(){document.getElementById("cliente-detalle-card").style.display="none";}
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
@@ -1515,10 +1608,14 @@ function initPresupuestos(){
 function cargarClientePres(nombre){
   if(!nombre) return;
   const c = clientes.find(x => x.cliente === nombre);
-  if(!c) return;
-  document.getElementById('pres-dest-nombre').value = c.cliente || '';
-  document.getElementById('pres-dest-tel').value = c.telefono || '';
-  document.getElementById('pres-dest-prov').value = c.provincia || '';
+  const ficha = fichasCache[nombre] || {};
+  document.getElementById('pres-dest-nombre').value = nombre;
+  document.getElementById('pres-dest-tel').value = ficha.telefono || (c?c.telefono:'') || '';
+  document.getElementById('pres-dest-prov').value = ficha.provincia || (c?c.provincia:'') || '';
+  document.getElementById('pres-dest-dni').value = ficha.dni_cuit || '';
+  document.getElementById('pres-dest-dir').value = ficha.direccion || '';
+  document.getElementById('pres-dest-loc').value = ficha.localidad || '';
+  document.getElementById('pres-dest-cp').value = ficha.cp || '';
 }
 
 function limpiarDestinatario(){
