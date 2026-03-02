@@ -155,6 +155,7 @@ input[type=number]{text-align:right;}
     <button onclick="showTab('config',this)">⚙️ Config</button>
     <button onclick="showTab('presupuestos',this)">📋 Presupuestos</button>
     <button onclick="showTab('analisis',this)">📊 Análisis</button>
+    <button onclick="exportarResumen()" style="background:linear-gradient(135deg,var(--accent),var(--gold));color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700">📤 Exportar</button>
   </nav>
 </header>
 <main>
@@ -218,12 +219,19 @@ input[type=number]{text-align:right;}
   </div>
   <div class="card">
     <div class="flex-between mb12">
-      <span class="card-title">📦 Precios Mayoristas</span>
+      <div class="flex" style="align-items:center;gap:12px">
+        <span class="card-title">📦 Precios Mayoristas</span>
+        <label style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px;cursor:pointer">
+          <input type="checkbox" id="may-show-hidden" onchange="renderMayoristas()" style="width:14px;height:14px"/>
+          Mostrar ocultos
+        </label>
+      </div>
       <input id="mayor-search" placeholder="🔍 Buscar..." style="width:180px" oninput="renderMayoristas()"/>
     </div>
     <div class="tbl-wrap">
       <table>
         <thead><tr>
+          <th style="width:28px"></th>
           <th>Producto</th>
           <th class="tr">Costo Final May.</th>
           <th class="tc" colspan="3" style="color:var(--blue);border-left:2px solid var(--border)">+12 unidades</th>
@@ -231,7 +239,7 @@ input[type=number]{text-align:right;}
           <th class="tc" colspan="3" style="color:var(--gold);border-left:2px solid var(--border)">+72 unidades</th>
         </tr>
         <tr>
-          <th></th><th></th>
+          <th></th><th></th><th></th>
           <th class="tc" style="border-left:2px solid var(--border)">Markup %</th>
           <th class="tr">Precio sugerido</th>
           <th class="tr">Tu precio</th>
@@ -982,7 +990,8 @@ function getMarkup(pid, cantidad){
 
 function renderMayoristas(){
   const q=(document.getElementById("mayor-search")||{value:""}).value.toLowerCase();
-  const list=productos.filter(p=>p.nombre.toLowerCase().includes(q)&&p.visible!==0);
+  const showHidden=document.getElementById("may-show-hidden")?.checked;
+  const list=productos.filter(p=>p.nombre.toLowerCase().includes(q)&&(showHidden||p.visible!==0));
 
   document.getElementById("mayor-tbody").innerHTML=list.map(p=>{
     const cf=costoFinalMay(p);
@@ -990,8 +999,15 @@ function renderMayoristas(){
     const s12=cf*(1+m12), s36=cf*(1+m36), s72=cf*(1+m72);
     const pm=preciosMay[p.id]||{};
     const p12=(pm["12"]||{}).precio||0, p36=(pm["36"]||{}).precio||0, p72=(pm["72"]||{}).precio||0;
+    const isVisible=p.visible!==0;
 
-    return `<tr>
+    return `<tr class="${isVisible?'':'hidden-prod'}">
+      <td class="tc" style="padding:4px">
+        <button onclick="toggleVisible(${p.id},${isVisible?0:1})"
+          title="${isVisible?'Ocultar':'Mostrar'}" style="font-size:13px;background:none;border:none;cursor:pointer">
+          ${isVisible?'👁️':'🙈'}
+        </button>
+      </td>
       <td><strong>${p.nombre}</strong></td>
       <td class="tr" style="color:var(--muted)">${fmt(cf)}</td>
       <td class="tc" style="border-left:2px solid var(--border)">
@@ -2080,6 +2096,128 @@ async function generarImagen(){
     win.document.close();
     toast('📱 Ventana abierta — tomá captura de pantalla para WhatsApp');
   }
+}
+
+
+// ─── EXPORTAR RESUMEN ─────────────────────────────────────────────────────────
+function exportarResumen(){
+  const trf=cfg("desc_transferencia"), efe=cfg("desc_efectivo");
+  const qrd=cfg("comision_qr_debito"), qrc=cfg("comision_qr_credito"), c3q=cfg("comision_3cuotas");
+  const fecha=new Date().toLocaleDateString("es-AR");
+
+  // Minoristas
+  const minData=productos.filter(p=>p.visible!==0&&p.costo_base).map(p=>{
+    const cf=costoFinalMin(p);
+    const markup=getMarkupMin(p.id);
+    const pmin=Math.round(cf*(1+markup));
+    const pm=preciosMin[p.id]||{};
+    const tuP=(typeof pm==="object"?pm.precio:pm)||0;
+    const ganancia=tuP?tuP-cf:pmin-cf;
+    return {
+      nombre:p.nombre,
+      costo:Math.round(cf),
+      markupPct:Math.round(markup*100),
+      pmin,
+      tuPrecio:tuP||null,
+      ganancia:Math.round(ganancia),
+      recibeTrf:tuP?Math.round(tuP*(1-trf)):null,
+      recibeEfe:tuP?Math.round(tuP*(1-efe)):null,
+      recibeQRDeb:tuP?Math.round(tuP*(1-qrd)):null,
+      recibeQRCre:tuP?Math.round(tuP*(1-qrc)):null,
+      recibe3C:tuP?Math.round(tuP*(1-c3q)):null,
+    };
+  }).sort((a,b)=>b.ganancia-a.ganancia);
+
+  // Mayoristas
+  const mayData=productos.filter(p=>p.visible!==0&&p.costo_base).map(p=>{
+    const cf=costoFinalMay(p);
+    const pm=preciosMay[p.id]||{};
+    const p12=(pm["12"]||{}).precio||0;
+    const p36=(pm["36"]||{}).precio||0;
+    const p72=(pm["72"]||{}).precio||0;
+    const m12=getMarkup(p.id,"12"), m36=getMarkup(p.id,"36"), m72=getMarkup(p.id,"72");
+    return {
+      nombre:p.nombre,
+      costo:Math.round(cf),
+      markup12:Math.round(m12*100), sugerido12:Math.round(cf*(1+m12)), tuPrecio12:p12||null,
+      markup36:Math.round(m36*100), sugerido36:Math.round(cf*(1+m36)), tuPrecio36:p36||null,
+      markup72:Math.round(m72*100), sugerido72:Math.round(cf*(1+m72)), tuPrecio72:p72||null,
+    };
+  });
+
+  // Config
+  const configResumen={
+    pctVariables:Math.round(cfg("pct_variables")*100),
+    descTrf:Math.round(trf*100), descEfe:Math.round(efe*100),
+    comQRDeb:Math.round(qrd*100), comQRCre:Math.round(qrc*100), com3C:Math.round(c3q*100),
+  };
+
+  const resumen={
+    negocio:"La Guarida",
+    fecha,
+    config:configResumen,
+    minoristas:minData,
+    mayoristas:mayData,
+  };
+
+  // Format as readable text for Claude
+  let txt=`# RESUMEN DE PRECIOS - LA GUARIDA
+Fecha: ${fecha}
+
+`;
+  txt+=`## CONFIGURACIÓN
+`;
+  txt+=`- Costos variables: ${configResumen.pctVariables}%
+`;
+  txt+=`- Descuento transferencia: ${configResumen.descTrf}% | Efectivo: ${configResumen.descEfe}%
+`;
+  txt+=`- Comisiones MP: QR Déb ${configResumen.comQRDeb}% | QR Cré ${configResumen.comQRCre}% | 3 Cuotas ${configResumen.com3C}%
+
+`;
+
+  txt+=`## PRECIOS MINORISTAS (ordenados por $ ganancia)
+`;
+  txt+=`| Producto | Costo | Markup% | Mínimo | Tu precio | Ganancia$ | Trf | Efe | QR Déb | QR Cré | 3C |
+`;
+  txt+=`|---|---|---|---|---|---|---|---|---|---|---|
+`;
+  minData.forEach(p=>{
+    const fmtN=n=>n!=null?'$'+n.toLocaleString('es-AR'):'—';
+    txt+=`| ${p.nombre} | $${p.costo.toLocaleString('es-AR')} | ${p.markupPct}% | $${p.pmin.toLocaleString('es-AR')} | ${fmtN(p.tuPrecio)} | $${p.ganancia.toLocaleString('es-AR')} | ${fmtN(p.recibeTrf)} | ${fmtN(p.recibeEfe)} | ${fmtN(p.recibeQRDeb)} | ${fmtN(p.recibeQRCre)} | ${fmtN(p.recibe3C)} |
+`;
+  });
+
+  txt+=`
+## PRECIOS MAYORISTAS
+`;
+  txt+=`| Producto | Costo | +12u Mk% | +12u Precio | +36u Mk% | +36u Precio | +72u Mk% | +72u Precio |
+`;
+  txt+=`|---|---|---|---|---|---|---|---|
+`;
+  mayData.forEach(p=>{
+    const fmtN=n=>n!=null?'$'+n.toLocaleString('es-AR'):'—';
+    txt+=`| ${p.nombre} | $${p.costo.toLocaleString('es-AR')} | ${p.markup12}% | ${fmtN(p.tuPrecio12)||'$'+p.sugerido12.toLocaleString('es-AR')} | ${p.markup36}% | ${fmtN(p.tuPrecio36)||'$'+p.sugerido36.toLocaleString('es-AR')} | ${p.markup72}% | ${fmtN(p.tuPrecio72)||'$'+p.sugerido72.toLocaleString('es-AR')} |
+`;
+  });
+
+  txt+=`
+## VENTAS (Feb 2026)
+`;
+  const totalVentas=pedidos.filter(p=>p.fecha&&p.fecha.startsWith('2026-02')).reduce((s,p)=>s+p.total,0);
+  txt+=`- Total pedidos mayoristas Feb 2026: $${Math.round(totalVentas).toLocaleString('es-AR')}
+`;
+  txt+=`- Clientes activos: ${clientes.length}
+`;
+
+  // Copy to clipboard
+  navigator.clipboard.writeText(txt).then(()=>{
+    toast('✅ Resumen copiado al portapapeles — pegalo en el chat con Clau!');
+  }).catch(()=>{
+    // Fallback: open in new window
+    const w=window.open('','_blank');
+    w.document.write('<pre style="font-family:monospace;padding:20px;white-space:pre-wrap">'+txt+'</pre>');
+    w.document.title='Resumen La Guarida';
+  });
 }
 
 init();
