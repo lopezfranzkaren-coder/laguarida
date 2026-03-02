@@ -47,6 +47,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);
 input[type=number]{text-align:right;}
 .w100{width:100%;}
 .price-inp{width:100px;background:#0d1b2a;border:1px solid #1e3a5f44;border-radius:5px;padding:4px 8px;color:var(--gold);font-size:12px;text-align:right;font-weight:700;}
+.subtab-btn{background:transparent;border:none;border-bottom:3px solid transparent;color:var(--muted);padding:8px 18px;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s;}
+.subtab-btn.active{color:var(--text);border-bottom-color:var(--accent);font-weight:700;}
+.subtab-btn:hover:not(.active){color:var(--text);}
 .price-inp:focus{border-color:var(--gold);outline:none;}
 .pct-inp{width:60px;background:#0d1b2a;border:1px solid #1e3a5f44;border-radius:5px;padding:4px 6px;color:var(--blue);font-size:11px;text-align:center;font-weight:700;}
 .pct-inp:focus{border-color:var(--blue);outline:none;}
@@ -145,8 +148,7 @@ input[type=number]{text-align:right;}
     <button onclick="showTab('mayoristas',this)">📦 Mayoristas</button>
     <button onclick="showTab('calculadora',this)">🧮 Calculadora</button>
     <button onclick="showTab('recetas',this)">🏭 Recetas</button>
-    <button onclick="showTab('pedidos',this)">🛒 Pedidos</button>
-    <button onclick="showTab('clientes',this)">👥 Clientes</button>
+    <button onclick="showTab('clientes',this)">👥 Clientes & Pedidos</button>
     <button onclick="showTab('productos',this)">🗂️ Productos</button>
     <button onclick="showTab('insumos',this)">🔧 Insumos</button>
     <button onclick="showTab('gastos',this)">🏢 Gastos</button>
@@ -808,9 +810,32 @@ function showTab(name,btn){
   document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
   document.getElementById("tab-"+name).classList.add("active");
   if(btn) btn.classList.add("active");
-  const renders={precios:renderPrecios,mayoristas:renderMayoristas,recetas:renderRecetaProds,
+  function showSubtab(name){
+  document.getElementById('subtab-clientes').style.display = name==='clientes' ? '' : 'none';
+  document.getElementById('subtab-pedidos').style.display = name==='pedidos' ? '' : 'none';
+  document.getElementById('subtab-btn-clientes').classList.toggle('active', name==='clientes');
+  document.getElementById('subtab-btn-pedidos').classList.toggle('active', name==='pedidos');
+  if(name==='pedidos') renderPedidos();
+  if(name==='clientes'){initMesGlobal();renderClientes();}
+}
+
+function showFichaTab(name){
+  document.getElementById('ficha-tab-historial').style.display = name==='historial' ? '' : 'none';
+  document.getElementById('ficha-tab-ficha').style.display = name==='ficha' ? '' : 'none';
+  document.getElementById('ficha-tab-btn-historial').classList.toggle('active', name==='historial');
+  document.getElementById('ficha-tab-btn-ficha').classList.toggle('active', name==='ficha');
+}
+
+function renombrarDesdePanel(){
+  const viejo = clienteActualNombre;
+  const nuevo = document.getElementById('ficha-nombre').value.trim();
+  if(!nuevo || nuevo === viejo) return;
+  renombrarCliente(encodeURIComponent(viejo), nuevo);
+}
+
+const renders={precios:renderPrecios,mayoristas:renderMayoristas,recetas:renderRecetaProds,
     productos:renderProductosTab,insumos:renderInsumos,gastos:renderGastos,
-    pedidos:renderPedidos,clientes:()=>{initMesGlobal();renderClientes();},config:renderConfig,calculadora:initCalc,presupuestos:initPresupuestos,analisis:renderAnalisis};
+    pedidos:renderPedidos,clientes:()=>{initMesGlobal();renderClientes();showSubtab('clientes');},config:renderConfig,calculadora:initCalc,presupuestos:initPresupuestos,analisis:renderAnalisis};
   if(renders[name]) renders[name]();
 }
 
@@ -864,9 +889,9 @@ function renderPrecios(){
     const cf=costoFinalMin(p);
     const markup=getMarkupMin(p.id);
     const pmin=cf*(1+markup);
-    const ganancia=pmin-cf;
     const pm=preciosMin[p.id]||{};
     const tuP=(typeof pm==="object"?pm.precio:pm)||0;
+    const ganancia=tuP ? tuP-cf : pmin-cf;
     const isVisible=p.visible!==0;
     return `<tr class="${isVisible?'':'hidden-prod'}">
       <td class="tc" style="padding:4px">
@@ -1493,24 +1518,29 @@ async function verCliente(nombre){
   clienteActualNombre=cli;
   const hist=await api(`/api/clientes/${encodeURIComponent(cli)}/pedidos`);
   clienteActualHist=hist;
-  document.getElementById("cliente-detalle-title").textContent=`📋 ${cli}`;
+  document.getElementById("cliente-detalle-title").textContent=cli;
   
-  // Cargar ficha si existe
+  // Cargar ficha
   const ficha=fichasCache[cli]||{};
+  const cliData=clientes.find(c=>c.cliente===cli)||{};
+  document.getElementById("ficha-nombre").value=cli;
   document.getElementById("ficha-dni").value=ficha.dni_cuit||"";
+  document.getElementById("ficha-tel2").value=ficha.telefono||cliData.telefono||"";
   document.getElementById("ficha-dir").value=ficha.direccion||"";
   document.getElementById("ficha-loc").value=ficha.localidad||"";
-  document.getElementById("ficha-prov").value=ficha.provincia||"";
+  document.getElementById("ficha-prov").value=ficha.provincia||cliData.provincia||"";
   document.getElementById("ficha-cp").value=ficha.cp||"";
   document.getElementById("ficha-notas").value=ficha.notas||"";
   
+  // Show historial tab by default
+  showFichaTab('historial');
   renderHistorial(hist);
   document.getElementById("cliente-detalle-card").style.display="block";
 }
 
-async function renombrarCliente(nombreEnc){
+async function renombrarCliente(nombreEnc, nuevoParam){
   const viejo=decodeURIComponent(nombreEnc);
-  const nuevo=prompt(`Renombrar "${viejo}" a:`, viejo);
+  const nuevo=nuevoParam||prompt(`Renombrar "${viejo}" a:`, viejo);
   if(!nuevo||nuevo===viejo) return;
   // Update all pedidos with this cliente name
   const pedidosCliente=pedidos.filter(p=>p.cliente===viejo);
@@ -1533,16 +1563,51 @@ async function renombrarCliente(nombreEnc){
 
 function renderHistorial(hist){
   const total=hist.reduce((s,p)=>s+p.total,0);
-  document.getElementById("cli-total-mes").textContent=hist.length?`${hist.length} pedidos · ${fmt(total)}`:"";
+  const resEl=document.getElementById("cli-total-mes");
+  if(resEl) resEl.textContent=hist.length?`${hist.length} pedidos · ${fmt(total)}`:"";
   document.getElementById("cliente-detalle-content").innerHTML=hist.map(p=>`
     <div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
       <div class="flex-between" style="margin-bottom:6px">
-        <span style="font-weight:700;font-size:13px">${p.fecha}${p.numero?" · #"+p.numero:""}</span>
-        <span class="badge estado-${p.estado}">${p.estado}</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="date" value="${p.fecha}" style="background:#0a1520;border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:2px 6px"
+            onchange="editarFechaPedido(${p.id},this.value)"/>
+          ${p.numero?`<span style="font-size:11px;color:var(--muted)">#${p.numero}</span>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="badge estado-${p.estado}">${p.estado}</span>
+          <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 8px" onclick="cargarPedidoEnPresupuesto(${p.id})">📋 Presupuesto</button>
+        </div>
       </div>
       ${p.items.map(i=>`<div style="font-size:12px;color:var(--muted)">${i.producto} × ${i.cantidad} = ${fmt(i.subtotal)}</div>`).join("")}
       <div style="text-align:right;font-weight:700;color:var(--gold);margin-top:6px">${fmt(p.total)}</div>
     </div>`).join("")||'<div style="color:var(--muted);text-align:center;padding:20px">Sin pedidos en este período</div>';
+}
+
+async function editarFechaPedido(pid, fecha){
+  const p=pedidos.find(x=>x.id===pid);
+  if(!p) return;
+  p.fecha=fecha;
+  await api(`/api/pedidos/${pid}`,{method:'PUT',body:JSON.stringify({...p,fecha})});
+  toast('✅ Fecha actualizada');
+}
+
+async function cargarPedidoEnPresupuesto(pid){
+  const p=pedidos.find(x=>x.id===pid);
+  if(!p) return;
+  // Switch to presupuestos tab
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-presupuestos').classList.add('active');
+  document.querySelector("nav button[onclick*='presupuestos']").classList.add('active');
+  // Init presupuestos if needed
+  initPresupuestos();
+  // Load client data
+  cargarClientePres(p.cliente);
+  document.getElementById('pres-cliente-sel').value=p.cliente;
+  // Load items from pedido
+  presItems = p.items.map(i=>({producto:i.producto, cantidad:i.cantidad, precio:i.precio_unitario}));
+  renderPresItems();
+  toast(`📋 Pedido de ${p.cliente} cargado en Presupuestos`);
 }
 
 async function guardarFicha(){
