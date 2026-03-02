@@ -105,9 +105,11 @@ def init_db():
             "CREATE TABLE IF NOT EXISTS pedido_items (id SERIAL PRIMARY KEY, pedido_id INTEGER NOT NULL, producto TEXT NOT NULL, cantidad INTEGER NOT NULL, precio_unitario REAL NOT NULL, subtotal REAL NOT NULL)",
             "CREATE TABLE IF NOT EXISTS precios_mayoristas (id SERIAL PRIMARY KEY, producto_id INTEGER NOT NULL, cantidad TEXT NOT NULL, precio REAL, markup REAL, UNIQUE(producto_id,cantidad))",
             "CREATE TABLE IF NOT EXISTS precios_minoristas (id SERIAL PRIMARY KEY, producto_id INTEGER NOT NULL UNIQUE, precio REAL)",
+            "CREATE TABLE IF NOT EXISTS clientes_fichas (id SERIAL PRIMARY KEY, cliente TEXT NOT NULL UNIQUE, dni_cuit TEXT, direccion TEXT, localidad TEXT, cp TEXT, telefono TEXT, provincia TEXT, notas TEXT)",
             "ALTER TABLE productos ADD COLUMN IF NOT EXISTS visible INTEGER DEFAULT 1",
             "ALTER TABLE precios_mayoristas ADD COLUMN IF NOT EXISTS markup REAL",
             "ALTER TABLE precios_minoristas ADD COLUMN IF NOT EXISTS markup REAL",
+            "CREATE TABLE IF NOT EXISTS clientes_fichas (id SERIAL PRIMARY KEY, cliente TEXT NOT NULL UNIQUE, dni_cuit TEXT, direccion TEXT, localidad TEXT, cp TEXT, telefono TEXT, provincia TEXT, notas TEXT)",
         ]
         for s in stmts:
             try: cur.execute(s)
@@ -124,6 +126,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS pedido_items (id INTEGER PRIMARY KEY AUTOINCREMENT, pedido_id INTEGER NOT NULL, producto TEXT NOT NULL, cantidad INTEGER NOT NULL, precio_unitario REAL NOT NULL, subtotal REAL NOT NULL);
         CREATE TABLE IF NOT EXISTS precios_mayoristas (id INTEGER PRIMARY KEY AUTOINCREMENT, producto_id INTEGER NOT NULL, cantidad TEXT NOT NULL, precio REAL, markup REAL, UNIQUE(producto_id,cantidad));
         CREATE TABLE IF NOT EXISTS precios_minoristas (id INTEGER PRIMARY KEY AUTOINCREMENT, producto_id INTEGER NOT NULL UNIQUE, precio REAL);
+        CREATE TABLE IF NOT EXISTS clientes_fichas (id INTEGER PRIMARY KEY AUTOINCREMENT, cliente TEXT NOT NULL UNIQUE, dni_cuit TEXT, direccion TEXT, localidad TEXT, cp TEXT, telefono TEXT, provincia TEXT, notas TEXT);
         """)
         try: db.execute("ALTER TABLE productos ADD COLUMN visible INTEGER DEFAULT 1"); db.commit()
         except: pass
@@ -455,6 +458,25 @@ if __name__ == "__main__":
 
 with app.app_context():
     init_db()
+
+@app.route("/api/clientes_fichas", methods=["GET"])
+def get_fichas():
+    return jsonify({r["cliente"]:dict(r) for r in q("SELECT * FROM clientes_fichas")})
+
+@app.route("/api/clientes_fichas/<path:nombre>", methods=["POST"])
+def save_ficha(nombre):
+    d = request.json or {}
+    db = get_db()
+    if USE_PG:
+        cur = db.cursor()
+        cur.execute("INSERT INTO clientes_fichas (cliente,dni_cuit,direccion,localidad,cp,telefono,provincia,notas) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (cliente) DO UPDATE SET dni_cuit=EXCLUDED.dni_cuit,direccion=EXCLUDED.direccion,localidad=EXCLUDED.localidad,cp=EXCLUDED.cp,telefono=EXCLUDED.telefono,provincia=EXCLUDED.provincia,notas=EXCLUDED.notas",
+            (nombre,d.get("dni_cuit",""),d.get("direccion",""),d.get("localidad",""),d.get("cp",""),d.get("telefono",""),d.get("provincia",""),d.get("notas","")))
+        db.commit()
+    else:
+        db.execute("INSERT OR REPLACE INTO clientes_fichas (cliente,dni_cuit,direccion,localidad,cp,telefono,provincia,notas) VALUES (?,?,?,?,?,?,?,?)",
+            (nombre,d.get("dni_cuit",""),d.get("direccion",""),d.get("localidad",""),d.get("cp",""),d.get("telefono",""),d.get("provincia",""),d.get("notas","")))
+        db.commit()
+    return jsonify({"ok":True})
 
 @app.route("/inicializar-laguarida-2026")
 def seed_now():
