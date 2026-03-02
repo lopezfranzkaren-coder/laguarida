@@ -330,34 +330,7 @@ input[type=number]{text-align:right;}
   </div>
 </div>
 
-<!-- ══ PEDIDOS ══════════════════════════════════════════════════════════════════ -->
-<div id="tab-pedidos" class="tab">
-  <div class="flex-between mb12">
-    <div class="flex">
-      <select id="pedido-filtro-estado" onchange="renderPedidos()" style="width:140px">
-        <option value="">Todos los estados</option>
-        <option value="pendiente">Pendiente</option>
-        <option value="pagado">Pagado</option>
-        <option value="entregado">Entregado</option>
-        <option value="cancelado">Cancelado</option>
-      </select>
-      <input id="pedido-search" placeholder="🔍 Buscar cliente..." style="width:200px" oninput="renderPedidos()"/>
-    </div>
-    <button class="btn btn-primary" onclick="abrirModalPedido()">+ Nuevo Pedido</button>
-  </div>
-  <div class="card">
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr>
-          <th>N°</th><th>Fecha</th><th>Cliente</th><th>Provincia</th>
-          <th>Transporte</th><th>Tipo Pago</th><th class="tr">Total</th>
-          <th class="tc">Estado</th><th class="tc">Acciones</th>
-        </tr></thead>
-        <tbody id="pedidos-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
+
 
 <!-- ══ ANÁLISIS ═════════════════════════════════════════════════════════════════ -->
 <div id="tab-analisis" class="tab">
@@ -384,60 +357,110 @@ input[type=number]{text-align:right;}
   </div>
 </div>
 
-<!-- ══ CLIENTES ══════════════════════════════════════════════════════════════════ -->
+<!-- ══ CLIENTES & PEDIDOS ════════════════════════════════════════════════════════ -->
 <div id="tab-clientes" class="tab">
-  <div class="kpi-grid" id="clientes-kpis"></div>
-  <!-- Filtro global por mes -->
-  <div class="card" style="padding:12px 16px;margin-bottom:0">
-    <div class="flex" style="gap:12px;align-items:center;flex-wrap:wrap">
-      <span style="font-size:12px;color:var(--muted);font-weight:600">📅 Filtrar por mes:</span>
-      <select id="cli-mes-global" style="width:200px" onchange="renderClientes()">
-        <option value="">Todos los meses</option>
-      </select>
-      <span id="cli-mes-resumen" style="font-size:12px;color:var(--gold);font-weight:700"></span>
-      <input id="cli-search" placeholder="🔍 Buscar cliente..." style="width:200px;margin-left:auto" oninput="renderClientes()"/>
+  <div class="flex" style="gap:0;margin-bottom:16px;border-bottom:2px solid var(--border)">
+    <button id="subtab-btn-clientes" class="subtab-btn active" onclick="showSubtab('clientes')">👥 Clientes</button>
+    <button id="subtab-btn-pedidos" class="subtab-btn" onclick="showSubtab('pedidos')">🛒 Pedidos</button>
+  </div>
+
+  <!-- SUB: CLIENTES -->
+  <div id="subtab-clientes">
+    <div class="kpi-grid" id="clientes-kpis"></div>
+    <div class="card" style="padding:12px 16px;margin-bottom:0">
+      <div class="flex" style="gap:12px;align-items:center;flex-wrap:wrap">
+        <span style="font-size:12px;color:var(--muted);font-weight:600">📅 Filtrar por mes:</span>
+        <select id="cli-mes-global" style="width:200px" onchange="renderClientes()">
+          <option value="">Todos los meses</option>
+        </select>
+        <span id="cli-mes-resumen" style="font-size:12px;color:var(--gold);font-weight:700"></span>
+        <input id="cli-search" placeholder="🔍 Buscar..." style="width:180px;margin-left:auto" oninput="renderClientes()"/>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 420px;gap:16px">
+      <div class="card">
+        <div class="card-title">👥 Clientes</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>Cliente</th><th>Teléfono</th><th>Provincia</th>
+              <th class="tc">Pedidos</th><th>Último pedido</th>
+              <th class="tr">Total mes</th><th class="tr">Acumulado</th>
+              <th class="tc">Acciones</th>
+            </tr></thead>
+            <tbody id="clientes-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Panel derecho: ficha + historial -->
+      <div class="card" id="cliente-detalle-card" style="display:none;align-self:start;max-height:82vh;overflow-y:auto">
+        <div class="flex-between mb8">
+          <strong id="cliente-detalle-title" style="font-size:14px"></strong>
+          <button class="btn-icon" onclick="cerrarDetalleCliente()">✕</button>
+        </div>
+        <!-- Sub-tabs dentro del panel -->
+        <div class="flex" style="gap:0;margin-bottom:12px;border-bottom:1px solid var(--border)">
+          <button id="panel-btn-historial" class="subtab-btn active" onclick="showPanelTab('historial')" style="font-size:11px;padding:5px 14px">📋 Historial</button>
+          <button id="panel-btn-ficha" class="subtab-btn" onclick="showPanelTab('ficha')" style="font-size:11px;padding:5px 14px">📝 Ficha</button>
+        </div>
+        <!-- Historial -->
+        <div id="panel-historial">
+          <div id="cliente-detalle-content"></div>
+        </div>
+        <!-- Ficha -->
+        <div id="panel-ficha" style="display:none">
+          <div class="form-row mb8">
+            <label>Nombre</label>
+            <div class="flex" style="gap:6px">
+              <input id="ficha-nombre" class="w100"/>
+              <button class="btn btn-ghost btn-sm" onclick="renombrarDesdePanel()">✏️ Renombrar</button>
+            </div>
+          </div>
+          <div class="form-grid mb8">
+            <div class="form-row"><label>DNI / CUIT</label><input id="ficha-dni" class="w100"/></div>
+            <div class="form-row"><label>Teléfono</label><input id="ficha-tel2" class="w100"/></div>
+          </div>
+          <div class="form-row mb8"><label>Dirección</label><input id="ficha-dir" class="w100"/></div>
+          <div class="form-grid3 mb8">
+            <div class="form-row"><label>Localidad</label><input id="ficha-loc" class="w100"/></div>
+            <div class="form-row"><label>Provincia</label><input id="ficha-prov" class="w100"/></div>
+            <div class="form-row"><label>CP</label><input id="ficha-cp" class="w100"/></div>
+          </div>
+          <div class="form-row mb12">
+            <label>Notas</label>
+            <textarea id="ficha-notas" class="w100" rows="2" placeholder="Ej: Paga a 30 días..."></textarea>
+          </div>
+          <button class="btn btn-primary w100" onclick="guardarFicha()">💾 Guardar ficha</button>
+        </div>
+      </div>
     </div>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 420px;gap:16px">
+
+  <!-- SUB: PEDIDOS -->
+  <div id="subtab-pedidos" style="display:none">
+    <div class="flex-between mb12">
+      <div class="flex">
+        <select id="pedido-filtro-estado" onchange="renderPedidos()" style="width:140px">
+          <option value="">Todos los estados</option>
+          <option value="pendiente">Pendiente</option>
+          <option value="pagado">Pagado</option>
+          <option value="entregado">Entregado</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+        <input id="pedido-search" placeholder="🔍 Buscar cliente..." style="width:200px" oninput="renderPedidos()"/>
+      </div>
+      <button class="btn btn-primary" onclick="abrirModalPedido()">+ Nuevo Pedido</button>
+    </div>
     <div class="card">
-      <div class="card-title">👥 Clientes Mayoristas</div>
       <div class="tbl-wrap">
         <table>
           <thead><tr>
-            <th>Cliente</th><th>Teléfono</th><th>Provincia</th>
-            <th class="tc">Pedidos</th><th>Último Pedido</th>
-            <th class="tr">Total mes</th><th class="tr">Acumulado</th>
-            <th class="tc">Acciones</th>
+            <th>N°</th><th>Fecha</th><th>Cliente</th><th>Provincia</th>
+            <th>Transporte</th><th>Tipo Pago</th><th class="tr">Total</th>
+            <th class="tc">Estado</th><th class="tc">Acciones</th>
           </tr></thead>
-          <tbody id="clientes-tbody"></tbody>
+          <tbody id="pedidos-tbody"></tbody>
         </table>
-      </div>
-    </div>
-    <div class="card" id="cliente-detalle-card" style="display:none;align-self:start;max-height:80vh;overflow-y:auto">
-      <div class="flex-between mb12">
-        <span class="card-title" id="cliente-detalle-title">Historial</span>
-        <button class="btn-icon" onclick="cerrarDetalleCliente()">✕</button>
-      </div>
-      <div id="cliente-detalle-content"></div>
-      <!-- Ficha del cliente -->
-      <div style="border-top:2px solid var(--border);margin-top:14px;padding-top:14px">
-        <div class="flex-between mb12">
-          <span style="font-size:12px;font-weight:700;color:var(--blue)">📋 Ficha completa</span>
-          <button class="btn btn-blue btn-sm" onclick="guardarFicha()">💾 Guardar ficha</button>
-        </div>
-        <div class="form-grid mb12">
-          <div class="form-row"><label>DNI / CUIT</label><input id="ficha-dni" class="w100" placeholder="Sin datos"/></div>
-          <div class="form-row"><label>Dirección</label><input id="ficha-dir" class="w100" placeholder="Sin datos"/></div>
-        </div>
-        <div class="form-grid3 mb12">
-          <div class="form-row"><label>Localidad</label><input id="ficha-loc" class="w100" placeholder="Sin datos"/></div>
-          <div class="form-row"><label>Provincia</label><input id="ficha-prov" class="w100" placeholder="Sin datos"/></div>
-          <div class="form-row"><label>CP</label><input id="ficha-cp" class="w100" placeholder="Sin datos"/></div>
-        </div>
-        <div class="form-row">
-          <label>Notas</label>
-          <textarea id="ficha-notas" class="w100" rows="2" placeholder="Ej: Paga siempre a 30 días..."></textarea>
-        </div>
       </div>
     </div>
   </div>
@@ -810,33 +833,34 @@ function showTab(name,btn){
   document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
   document.getElementById("tab-"+name).classList.add("active");
   if(btn) btn.classList.add("active");
-  function showSubtab(name){
-  document.getElementById('subtab-clientes').style.display = name==='clientes' ? '' : 'none';
-  document.getElementById('subtab-pedidos').style.display = name==='pedidos' ? '' : 'none';
-  document.getElementById('subtab-btn-clientes').classList.toggle('active', name==='clientes');
-  document.getElementById('subtab-btn-pedidos').classList.toggle('active', name==='pedidos');
+  const renders={precios:renderPrecios,mayoristas:renderMayoristas,recetas:renderRecetaProds,
+    productos:renderProductosTab,insumos:renderInsumos,gastos:renderGastos,
+    pedidos:renderPedidos,clientes:()=>{initMesGlobal();renderClientes();showSubtab('clientes');},
+    config:renderConfig,calculadora:initCalc,presupuestos:initPresupuestos,analisis:renderAnalisis};
+  if(renders[name]) renders[name]();
+}
+
+function showSubtab(name){
+  ['clientes','pedidos'].forEach(n=>{
+    document.getElementById('subtab-'+n).style.display=n===name?'':'none';
+    document.getElementById('subtab-btn-'+n).classList.toggle('active',n===name);
+  });
   if(name==='pedidos') renderPedidos();
   if(name==='clientes'){initMesGlobal();renderClientes();}
 }
 
-function showFichaTab(name){
-  document.getElementById('ficha-tab-historial').style.display = name==='historial' ? '' : 'none';
-  document.getElementById('ficha-tab-ficha').style.display = name==='ficha' ? '' : 'none';
-  document.getElementById('ficha-tab-btn-historial').classList.toggle('active', name==='historial');
-  document.getElementById('ficha-tab-btn-ficha').classList.toggle('active', name==='ficha');
+function showPanelTab(name){
+  document.getElementById('panel-historial').style.display=name==='historial'?'':'none';
+  document.getElementById('panel-ficha').style.display=name==='ficha'?'':'none';
+  document.getElementById('panel-btn-historial').classList.toggle('active',name==='historial');
+  document.getElementById('panel-btn-ficha').classList.toggle('active',name==='ficha');
 }
 
 function renombrarDesdePanel(){
-  const viejo = clienteActualNombre;
-  const nuevo = document.getElementById('ficha-nombre').value.trim();
-  if(!nuevo || nuevo === viejo) return;
-  renombrarCliente(encodeURIComponent(viejo), nuevo);
-}
-
-const renders={precios:renderPrecios,mayoristas:renderMayoristas,recetas:renderRecetaProds,
-    productos:renderProductosTab,insumos:renderInsumos,gastos:renderGastos,
-    pedidos:renderPedidos,clientes:()=>{initMesGlobal();renderClientes();showSubtab('clientes');},config:renderConfig,calculadora:initCalc,presupuestos:initPresupuestos,analisis:renderAnalisis};
-  if(renders[name]) renders[name]();
+  const viejo=clienteActualNombre;
+  const nuevo=document.getElementById('ficha-nombre').value.trim();
+  if(!nuevo||nuevo===viejo){toast('El nombre no cambió',true);return;}
+  renombrarCliente(encodeURIComponent(viejo),nuevo);
 }
 
 function uploadLogo(e){
@@ -1519,7 +1543,7 @@ async function verCliente(nombre){
   const hist=await api(`/api/clientes/${encodeURIComponent(cli)}/pedidos`);
   clienteActualHist=hist;
   document.getElementById("cliente-detalle-title").textContent=cli;
-  
+
   // Cargar ficha
   const ficha=fichasCache[cli]||{};
   const cliData=clientes.find(c=>c.cliente===cli)||{};
@@ -1531,11 +1555,11 @@ async function verCliente(nombre){
   document.getElementById("ficha-prov").value=ficha.provincia||cliData.provincia||"";
   document.getElementById("ficha-cp").value=ficha.cp||"";
   document.getElementById("ficha-notas").value=ficha.notas||"";
-  
-  // Show historial tab by default
-  showFichaTab('historial');
+
+  showPanelTab('historial');
   renderHistorial(hist);
   document.getElementById("cliente-detalle-card").style.display="block";
+  document.getElementById("cliente-detalle-card").scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 async function renombrarCliente(nombreEnc, nuevoParam){
@@ -1605,7 +1629,11 @@ async function cargarPedidoEnPresupuesto(pid){
   cargarClientePres(p.cliente);
   document.getElementById('pres-cliente-sel').value=p.cliente;
   // Load items from pedido
-  presItems = p.items.map(i=>({producto:i.producto, cantidad:i.cantidad, precio:i.precio_unitario}));
+  presItems = p.items.map(i=>({
+    producto:i.producto,
+    cantidad:i.cantidad||1,
+    precio:i.precio_unitario||(i.subtotal&&i.cantidad?Math.round(i.subtotal/i.cantidad):0)
+  }));
   renderPresItems();
   toast(`📋 Pedido de ${p.cliente} cargado en Presupuestos`);
 }
@@ -1619,7 +1647,7 @@ async function guardarFicha(){
     provincia:document.getElementById("ficha-prov").value,
     cp:document.getElementById("ficha-cp").value,
     notas:document.getElementById("ficha-notas").value,
-    telefono:(clientes.find(c=>c.cliente===clienteActualNombre)||{}).telefono||""
+    telefono:document.getElementById("ficha-tel2").value||(clientes.find(c=>c.cliente===clienteActualNombre)||{}).telefono||""
   };
   await api(`/api/clientes_fichas/${encodeURIComponent(clienteActualNombre)}`,{method:"POST",body:JSON.stringify(data)});
   fichasCache[clienteActualNombre]={...data,cliente:clienteActualNombre};
