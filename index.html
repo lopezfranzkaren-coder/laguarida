@@ -152,6 +152,7 @@ input[type=number]{text-align:right;}
     <button onclick="showTab('gastos',this)">🏢 Gastos</button>
     <button onclick="showTab('config',this)">⚙️ Config</button>
     <button onclick="showTab('presupuestos',this)">📋 Presupuestos</button>
+    <button onclick="showTab('analisis',this)">📊 Análisis</button>
   </nav>
 </header>
 <main>
@@ -176,22 +177,23 @@ input[type=number]{text-align:right;}
     </div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr>
-          <th style="width:30px"></th>
-          <th>Producto</th>
-          <th class="tr">Costo Base</th>
-          <th class="tr">Costo Final Min.</th>
-          <th class="tc">Ganancia %</th>
-          <th class="tr" style="color:var(--accent)">Precio Mínimo</th>
-          <th class="tr" style="color:var(--green)">$ Ganancia neta</th>
-          <th class="tc">Tu precio actual</th>
-          <th class="tr" style="color:var(--blue)">Recibís (Transf. −5%)</th>
-          <th class="tr" style="color:var(--blue)">Recibís (Efect. −10%)</th>
-          <th class="tr">Recibís (QR Déb.)</th>
-          <th class="tr">Recibís (QR Cré.)</th>
-          <th class="tr" style="color:var(--gold)">Recibís (3 Cuotas)</th>
-          <th class="tc">Estado</th>
-        </tr></thead>
+        <thead>
+          <tr>
+            <th style="width:28px"></th>
+            <th>Producto</th>
+            <th class="tr" style="font-size:10px">Costo</th>
+            <th class="tc" style="font-size:10px">Gan.%</th>
+            <th class="tr" style="color:var(--accent);font-size:10px">Mínimo</th>
+            <th class="tr" style="color:var(--green);font-size:10px">$ Gan.</th>
+            <th class="tc" style="font-size:10px">Tu precio</th>
+            <th class="tr" style="color:var(--blue);font-size:10px" title="Recibís con Transferencia −5%">💳Trf</th>
+            <th class="tr" style="color:var(--blue);font-size:10px" title="Recibís con Efectivo −10%">💵Efe</th>
+            <th class="tr" style="font-size:10px" title="Recibís con QR Débito">📱Déb</th>
+            <th class="tr" style="font-size:10px" title="Recibís con QR Crédito">💳Cré</th>
+            <th class="tr" style="color:var(--gold);font-size:10px" title="Recibís con 3 Cuotas">🔄3C</th>
+            <th class="tc" style="font-size:10px">Estado</th>
+          </tr>
+        </thead>
         <tbody id="precios-tbody"></tbody>
       </table>
     </div>
@@ -351,6 +353,31 @@ input[type=number]{text-align:right;}
         </tr></thead>
         <tbody id="pedidos-tbody"></tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ANÁLISIS ═════════════════════════════════════════════════════════════════ -->
+<div id="tab-analisis" class="tab">
+  <div style="display:grid;grid-template-columns:1fr 320px;gap:16px">
+    <!-- Gráfico de barras -->
+    <div class="card">
+      <div class="flex-between mb12">
+        <span class="card-title">📊 Rentabilidad por producto ($ ganancia neta)</span>
+        <select id="analisis-orden" style="width:180px" onchange="renderAnalisis()">
+          <option value="ganancia">Mayor ganancia $</option>
+          <option value="markup">Mayor markup %</option>
+          <option value="nombre">Nombre A-Z</option>
+        </select>
+      </div>
+      <div id="analisis-chart" style="overflow-y:auto;max-height:600px"></div>
+    </div>
+    <!-- Sugerencias -->
+    <div>
+      <div class="card" style="position:sticky;top:80px">
+        <div class="card-title">💡 Sugerencias</div>
+        <div id="analisis-sugerencias"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -783,7 +810,7 @@ function showTab(name,btn){
   if(btn) btn.classList.add("active");
   const renders={precios:renderPrecios,mayoristas:renderMayoristas,recetas:renderRecetaProds,
     productos:renderProductosTab,insumos:renderInsumos,gastos:renderGastos,
-    pedidos:renderPedidos,clientes:()=>{initMesGlobal();renderClientes();},config:renderConfig,calculadora:initCalc,presupuestos:initPresupuestos};
+    pedidos:renderPedidos,clientes:()=>{initMesGlobal();renderClientes();},config:renderConfig,calculadora:initCalc,presupuestos:initPresupuestos,analisis:renderAnalisis};
   if(renders[name]) renders[name]();
 }
 
@@ -842,34 +869,33 @@ function renderPrecios(){
     const tuP=(typeof pm==="object"?pm.precio:pm)||0;
     const isVisible=p.visible!==0;
     return `<tr class="${isVisible?'':'hidden-prod'}">
-      <td class="tc">
+      <td class="tc" style="padding:4px">
         <button class="eye-btn ${isVisible?'':'hidden'}" onclick="toggleVisible(${p.id},${isVisible?0:1})"
-          title="${isVisible?'Ocultar (sin stock)':'Mostrar'}">
+          title="${isVisible?'Ocultar':'Mostrar'}" style="font-size:13px;background:none;border:none;cursor:pointer">
           ${isVisible?'👁️':'🙈'}
         </button>
       </td>
-      <td><strong>${p.nombre}</strong>${!p.costo_base?'<span class="badge b-red" style="margin-left:6px">⚠️</span>':''}</td>
-      <td class="tr" style="color:var(--muted)">${fmt(p.costo_base)}</td>
-      <td class="tr">${fmt(cf)}</td>
-      <td class="tc">
-        <div class="markup-cell">
-          <input class="pct-inp" type="number" value="${Math.round(markup*100)}" min="0" max="999"
+      <td style="padding:6px 8px"><strong style="font-size:12px">${p.nombre}</strong>${!p.costo_base?'<span style="color:var(--red);margin-left:4px">⚠️</span>':''}</td>
+      <td class="tr" style="color:var(--muted);font-size:11px;padding:6px 8px">${fmt(cf)}</td>
+      <td class="tc" style="padding:4px">
+        <div style="display:flex;align-items:center;gap:2px">
+          <input class="pct-inp" type="number" value="${Math.round(markup*100)}" min="0" max="999" style="width:45px"
             onchange="saveMarkupMin(${p.id},this.value/100)"/>
-          <span>%</span>
+          <span style="font-size:10px;color:var(--muted)">%</span>
         </div>
       </td>
-      <td class="tr" style="font-weight:700;color:var(--accent)">${fmt(pmin)}</td>
-      <td class="tr" style="font-weight:700;color:var(--green)">${fmt(ganancia)}</td>
-      <td class="tc">
+      <td class="tr" style="font-weight:700;color:var(--accent);font-size:12px;padding:6px 8px">${fmt(pmin)}</td>
+      <td class="tr" style="font-weight:700;color:var(--green);font-size:12px;padding:6px 8px">${fmt(ganancia)}</td>
+      <td class="tc" style="padding:4px">
         <input class="price-inp" type="number" value="${tuP||""}" placeholder="0"
-          onchange="savePrecioMin(${p.id},this.value)" style="width:110px"/>
+          onchange="savePrecioMin(${p.id},this.value)" style="width:90px"/>
       </td>
-      <td class="tr" style="color:var(--blue)">${tuP?fmt(tuP*(1-trf)):'—'}</td>
-      <td class="tr" style="color:var(--blue)">${tuP?fmt(tuP*(1-efe)):'—'}</td>
-      <td class="tr">${tuP?fmt(tuP*(1-qrd)):'—'}</td>
-      <td class="tr">${tuP?fmt(tuP*(1-qrc)):'—'}</td>
-      <td class="tr" style="color:var(--gold);font-weight:600">${tuP?fmt(tuP*(1-c3q)):'—'}</td>
-      <td class="tc">${semaforo(tuP,pmin)}</td>
+      <td class="tr" style="color:var(--blue);font-size:11px;padding:6px 4px">${tuP?fmt(tuP*(1-trf)):'—'}</td>
+      <td class="tr" style="color:var(--blue);font-size:11px;padding:6px 4px">${tuP?fmt(tuP*(1-efe)):'—'}</td>
+      <td class="tr" style="font-size:11px;padding:6px 4px">${tuP?fmt(tuP*(1-qrd)):'—'}</td>
+      <td class="tr" style="font-size:11px;padding:6px 4px">${tuP?fmt(tuP*(1-qrc)):'—'}</td>
+      <td class="tr" style="color:var(--gold);font-size:11px;padding:6px 4px">${tuP?fmt(tuP*(1-c3q)):'—'}</td>
+      <td class="tc" style="padding:4px">${semaforo(tuP,pmin)}</td>
     </tr>`;
   }).join("");
 }
@@ -1623,6 +1649,78 @@ async function aplicarInflacion(){
   renderMayoristas();
 }
 
+
+
+// ─── ANÁLISIS ─────────────────────────────────────────────────────────────────
+function renderAnalisis(){
+  const orden = document.getElementById("analisis-orden")?.value || "ganancia";
+  const trf=cfg("desc_transferencia");
+  
+  // Build data for each product
+  const data = productos
+    .filter(p => p.visible !== 0 && p.costo_base)
+    .map(p => {
+      const cf = costoFinalMin(p);
+      const markup = getMarkupMin(p.id);
+      const pmin = cf * (1 + markup);
+      const ganancia = pmin - cf;
+      const pm = preciosMin[p.id] || {};
+      const tuP = (typeof pm === "object" ? pm.precio : pm) || 0;
+      const gananciaReal = tuP ? tuP * (1 - trf) - cf : ganancia;
+      return { nombre: p.nombre, cf, markup, pmin, ganancia, tuP, gananciaReal };
+    });
+
+  // Sort
+  if(orden === "ganancia") data.sort((a,b) => b.ganancia - a.ganancia);
+  else if(orden === "markup") data.sort((a,b) => b.markup - a.markup);
+  else data.sort((a,b) => a.nombre.localeCompare(b.nombre));
+
+  const maxGan = Math.max(...data.map(d => d.ganancia), 1);
+
+  // Chart
+  document.getElementById("analisis-chart").innerHTML = data.map(d => {
+    const pct = Math.round(d.ganancia / maxGan * 100);
+    const markupPct = Math.round(d.markup * 100);
+    // Color by markup: red <30%, orange 30-70%, green >70%
+    const color = markupPct < 30 ? "var(--red)" : markupPct < 70 ? "var(--gold)" : "var(--green)";
+    return `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+        <span style="font-weight:600">${d.nombre}</span>
+        <span style="color:var(--green);font-weight:700">${fmt(d.ganancia)}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="flex:1;background:#1e3a5f33;border-radius:4px;height:18px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:${color};border-radius:4px;transition:width .3s;display:flex;align-items:center;padding-left:6px">
+            <span style="font-size:10px;color:#fff;font-weight:700;white-space:nowrap">${markupPct}%</span>
+          </div>
+        </div>
+        <span style="font-size:10px;color:var(--muted);width:70px;text-align:right">${fmt(d.pmin)}</span>
+      </div>
+    </div>`;
+  }).join("");
+
+  // Sugerencias automáticas
+  const sorted = [...data].sort((a,b) => b.ganancia - a.ganancia);
+  const top3 = sorted.slice(0, 3);
+  const sinPrecio = data.filter(d => !d.tuP);
+  const bajoPct = data.filter(d => d.markup < 0.3 && d.ganancia > 0);
+  const altoGan = sorted[0];
+  const bajoPesos = [...data].sort((a,b) => a.ganancia - b.ganancia).slice(0,3);
+
+  let sugs = [];
+  if(altoGan) sugs.push({icon:"🏆", color:"var(--green)", titulo:"Más rentable en $", texto:`<strong>${altoGan.nombre}</strong> te deja <strong>${fmt(altoGan.ganancia)}</strong> por unidad`});
+  top3.forEach(d => {
+    if(d !== altoGan) sugs.push({icon:"⭐", color:"var(--gold)", titulo:"Top rentabilidad", texto:`${d.nombre} · ${fmt(d.ganancia)}`});
+  });
+  bajoPct.forEach(d => sugs.push({icon:"⚠️", color:"var(--red)", titulo:"Markup bajo", texto:`<strong>${d.nombre}</strong> tiene solo ${Math.round(d.markup*100)}% de ganancia — considerá subir el precio`}));
+  sinPrecio.slice(0,3).forEach(d => sugs.push({icon:"❓", color:"var(--muted)", titulo:"Sin precio cargado", texto:`${d.nombre} — cargá tu precio real para ver la rentabilidad exacta`}));
+
+  document.getElementById("analisis-sugerencias").innerHTML = sugs.length ? sugs.map(s => `
+    <div style="border-left:3px solid ${s.color};padding:10px 12px;margin-bottom:10px;background:#0a152088;border-radius:0 8px 8px 0">
+      <div style="font-size:11px;font-weight:700;color:${s.color};margin-bottom:3px">${s.icon} ${s.titulo}</div>
+      <div style="font-size:12px">${s.texto}</div>
+    </div>`).join("") : '<div style="color:var(--muted);font-size:12px;padding:10px">Cargá precios para ver sugerencias</div>';
+}
 
 // ─── PRESUPUESTOS ─────────────────────────────────────────────────────────────
 let presItems = [];
