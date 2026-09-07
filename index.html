@@ -1074,7 +1074,17 @@ function showTab(name,btn){
   const renders={
     precios:renderPrecios,
     mayoristas:renderMayoristas,
-    // ── CALCULADORA ───────────────────────────────────────────────────────────────
+      calculadora:()=>{initCalc();},
+      clientes:()=>{initMesGlobal();renderClientes();showSubtab('clientes');},
+      productos:()=>{renderProductosTab();showProdTab('lista');},
+      gastos:()=>{renderInsumos();renderGastos();showGastosTab('insumos');},
+      analisis:()=>{renderAnalisis();initUnidadesMes();},
+      config:renderConfig
+    };
+    if(renders[name]) renders[name]();
+  }
+
+// ── CALCULADORA ───────────────────────────────────────────────────────────────
 let calcRows=[], calcTipo='minorista';
 
 function initCalc(){
