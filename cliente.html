@@ -1,0 +1,706 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.4">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.0px 'Helvetica Neue'}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.0px 'Helvetica Neue'; min-height: 15.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="es"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1">&lt;meta charset="UTF-8"/&gt;</p>
+<p class="p1">&lt;meta name="viewport" content="width=device-width,initial-scale=1"/&gt;</p>
+<p class="p1">&lt;title&gt;Ficha de Cliente — La Guarida&lt;/title&gt;</p>
+<p class="p1">&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"&gt;&lt;/script&gt;</p>
+<p class="p1">&lt;style&gt;</p>
+<p class="p1">:root{</p>
+<p class="p1"><span class="Apple-converted-space">  </span>--bg:#F5F0E8;--surface:#FDFAF5;--border:#DDD5C8;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>--accent:#E8720C;--gold:#C9780C;--green:#2E7D32;--blue:#1A3A5C;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>--text:#3D3128;--muted:#9A8E82;--input-bg:#F5F0E8;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>--red:#C62828;--warn:#F57F17;</p>
+<p class="p1">}</p>
+<p class="p1">*{box-sizing:border-box;margin:0;padding:0;}</p>
+<p class="p1">body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;}</p>
+<p class="p2"><br></p>
+<p class="p1">/* HEADER */</p>
+<p class="p1">.page-header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:50;}</p>
+<p class="p1">.back-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}</p>
+<p class="p1">.back-btn:hover{border-color:var(--accent);color:var(--accent);}</p>
+<p class="p1">.page-title{font-size:18px;font-weight:800;color:var(--text);}</p>
+<p class="p1">.page-subtitle{font-size:12px;color:var(--muted);}</p>
+<p class="p1">.header-actions{margin-left:auto;display:flex;gap:8px;}</p>
+<p class="p2"><br></p>
+<p class="p1">/* LAYOUT */</p>
+<p class="p1">.page-content{max-width:1200px;margin:0 auto;padding:20px 24px;}</p>
+<p class="p2"><br></p>
+<p class="p1">/* CARDS */</p>
+<p class="p1">.card{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:20px;margin-bottom:16px;}</p>
+<p class="p1">.card-title{font-size:13px;font-weight:700;margin-bottom:14px;color:var(--text);display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--border);}</p>
+<p class="p2"><br></p>
+<p class="p1">/* KPIs */</p>
+<p class="p1">.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px;}</p>
+<p class="p1">.kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;text-align:center;}</p>
+<p class="p1">.kpi label{font-size:10px;color:var(--muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;}</p>
+<p class="p1">.kpi .kval{font-size:20px;font-weight:800;color:var(--text);}</p>
+<p class="p1">.kpi .kval.accent{color:var(--accent);}</p>
+<p class="p1">.kpi .kval.green{color:var(--green);}</p>
+<p class="p1">.kpi .kval.blue{color:var(--blue);}</p>
+<p class="p2"><br></p>
+<p class="p1">/* GRID LAYOUT */</p>
+<p class="p1">.two-col{display:grid;grid-template-columns:340px 1fr;gap:16px;}</p>
+<p class="p2"><br></p>
+<p class="p1">/* FICHA */</p>
+<p class="p1">.ficha-field{margin-bottom:12px;}</p>
+<p class="p1">.ficha-field label{font-size:10px;color:var(--muted);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px;}</p>
+<p class="p1">.ficha-field input,.ficha-field textarea,.ficha-field select{width:100%;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;}</p>
+<p class="p1">.ficha-field input:focus,.ficha-field textarea:focus{outline:none;border-color:var(--accent);}</p>
+<p class="p1">.field-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}</p>
+<p class="p1">.field-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}</p>
+<p class="p2"><br></p>
+<p class="p1">/* AVATAR */</p>
+<p class="p1">.avatar{width:56px;height:56px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;flex-shrink:0;}</p>
+<p class="p2"><br></p>
+<p class="p1">/* TABLA */</p>
+<p class="p1">table{width:100%;border-collapse:collapse;font-size:12px;}</p>
+<p class="p1">th{padding:8px 10px;font-size:10px;color:var(--muted);text-align:left;border-bottom:2px solid var(--border);font-weight:600;white-space:nowrap;background:var(--bg);}</p>
+<p class="p1">td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text);}</p>
+<p class="p1">tr:hover td{background:var(--bg);}</p>
+<p class="p1">.tr{text-align:right;}.tc{text-align:center;}</p>
+<p class="p2"><br></p>
+<p class="p1">/* BADGES */</p>
+<p class="p1">.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;}</p>
+<p class="p1">.b-green{background:#E8F5E9;color:#2E7D32;}</p>
+<p class="p1">.b-gold{background:#FFF8E1;color:#F57F17;}</p>
+<p class="p1">.b-red{background:#FFEBEE;color:#C62828;}</p>
+<p class="p1">.b-blue{background:#E8F0FD;color:#1A3A5C;}</p>
+<p class="p1">.b-gray{background:#F5F0E8;color:#9A8E82;}</p>
+<p class="p1">.b-orange{background:#FFF3E8;color:#E8720C;}</p>
+<p class="p2"><br></p>
+<p class="p1">/* ESTADO */</p>
+<p class="p1">.estado-activo{background:#E8F5E9;color:#1B5E20;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;display:inline-block;}</p>
+<p class="p1">.estado-tibio{background:#FFF8E1;color:#E65100;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;display:inline-block;}</p>
+<p class="p1">.estado-contactar{background:#FFEBEE;color:#B71C1C;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;display:inline-block;}</p>
+<p class="p2"><br></p>
+<p class="p1">/* BOTONES */</p>
+<p class="p1">.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:7px;border:none;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;}</p>
+<p class="p1">.btn-primary{background:var(--accent);color:#fff;}</p>
+<p class="p1">.btn-primary:hover{background:#CF6409;}</p>
+<p class="p1">.btn-blue{background:var(--blue);color:#fff;}</p>
+<p class="p1">.btn-green{background:var(--green);color:#fff;}</p>
+<p class="p1">.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}</p>
+<p class="p1">.btn-ghost:hover{background:var(--bg);border-color:var(--accent);color:var(--accent);}</p>
+<p class="p1">.btn-excel{background:var(--green);color:#fff;}</p>
+<p class="p1">.btn-sm{padding:4px 10px;font-size:11px;}</p>
+<p class="p1">.btn-danger{background:#FFEBEE;color:var(--red);border:1px solid #FFCDD2;}</p>
+<p class="p1">.btn-danger:hover{background:var(--red);color:#fff;}</p>
+<p class="p1">.w100{width:100%;}</p>
+<p class="p2"><br></p>
+<p class="p1">/* PEDIDO CARD */</p>
+<p class="p1">.pedido-card{border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;background:var(--surface);}</p>
+<p class="p1">.pedido-card:hover{border-color:var(--accent);}</p>
+<p class="p1">.pedido-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}</p>
+<p class="p1">.pedido-items{font-size:11px;color:var(--muted);line-height:1.8;}</p>
+<p class="p1">.pedido-total{text-align:right;font-weight:800;color:var(--accent);font-size:14px;margin-top:6px;}</p>
+<p class="p2"><br></p>
+<p class="p1">/* FRECUENCIA CHART */</p>
+<p class="p1">.freq-bar{display:flex;align-items:center;gap:8px;margin-bottom:6px;}</p>
+<p class="p1">.freq-label{font-size:11px;color:var(--muted);width:60px;flex-shrink:0;}</p>
+<p class="p1">.freq-track{flex:1;background:var(--border);border-radius:3px;height:14px;overflow:hidden;}</p>
+<p class="p1">.freq-fill{height:100%;background:var(--accent);border-radius:3px;display:flex;align-items:center;padding-left:5px;}</p>
+<p class="p1">.freq-val{font-size:9px;color:#fff;font-weight:700;}</p>
+<p class="p2"><br></p>
+<p class="p1">/* TOAST */</p>
+<p class="p1">#toast{position:fixed;bottom:20px;right:20px;background:var(--green);color:#fff;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;z-index:999;pointer-events:none;}</p>
+<p class="p1">#toast.show{opacity:1;}</p>
+<p class="p1">#toast.err{background:var(--red);}</p>
+<p class="p2"><br></p>
+<p class="p1">/* TABS */</p>
+<p class="p1">.tab-bar{display:flex;border-bottom:2px solid var(--border);margin-bottom:16px;}</p>
+<p class="p1">.tab-btn{background:transparent;border:none;border-bottom:3px solid transparent;color:var(--muted);padding:8px 16px;cursor:pointer;font-size:13px;font-weight:500;margin-bottom:-2px;}</p>
+<p class="p1">.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:700;}</p>
+<p class="p2"><br></p>
+<p class="p1">/* EMPTY */</p>
+<p class="p1">.empty{text-align:center;color:var(--muted);padding:30px;font-size:13px;}</p>
+<p class="p2"><br></p>
+<p class="p1">@media(max-width:900px){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.kpi-grid{grid-template-columns:repeat(3,1fr);}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.two-col{grid-template-columns:1fr;}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.field-grid2{grid-template-columns:1fr;}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.field-grid3{grid-template-columns:1fr 1fr;}</p>
+<p class="p1">}</p>
+<p class="p1">&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;div class="page-header"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;a href="javascript:history.back()" class="back-btn"&gt;← Volver&lt;/a&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="page-title" id="page-title"&gt;Cargando...&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="page-subtitle" id="page-subtitle"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="header-actions"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;button class="btn btn-ghost btn-sm" onclick="exportarFichaExcel()"&gt;📊 Excel&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;button class="btn btn-primary btn-sm" onclick="nuevoPedidoDesdeCliente()"&gt;➕ Nuevo pedido&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;div class="page-content"&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- KPIs --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="kpi-grid" id="kpi-grid"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="kpi"&gt;&lt;label&gt;Total acumulado&lt;/label&gt;&lt;div class="kval accent" id="kpi-total"&gt;—&lt;/div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="kpi"&gt;&lt;label&gt;Cantidad pedidos&lt;/label&gt;&lt;div class="kval blue" id="kpi-pedidos"&gt;—&lt;/div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="kpi"&gt;&lt;label&gt;Ticket promedio&lt;/label&gt;&lt;div class="kval" id="kpi-ticket"&gt;—&lt;/div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="kpi"&gt;&lt;label&gt;Frecuencia&lt;/label&gt;&lt;div class="kval" id="kpi-frecuencia"&gt;—&lt;/div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="kpi"&gt;&lt;label&gt;Último pedido&lt;/label&gt;&lt;div class="kval" id="kpi-ultimo" style="font-size:13px"&gt;—&lt;/div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="kpi"&gt;&lt;label&gt;Estado&lt;/label&gt;&lt;div id="kpi-estado"&gt;—&lt;/div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="two-col"&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- COLUMNA IZQUIERDA: FICHA --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="card"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="card-title"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div class="avatar" id="avatar-initials"&gt;?&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div style="font-size:15px;font-weight:800" id="ficha-nombre-display"&gt;—&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div style="font-size:11px;color:var(--muted)" id="ficha-estado-display"&gt;—&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="ficha-view"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div class="field-grid2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="ficha-field"&gt;&lt;label&gt;DNI / CUIT&lt;/label&gt;&lt;div id="view-dni" style="font-size:13px;padding:4px 0;color:var(--text)"&gt;—&lt;/div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="ficha-field"&gt;&lt;label&gt;Teléfono&lt;/label&gt;&lt;div id="view-tel" style="font-size:13px;padding:4px 0;color:var(--text)"&gt;—&lt;/div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div class="ficha-field"&gt;&lt;label&gt;Dirección&lt;/label&gt;&lt;div id="view-dir" style="font-size:13px;padding:4px 0;color:var(--text)"&gt;—&lt;/div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div class="field-grid3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="ficha-field"&gt;&lt;label&gt;Ciudad&lt;/label&gt;&lt;div id="view-ciudad" style="font-size:13px;padding:4px 0;color:var(--text)"&gt;—&lt;/div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="ficha-field"&gt;&lt;label&gt;Provincia&lt;/label&gt;&lt;div id="view-prov" style="font-size:13px;padding:4px 0;color:var(--text)"&gt;—&lt;/div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="ficha-field"&gt;&lt;label&gt;CP&lt;/label&gt;&lt;div id="view-cp" style="font-size:13px;padding:4px 0;color:var(--text)"&gt;—&lt;/div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div class="ficha-field"&gt;&lt;label&gt;Notas&lt;/label&gt;&lt;div id="view-notas" style="font-size:12px;padding:4px 0;color:var(--muted);font-style:italic"&gt;—&lt;/div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button class="btn btn-ghost w100" style="margin-top:8px" onclick="mostrarEdicion()"&gt;✏️ Editar ficha&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="ficha-edit" style="display:none"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div class="field-grid2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="ficha-field"&gt;&lt;label&gt;DNI / CUIT&lt;/label&gt;&lt;input id="edit-dni" class="w100"/&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="ficha-field"&gt;&lt;label&gt;Teléfono&lt;/label&gt;&lt;input id="edit-tel" class="w100"/&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div class="ficha-field"&gt;&lt;label&gt;Dirección&lt;/label&gt;&lt;input id="edit-dir" class="w100"/&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div class="field-grid3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="ficha-field"&gt;&lt;label&gt;Ciudad&lt;/label&gt;&lt;input id="edit-ciudad" class="w100"/&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="ficha-field"&gt;&lt;label&gt;Provincia&lt;/label&gt;&lt;input id="edit-prov" class="w100"/&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="ficha-field"&gt;&lt;label&gt;CP&lt;/label&gt;&lt;input id="edit-cp" class="w100"/&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div class="ficha-field"&gt;&lt;label&gt;Notas&lt;/label&gt;&lt;textarea id="edit-notas" rows="3" style="width:100%;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;resize:vertical"&gt;&lt;/textarea&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div style="display:flex;gap:8px;margin-top:10px"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;button class="btn btn-ghost btn-sm" onclick="cancelarEdicion()"&gt;Cancelar&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;button class="btn btn-primary w100" onclick="guardarFicha()"&gt;💾 Guardar ficha&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;!-- PRODUCTOS MÁS COMPRADOS --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="card"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="card-title"&gt;🛍️ Productos más comprados&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="productos-frecuentes"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;!-- UNIFICAR --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="card" style="border:1px dashed var(--border)"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="card-title" style="color:var(--muted);border:none;padding:0;margin-bottom:10px"&gt;🔗 Gestión del cliente&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button class="btn btn-danger w100 btn-sm" style="margin-bottom:8px" onclick="abrirUnificar()"&gt;🔗 Unificar con duplicado&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="unificar-panel" style="display:none;margin-top:10px"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div class="ficha-field"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;label&gt;Cliente duplicado a eliminar&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;select id="unif-select" class="w100"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;option value=""&gt;— Elegí el duplicado —&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div id="unif-preview" style="display:none;background:#FFF3E8;border:1px solid #F5C49A;border-radius:7px;padding:10px;font-size:12px;margin:8px 0;color:#8B4A0E"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button class="btn btn-primary w100 btn-sm" onclick="ejecutarUnificar()"&gt;Confirmar unificación&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- COLUMNA DERECHA: HISTORIAL --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="card"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="tab-bar"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button class="tab-btn active" id="tab-btn-historial" onclick="showTab('historial')"&gt;📋 Historial de pedidos&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button class="tab-btn" id="tab-btn-stats" onclick="showTab('stats')"&gt;📊 Estadísticas&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- HISTORIAL --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="tab-historial"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div class="flex-between" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span style="font-size:12px;color:var(--muted)" id="historial-resumen"&gt;&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;select id="historial-orden" style="font-size:11px;padding:4px 8px;background:var(--input-bg);border:1px solid var(--border);border-radius:5px;color:var(--text)" onchange="renderHistorial()"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;option value="fecha-desc"&gt;Más reciente primero&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;option value="fecha-asc"&gt;Más antiguo primero&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;option value="monto-desc"&gt;Mayor monto&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div id="historial-list"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- STATS --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="tab-stats" style="display:none"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div id="stats-content"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;div id="toast"&gt;&lt;/div&gt;</p>
+<p class="p1">&lt;script&gt;</p>
+<p class="p1">const fmt = n =&gt; n==null||isNaN(n) ? "—" : "$"+Math.round(n).toLocaleString("es-AR");</p>
+<p class="p1">const api = (url,opts={}) =&gt; fetch(url,{headers:{"Content-Type":"application/json"},...opts}).then(r=&gt;r.json());</p>
+<p class="p2"><br></p>
+<p class="p1">let nombreCliente = '';</p>
+<p class="p1">let fichaData = {};</p>
+<p class="p1">let pedidosCliente = [];</p>
+<p class="p1">let todosClientes = [];</p>
+<p class="p2"><br></p>
+<p class="p1">function toast(msg,err=false){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const t=document.getElementById("toast");</p>
+<p class="p1"><span class="Apple-converted-space">  </span>t.textContent=msg; t.className="show"+(err?" err":"");</p>
+<p class="p1"><span class="Apple-converted-space">  </span>setTimeout(()=&gt;t.className="",3000);</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function showTab(name){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>['historial','stats'].forEach(t=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById(`tab-${t}`).style.display=t===name?'block':'none';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById(`tab-btn-${t}`).classList.toggle('active',t===name);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(name==='stats') renderStats();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">// ── INIT ──────────────────────────────────────────────────────────────────────</p>
+<p class="p1">async function init(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Obtener nombre del cliente desde la URL</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const path=window.location.pathname;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const encoded=path.split('/cliente/')[1];</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(!encoded){ mostrarError('Cliente no especificado'); return; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>nombreCliente=decodeURIComponent(encoded);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(nombreCliente==='__nuevo__'){</p>
+<p class="p1"><span class="Apple-converted-space">    </span>mostrarFormularioNuevo();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.title=`${nombreCliente} — La Guarida`;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('page-title').textContent=nombreCliente;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Iniciales para avatar</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const iniciales=nombreCliente.split(' ').map(w=&gt;w[0]).join('').slice(0,2).toUpperCase();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('avatar-initials').textContent=iniciales;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>try{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Cargar datos en paralelo</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const [fichas,pedidosTodos,clientes]=await Promise.all([</p>
+<p class="p1"><span class="Apple-converted-space">      </span>api('/api/clientes_fichas'),</p>
+<p class="p1"><span class="Apple-converted-space">      </span>api('/api/pedidos'),</p>
+<p class="p1"><span class="Apple-converted-space">      </span>api('/api/clientes')</p>
+<p class="p1"><span class="Apple-converted-space">    </span>]);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>todosClientes=clientes;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>fichaData=fichas[nombreCliente]||{};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>pedidosCliente=pedidosTodos.filter(p=&gt;p.cliente===nombreCliente)</p>
+<p class="p1"><span class="Apple-converted-space">      </span>.sort((a,b)=&gt;b.fecha.localeCompare(a.fecha));</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>renderFicha();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>renderKPIs();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>renderHistorial();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>renderProductosFrecuentes();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>poblarUnificar(clientes);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>}catch(e){</p>
+<p class="p1"><span class="Apple-converted-space">    </span>console.error(e);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>mostrarError('Error al cargar los datos del cliente.');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function mostrarError(msg){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('page-title').textContent='Error';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('page-content').innerHTML=`&lt;div class="card"&gt;&lt;p style="color:var(--red);padding:20px"&gt;${msg}&lt;/p&gt;&lt;/div&gt;`;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function mostrarFormularioNuevo(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('page-title').textContent='Nuevo cliente';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('page-subtitle').textContent='Completá los datos y guardá la ficha';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>mostrarEdicion();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">// ── FICHA ─────────────────────────────────────────────────────────────────────</p>
+<p class="p1">function renderFicha(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const f=fichaData;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('ficha-nombre-display').textContent=nombreCliente;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Estado basado en último pedido</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const hoy=new Date();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const ult=pedidosCliente[0]?.fecha;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const dias=ult?Math.floor((hoy-new Date(ult))/(1000*60*60*24)):999;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let estadoTxt,estadoCls;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(dias&lt;=30){estadoTxt='🟢 Cliente activo';estadoCls='estado-activo';}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>else if(dias&lt;=90){estadoTxt='🟡 Compra poco frecuente';estadoCls='estado-tibio';}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>else{estadoTxt='🔴 Sin compras recientes';estadoCls='estado-contactar';}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('ficha-estado-display').innerHTML=`&lt;span class="${estadoCls}"&gt;${estadoTxt}&lt;/span&gt;`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('view-dni').textContent=f.dni_cuit||'—';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('view-tel').textContent=f.telefono||'—';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('view-dir').textContent=f.direccion||'—';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('view-ciudad').textContent=f.ciudad||'—';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('view-prov').textContent=f.provincia||'—';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('view-cp').textContent=f.cp||'—';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('view-notas').textContent=f.notas||'Sin notas';</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function mostrarEdicion(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('ficha-view').style.display='none';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('ficha-edit').style.display='block';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const f=fichaData;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('edit-dni').value=f.dni_cuit||'';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('edit-tel').value=f.telefono||'';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('edit-dir').value=f.direccion||'';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('edit-ciudad').value=f.ciudad||'';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('edit-prov').value=f.provincia||'';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('edit-cp').value=f.cp||'';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('edit-notas').value=f.notas||'';</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function cancelarEdicion(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('ficha-view').style.display='block';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('ficha-edit').style.display='none';</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">async function guardarFicha(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const nombre=nombreCliente==='__nuevo__'</p>
+<p class="p1"><span class="Apple-converted-space">    </span>? prompt('Nombre del cliente:')?.trim()</p>
+<p class="p1"><span class="Apple-converted-space">    </span>: nombreCliente;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(!nombre){toast('El nombre es obligatorio',true);return;}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const data={</p>
+<p class="p1"><span class="Apple-converted-space">    </span>dni_cuit:document.getElementById('edit-dni').value,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>telefono:document.getElementById('edit-tel').value,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>direccion:document.getElementById('edit-dir').value,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>ciudad:document.getElementById('edit-ciudad').value,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>provincia:document.getElementById('edit-prov').value,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>cp:document.getElementById('edit-cp').value,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>notas:document.getElementById('edit-notas').value,</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>try{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>await api(`/api/clientes_fichas/${encodeURIComponent(nombre)}`,{method:'POST',body:JSON.stringify(data)});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>fichaData={...data};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(nombreCliente==='__nuevo__'){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>nombreCliente=nombre;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>window.history.replaceState(null,'',`/cliente/${encodeURIComponent(nombre)}`);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById('page-title').textContent=nombre;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById('avatar-initials').textContent=nombre.split(' ').map(w=&gt;w[0]).join('').slice(0,2).toUpperCase();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById('ficha-nombre-display').textContent=nombre;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>cancelarEdicion();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>renderFicha();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>toast('✅ Ficha guardada');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}catch(e){toast('Error al guardar',true);}</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">// ── KPIs ──────────────────────────────────────────────────────────────────────</p>
+<p class="p1">function renderKPIs(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const total=pedidosCliente.reduce((s,p)=&gt;s+(p.total||0),0);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const n=pedidosCliente.length;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const ticket=n?Math.round(total/n):0;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Frecuencia: días promedio entre pedidos</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let frecuencia='—';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(n&gt;=2){</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const fechas=pedidosCliente.map(p=&gt;new Date(p.fecha)).sort((a,b)=&gt;a-b);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const diffs=[];</p>
+<p class="p1"><span class="Apple-converted-space">    </span>for(let i=1;i&lt;fechas.length;i++) diffs.push((fechas[i]-fechas[i-1])/(1000*60*60*24));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const prom=Math.round(diffs.reduce((s,d)=&gt;s+d,0)/diffs.length);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>frecuencia=`cada ${prom}d`;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const ult=pedidosCliente[0]?.fecha||'—';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const hoy=new Date();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const dias=ult!=='—'?Math.floor((hoy-new Date(ult))/(1000*60*60*24)):999;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let estadoHTML;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(dias&lt;=30) estadoHTML='&lt;span class="estado-activo"&gt;🟢 Activo&lt;/span&gt;';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>else if(dias&lt;=90) estadoHTML='&lt;span class="estado-tibio"&gt;🟡 Tibio&lt;/span&gt;';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>else estadoHTML='&lt;span class="estado-contactar"&gt;🔴 Contactar&lt;/span&gt;';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('kpi-total').textContent=fmt(total);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('kpi-pedidos').textContent=n;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('kpi-ticket').textContent=fmt(ticket);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('kpi-frecuencia').textContent=frecuencia;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('kpi-ultimo').textContent=ult;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('kpi-estado').innerHTML=estadoHTML;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Subtitle</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('page-subtitle').textContent=</p>
+<p class="p1"><span class="Apple-converted-space">    </span>`${n} pedido${n!==1?'s':''} · ${fmt(total)} acumulado`;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">// ── HISTORIAL ─────────────────────────────────────────────────────────────────</p>
+<p class="p1">function renderHistorial(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const orden=document.getElementById('historial-orden')?.value||'fecha-desc';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let lista=[...pedidosCliente];</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(orden==='fecha-asc') lista.sort((a,b)=&gt;a.fecha.localeCompare(b.fecha));</p>
+<p class="p1"><span class="Apple-converted-space">  </span>else if(orden==='monto-desc') lista.sort((a,b)=&gt;(b.total||0)-(a.total||0));</p>
+<p class="p1"><span class="Apple-converted-space">  </span>else lista.sort((a,b)=&gt;b.fecha.localeCompare(a.fecha));</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const total=lista.reduce((s,p)=&gt;s+(p.total||0),0);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('historial-resumen').textContent=</p>
+<p class="p1"><span class="Apple-converted-space">    </span>`${lista.length} pedido${lista.length!==1?'s':''} · ${fmt(total)} total`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(!lista.length){</p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('historial-list').innerHTML='&lt;div class="empty"&gt;Sin pedidos registrados&lt;/div&gt;';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('historial-list').innerHTML=lista.map(p=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const estadoCls=p.estado==='pagado'?'b-green':p.estado==='pendiente'?'b-gold':'b-blue';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return `&lt;div class="pedido-card"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="pedido-header"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div style="display:flex;align-items:center;gap:8px"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;span style="font-weight:700;font-size:13px"&gt;${p.fecha}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>${p.numero?`&lt;span style="color:var(--muted);font-size:11px"&gt;#${p.numero}&lt;/span&gt;`:''}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div style="display:flex;align-items:center;gap:8px"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;span class="badge ${estadoCls}"&gt;${p.estado}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;button class="btn btn-ghost btn-sm" onclick="cargarEnPresupuesto(${p.id})" style="font-size:10px;padding:2px 8px"&gt;📋 Presupuesto&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="pedido-items"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>${(p.items||[]).map(i=&gt;`&lt;span style="margin-right:12px"&gt;• ${i.producto} × ${i.cantidad} = &lt;strong&gt;${fmt(i.subtotal)}&lt;/strong&gt;&lt;/span&gt;`).join('')}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>${p.transporte?`&lt;div style="font-size:11px;color:var(--muted);margin-top:4px"&gt;🚚 ${p.transporte}${p.ciudad?' · '+p.ciudad:''}${p.provincia?' ('+p.provincia+')':''}&lt;/div&gt;`:''}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>${p.observaciones?`&lt;div style="font-size:11px;color:var(--muted);margin-top:4px;font-style:italic"&gt;📝 ${p.observaciones}&lt;/div&gt;`:''}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="pedido-total"&gt;${fmt(p.total)}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}).join('');</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">// ── STATS ─────────────────────────────────────────────────────────────────────</p>
+<p class="p1">function renderStats(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(!pedidosCliente.length){</p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('stats-content').innerHTML='&lt;div class="empty"&gt;Sin datos suficientes&lt;/div&gt;';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Ventas por mes</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const porMes={};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>pedidosCliente.forEach(p=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const mes=p.fecha.slice(0,7);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(!porMes[mes]) porMes[mes]=0;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>porMes[mes]+=p.total||0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const meses=Object.keys(porMes).sort();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const maxMes=Math.max(...Object.values(porMes),1);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Productos</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const porProd={};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>pedidosCliente.forEach(p=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>(p.items||[]).forEach(i=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if(!porProd[i.producto]) porProd[i.producto]={unidades:0,total:0};</p>
+<p class="p1"><span class="Apple-converted-space">      </span>porProd[i.producto].unidades+=i.cantidad||0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>porProd[i.producto].total+=i.subtotal||0;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const prodOrdenado=Object.entries(porProd).sort((a,b)=&gt;b[1].total-a[1].total);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Año actual vs anterior</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const anioActual=new Date().getFullYear();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const totalActual=pedidosCliente.filter(p=&gt;p.fecha.startsWith(anioActual)).reduce((s,p)=&gt;s+(p.total||0),0);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const totalAnterior=pedidosCliente.filter(p=&gt;p.fecha.startsWith(anioActual-1)).reduce((s,p)=&gt;s+(p.total||0),0);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('stats-content').innerHTML=`</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px"&gt;Ventas ${anioActual}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div style="font-size:22px;font-weight:800;color:var(--accent)"&gt;${fmt(totalActual)}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px"&gt;Ventas ${anioActual-1}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div style="font-size:22px;font-weight:800;color:var(--muted)"&gt;${fmt(totalAnterior)}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px"&gt;Compras por mes&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>${meses.map(m=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const [y,mo]=m.split('-');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const label=new Date(y,parseInt(mo)-1).toLocaleString('es-AR',{month:'short',year:'2-digit'});</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const pct=Math.round(porMes[m]/maxMes*100);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return `&lt;div class="freq-bar"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;span class="freq-label"&gt;${label}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="freq-track"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div class="freq-fill" style="width:${pct}%"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span class="freq-val"&gt;${pct&gt;15?fmt(porMes[m]):''}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;span style="font-size:11px;color:var(--accent);font-weight:700;min-width:80px;text-align:right"&gt;${fmt(porMes[m])}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}).join('')}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 10px"&gt;Productos comprados&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;table&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;thead&gt;&lt;tr&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;th&gt;Producto&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;th class="tc"&gt;Unidades&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;th class="tr"&gt;Total $&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/tr&gt;&lt;/thead&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;tbody&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>${prodOrdenado.map(([nombre,d])=&gt;`&lt;tr&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;td&gt;${nombre}&lt;/td&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;td class="tc"&gt;${d.unidades}&lt;/td&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;td class="tr" style="color:var(--accent);font-weight:700"&gt;${fmt(d.total)}&lt;/td&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/tr&gt;`).join('')}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/tbody&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/table&gt;`;</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">// ── PRODUCTOS FRECUENTES ──────────────────────────────────────────────────────</p>
+<p class="p1">function renderProductosFrecuentes(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const porProd={};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>pedidosCliente.forEach(p=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>(p.items||[]).forEach(i=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if(!porProd[i.producto]) porProd[i.producto]={unidades:0,veces:0};</p>
+<p class="p1"><span class="Apple-converted-space">      </span>porProd[i.producto].unidades+=i.cantidad||0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>porProd[i.producto].veces++;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const lista=Object.entries(porProd).sort((a,b)=&gt;b[1].unidades-a[1].unidades).slice(0,5);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const maxU=lista[0]?.[1]?.unidades||1;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(!lista.length){</p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('productos-frecuentes').innerHTML='&lt;div class="empty" style="padding:16px"&gt;Sin productos registrados&lt;/div&gt;';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('productos-frecuentes').innerHTML=lista.map(([nombre,d])=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const pct=Math.round(d.unidades/maxU*100);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return `&lt;div class="freq-bar" style="margin-bottom:10px"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div style="flex:1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;span style="font-weight:600"&gt;${nombre}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;span style="color:var(--accent);font-weight:700"&gt;${d.unidades} u&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="freq-track"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div class="freq-fill" style="width:${pct}%;background:var(--blue)"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span class="freq-val"&gt;${d.veces} pedido${d.veces!==1?'s':''}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}).join('');</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">// ── UNIFICAR ──────────────────────────────────────────────────────────────────</p>
+<p class="p1">function poblarUnificar(clientes){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const sel=document.getElementById('unif-select');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>sel.innerHTML='&lt;option value=""&gt;— Elegí el duplicado —&lt;/option&gt;'+</p>
+<p class="p1"><span class="Apple-converted-space">    </span>clientes.filter(c=&gt;c.cliente!==nombreCliente)</p>
+<p class="p1"><span class="Apple-converted-space">      </span>.map(c=&gt;`&lt;option value="${c.cliente}"&gt;${c.cliente} (${c.num_pedidos} pedidos · ${fmt(c.total_acumulado)})&lt;/option&gt;`)</p>
+<p class="p1"><span class="Apple-converted-space">      </span>.join('');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>sel.addEventListener('change',function(){</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const dup=this.value;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const prev=document.getElementById('unif-preview');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(!dup){prev.style.display='none';return;}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>prev.style.display='block';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>prev.textContent=`Todos los pedidos de "${dup}" se moverán a "${nombreCliente}" y el duplicado se eliminará.`;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function abrirUnificar(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const panel=document.getElementById('unificar-panel');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>panel.style.display=panel.style.display==='none'?'block':'none';</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">async function ejecutarUnificar(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const duplicado=document.getElementById('unif-select').value;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(!duplicado){toast('Elegí el duplicado',true);return;}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(!confirm(`¿Unificar "${duplicado}" en "${nombreCliente}"? No se puede deshacer.`)) return;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>try{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const pedidosTodos=await api('/api/pedidos');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const pedsDup=pedidosTodos.filter(p=&gt;p.cliente===duplicado);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>for(const p of pedsDup){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>await api(`/api/pedidos/${p.id}`,{method:'PUT',body:JSON.stringify({...p,cliente:nombreCliente})});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>try{await api(`/api/clientes_fichas/${encodeURIComponent(duplicado)}`,{method:'DELETE'});}catch(e){}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>toast(`✅ "${duplicado}" unificado`);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('unificar-panel').style.display='none';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Recargar</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const pedidosTodos2=await api('/api/pedidos');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>pedidosCliente=pedidosTodos2.filter(p=&gt;p.cliente===nombreCliente).sort((a,b)=&gt;b.fecha.localeCompare(a.fecha));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>renderKPIs();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>renderHistorial();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>renderProductosFrecuentes();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}catch(e){toast('Error al unificar',true);}</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">// ── ACCIONES ──────────────────────────────────────────────────────────────────</p>
+<p class="p1">function nuevoPedidoDesdeCliente(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>window.location.href='/?cliente='+encodeURIComponent(nombreCliente)+'#pedidos';</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function cargarEnPresupuesto(pid){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>window.location.href='/?presupuesto='+pid+'#presupuestos';</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function exportarFichaExcel(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>try{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const f=fichaData;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const filaFicha=[{</p>
+<p class="p1"><span class="Apple-converted-space">      </span>Cliente:nombreCliente,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>'DNI/CUIT':f.dni_cuit||'',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>Teléfono:f.telefono||'',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>Dirección:f.direccion||'',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>Ciudad:f.ciudad||'',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>Provincia:f.provincia||'',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>CP:f.cp||'',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>Notas:f.notas||'',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>'Total acumulado':Math.round(pedidosCliente.reduce((s,p)=&gt;s+(p.total||0),0)),</p>
+<p class="p1"><span class="Apple-converted-space">      </span>'N° Pedidos':pedidosCliente.length,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}];</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const filaPedidos=pedidosCliente.map(p=&gt;({</p>
+<p class="p1"><span class="Apple-converted-space">      </span>Fecha:p.fecha,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>'N°':p.numero||'',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>Estado:p.estado,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>Transporte:p.transporte||'',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>Ciudad:p.ciudad||'',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>Provincia:p.provincia||'',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>Total:Math.round(p.total||0),</p>
+<p class="p1"><span class="Apple-converted-space">      </span>Productos:(p.items||[]).map(i=&gt;`${i.producto} x${i.cantidad}`).join(', '),</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}));</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const wb=XLSX.utils.book_new();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(filaFicha),'Ficha');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(filaPedidos),'Pedidos');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>XLSX.writeFile(wb,`LaGuarida_${nombreCliente.replace(/\s+/g,'_')}.xlsx`);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>toast('📊 Excel descargado');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}catch(e){toast('Error al generar Excel',true);}</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">// ── NUEVO PEDIDO PRE-CARGADO ──────────────────────────────────────────────────</p>
+<p class="p1">// Si venimos desde index.html con ?cliente=X, abrir modal de pedido pre-cargado</p>
+<p class="p1">window.addEventListener('load',()=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">  </span>init();</p>
+<p class="p1">});</p>
+<p class="p1">&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
