@@ -2012,9 +2012,7 @@ async function generarPDF(){
     </head><body>
     <button class="print-btn no-print" onclick="window.print()">⬇️ Descargar PDF</button>
     ${buildDocHTML(d,true)}
-    <script>
-      window.onload = function(){ window.print(); }
-    </script>
+    <script>window.onload=function(){window.print();}<\/script>
     </body></html>`);
   win.document.close();
   toast('📄 Abriendo para descargar...');
