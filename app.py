@@ -1,5 +1,6 @@
 """
 La Guarida — Flask + PostgreSQL (Supabase) | Login por contraseña
+VERSIÓN LIMPIA - SIN DUPLICADOS
 """
 import os
 from flask import Flask, g, jsonify, request, send_from_directory, session, redirect
@@ -116,7 +117,10 @@ def init_db():
             "CREATE TABLE IF NOT EXISTS precios_minoristas (id SERIAL PRIMARY KEY, producto_id INTEGER NOT NULL UNIQUE, precio REAL, markup REAL)",
             "CREATE TABLE IF NOT EXISTS clientes_fichas (id SERIAL PRIMARY KEY, cliente TEXT NOT NULL UNIQUE, dni_cuit TEXT, direccion TEXT, localidad TEXT, ciudad TEXT, cp TEXT, telefono TEXT, provincia TEXT, notas TEXT)",
             "CREATE TABLE IF NOT EXISTS precio_historial (id SERIAL PRIMARY KEY, producto_id INTEGER NOT NULL, fecha TEXT NOT NULL, precio_anterior REAL NOT NULL, precio_nuevo REAL NOT NULL, diff_pct REAL)",
+            "CREATE TABLE IF NOT EXISTS categorias (id SERIAL PRIMARY KEY, nombre TEXT NOT NULL UNIQUE)",
             "ALTER TABLE productos ADD COLUMN IF NOT EXISTS visible INTEGER DEFAULT 1",
+            "ALTER TABLE productos ADD COLUMN IF NOT EXISTS categoria TEXT",
+            "ALTER TABLE productos ADD COLUMN IF NOT EXISTS origen TEXT DEFAULT 'proveedor'",
             "ALTER TABLE precios_mayoristas ADD COLUMN IF NOT EXISTS markup REAL",
             "ALTER TABLE precios_minoristas ADD COLUMN IF NOT EXISTS markup REAL",
             "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS ciudad TEXT",
@@ -140,11 +144,13 @@ def init_db():
         CREATE TABLE IF NOT EXISTS pedido_items (id INTEGER PRIMARY KEY AUTOINCREMENT, pedido_id INTEGER NOT NULL, producto TEXT NOT NULL, cantidad INTEGER NOT NULL, precio_unitario REAL NOT NULL, subtotal REAL NOT NULL);
         CREATE TABLE IF NOT EXISTS precios_mayoristas (id INTEGER PRIMARY KEY AUTOINCREMENT, producto_id INTEGER NOT NULL, cantidad TEXT NOT NULL, precio REAL, markup REAL, UNIQUE(producto_id,cantidad));
         CREATE TABLE IF NOT EXISTS precios_minoristas (id INTEGER PRIMARY KEY AUTOINCREMENT, producto_id INTEGER NOT NULL UNIQUE, precio REAL, markup REAL);
- CREATE TABLE IF NOT EXISTS precio_historial (id INTEGER PRIMARY KEY AUTOINCREMENT, producto_id INTEGER NOT NULL, fecha TEXT NOT NULL, precio_anterior REAL NOT NULL, precio_nuevo REAL NOT NULL, diff_pct REAL);
+        CREATE TABLE IF NOT EXISTS precio_historial (id INTEGER PRIMARY KEY AUTOINCREMENT, producto_id INTEGER NOT NULL, fecha TEXT NOT NULL, precio_anterior REAL NOT NULL, precio_nuevo REAL NOT NULL, diff_pct REAL);
         CREATE TABLE IF NOT EXISTS categorias (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL UNIQUE);
         """)
         for col in [
             ("productos","visible","INTEGER DEFAULT 1"),
+            ("productos","categoria","TEXT"),
+            ("productos","origen","TEXT DEFAULT 'proveedor'"),
             ("precios_mayoristas","markup","REAL"),
             ("precios_minoristas","markup","REAL"),
             ("pedidos","ciudad","TEXT"),
@@ -152,13 +158,10 @@ def init_db():
             ("pedidos","dni_cuit","TEXT"),
             ("pedidos","cp","TEXT"),
             ("clientes_fichas","ciudad","TEXT"),
-                        ("productos","categoria","TEXT"),
-            ("productos","origen","TEXT DEFAULT 'proveedor'"),
         ]:
             try: db.execute(f"ALTER TABLE {col[0]} ADD COLUMN {col[1]} {col[2]}"); db.commit()
             except: pass
 
-    # Seed si está vacío
     cnt = q("SELECT COUNT(*) as n FROM categorias")[0]["n"]
     if int(cnt) == 0:
         cats = [("Principales",),("Textil",),("Accesorios",),("Packaging",)]
@@ -306,6 +309,7 @@ def del_producto(pid):
     else:
         get_db().execute("UPDATE productos SET activo=0 WHERE id=?",(pid,)); get_db().commit()
     return jsonify({"ok":True})
+
 @app.route("/api/categorias", methods=["GET"])
 def get_categorias():
     return jsonify(q("SELECT * FROM categorias ORDER BY nombre"))
@@ -453,33 +457,25 @@ def del_gasto(gid):
 
 @app.route("/api/pedidos", methods=["GET"])
 def get_pedidos():
-    rows = q("SELECT * FROM pedidos ORDER BY fecha DESC, id DESC")
-    result=[]
-    for r in rows:
-        p=dict(r)
-        sql="SELECT * FROM pedido_items WHERE pedido_id={0}".format("%s" if USE_PG else "?")
-        p["items"]=q(sql,(p["id"],))
-        result.append(p)
-    return jsonify(result)
+    return jsonify(q("SELECT * FROM pedidos ORDER BY id DESC"))
 
 @app.route("/api/pedidos", methods=["POST"])
 def add_pedido():
-    d=request.json; items=d.pop("items",[]); total=sum(i["subtotal"] for i in items)
-    db=get_db()
+    d=request.json; items=d.pop("items",[]); total=sum(i["subtotal"] for i in items); db=get_db()
     if USE_PG:
         cur=db.cursor()
         cur.execute("""INSERT INTO pedidos 
             (numero,fecha,cliente,telefono,provincia,ciudad,direccion,dni_cuit,cp,transporte,tipo_pago,estado,observaciones,total) 
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
             (d.get("numero",""),d["fecha"],d["cliente"],d.get("telefono",""),d.get("provincia",""),
              d.get("ciudad",""),d.get("direccion",""),d.get("dni_cuit",""),d.get("cp",""),
              d.get("transporte",""),d.get("tipo_pago","transferencia"),d.get("estado","pendiente"),
              d.get("observaciones",""),total))
-        pid=cur.fetchone()[0]
+        pid=cur.fetchone()[0] if cur.fetchone() else None
         for i in items: cur.execute("INSERT INTO pedido_items (pedido_id,producto,cantidad,precio_unitario,subtotal) VALUES (%s,%s,%s,%s,%s)",(pid,i["producto"],i["cantidad"],i["precio_unitario"],i["subtotal"]))
         db.commit()
     else:
-        cur=db.execute("""INSERT INTO pedidos 
+        db.execute("""INSERT INTO pedidos 
             (numero,fecha,cliente,telefono,provincia,ciudad,direccion,dni_cuit,cp,transporte,tipo_pago,estado,observaciones,total) 
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (d.get("numero",""),d["fecha"],d["cliente"],d.get("telefono",""),d.get("provincia",""),
@@ -533,7 +529,6 @@ def del_pedido(pid):
 
 @app.route("/api/clientes", methods=["GET"])
 def get_clientes():
-    # Agrupado SOLO por nombre — fix de duplicados
     return jsonify(q("""
         SELECT cliente,
                MAX(telefono) as telefono,
@@ -586,7 +581,6 @@ def del_ficha(nombre):
         db.execute("DELETE FROM clientes_fichas WHERE cliente=?",(nombre,)); db.commit()
     return jsonify({"ok":True})
 
-# ─── Historial de precios ──────────────────────────────────────────────────────
 @app.route("/api/precio_historial", methods=["GET"])
 def get_precio_historial():
     rows = q("SELECT * FROM precio_historial ORDER BY id DESC")
@@ -621,7 +615,6 @@ def add_precio_historial(pid):
         get_db().commit()
     return jsonify({"ok": True})
 
-# ─── Inicializar ───────────────────────────────────────────────────────────────
 @app.route("/inicializar-laguarida-2026")
 def seed_now():
     try:
