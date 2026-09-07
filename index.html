@@ -719,7 +719,127 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);
     <div id="inf-resultado" style="margin-top:10px;display:none"></div>
   </div>
 </div>
+<!-- TAB FICHA CLIENTE -->
+<div id="tab-ficha-cliente" class="tab">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+    <button class="btn btn-ghost btn-sm" onclick="volverAClientes()">← Volver</button>
+    <div>
+      <div style="font-size:18px;font-weight:800;color:var(--text)" id="ficha-page-title">—</div>
+      <div style="font-size:12px;color:var(--muted)" id="ficha-page-subtitle">—</div>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="exportarFichaClienteExcel()">📊 Excel</button>
+      <button class="btn btn-primary btn-sm" onclick="nuevoPedidoDesdeCliente()">➕ Nuevo pedido</button>
+    </div>
+  </div>
 
+  <!-- KPIs -->
+  <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px" id="ficha-kpi-grid">
+    <div class="kpi"><label>Total acumulado</label><div class="kval" style="color:var(--accent)" id="fkpi-total">—</div></div>
+    <div class="kpi"><label>Pedidos</label><div class="kval" style="color:var(--blue)" id="fkpi-pedidos">—</div></div>
+    <div class="kpi"><label>Ticket promedio</label><div class="kval" id="fkpi-ticket">—</div></div>
+    <div class="kpi"><label>Frecuencia</label><div class="kval" id="fkpi-frecuencia">—</div></div>
+    <div class="kpi"><label>Último pedido</label><div class="kval" style="font-size:13px" id="fkpi-ultimo">—</div></div>
+    <div class="kpi"><label>Estado</label><div id="fkpi-estado">—</div></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:320px 1fr;gap:14px">
+
+    <!-- COLUMNA IZQUIERDA -->
+    <div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+          <div id="ficha-avatar" style="width:48px;height:48px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;flex-shrink:0">?</div>
+          <div>
+            <div style="font-size:15px;font-weight:800" id="ficha-cli-nombre">—</div>
+            <div id="ficha-cli-estado" style="font-size:11px;margin-top:2px">—</div>
+          </div>
+        </div>
+
+        <!-- VISTA -->
+        <div id="ficha-cli-view">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+            <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:2px">DNI / CUIT</div><div style="font-size:12px" id="fv-dni">—</div></div>
+            <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:2px">Teléfono</div><div style="font-size:12px" id="fv-tel">—</div></div>
+          </div>
+          <div style="margin-bottom:8px"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:2px">Dirección</div><div style="font-size:12px" id="fv-dir">—</div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
+            <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:2px">Ciudad</div><div style="font-size:12px" id="fv-ciudad">—</div></div>
+            <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:2px">Provincia</div><div style="font-size:12px" id="fv-prov">—</div></div>
+            <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:2px">CP</div><div style="font-size:12px" id="fv-cp">—</div></div>
+          </div>
+          <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:2px">Notas</div><div style="font-size:12px;color:var(--muted);font-style:italic" id="fv-notas">—</div></div>
+          <button class="btn btn-ghost w100" style="margin-top:12px" onclick="mostrarEdicionCliente()">✏️ Editar ficha</button>
+        </div>
+
+        <!-- EDICION -->
+        <div id="ficha-cli-edit" style="display:none">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+            <div class="form-row"><label>DNI / CUIT</label><input id="fe-dni" class="w100"/></div>
+            <div class="form-row"><label>Teléfono</label><input id="fe-tel" class="w100"/></div>
+          </div>
+          <div class="form-row"><label>Dirección</label><input id="fe-dir" class="w100"/></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div class="form-row"><label>Ciudad</label><input id="fe-ciudad" class="w100"/></div>
+            <div class="form-row"><label>Provincia</label><input id="fe-prov" class="w100"/></div>
+            <div class="form-row"><label>CP</label><input id="fe-cp" class="w100"/></div>
+          </div>
+          <div class="form-row"><label>Notas</label><textarea id="fe-notas" class="w100" rows="2"></textarea></div>
+          <div class="flex" style="gap:8px;margin-top:10px">
+            <button class="btn btn-ghost btn-sm" onclick="cancelarEdicionCliente()">Cancelar</button>
+            <button class="btn btn-primary w100" onclick="guardarFichaCliente()">💾 Guardar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRODUCTOS FRECUENTES -->
+      <div class="card">
+        <div class="card-title">🛍️ Productos más comprados</div>
+        <div id="ficha-prod-frecuentes"></div>
+      </div>
+
+      <!-- UNIFICAR -->
+      <div class="card" style="border:1px dashed var(--border)">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px">🔗 Gestión</div>
+        <button class="btn btn-sm w100" style="background:#FFEBEE;color:var(--red);border:1px solid #FFCDD2" onclick="toggleUnificarPanel()">🔗 Unificar con duplicado</button>
+        <div id="ficha-unif-panel" style="display:none;margin-top:10px">
+          <div class="form-row">
+            <label>Duplicado a eliminar</label>
+            <select id="ficha-unif-select" class="w100" onchange="previewUnificar(this.value)">
+              <option value="">— Elegí el duplicado —</option>
+            </select>
+          </div>
+          <div id="ficha-unif-preview" style="display:none;background:#FFF3E8;border:1px solid #F5C49A;border-radius:7px;padding:9px;font-size:12px;margin:8px 0;color:#8B4A0E"></div>
+          <button class="btn btn-primary w100 btn-sm" onclick="ejecutarUnificarDesdeCliente()">Confirmar unificación</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMNA DERECHA -->
+    <div class="card">
+      <div class="subtab-bar">
+        <button id="ftab-btn-historial" class="subtab-btn active" onclick="showFichaTab('historial')">📋 Historial</button>
+        <button id="ftab-btn-stats" class="subtab-btn" onclick="showFichaTab('stats')">📊 Estadísticas</button>
+      </div>
+
+      <div id="ftab-historial">
+        <div class="flex-between mb12">
+          <span style="font-size:12px;color:var(--muted)" id="ficha-hist-resumen"></span>
+          <select id="ficha-hist-orden" style="font-size:11px;padding:4px 8px;background:var(--input-bg);border:1px solid var(--border);border-radius:5px" onchange="renderFichaHistorial()">
+            <option value="fecha-desc">Más reciente primero</option>
+            <option value="fecha-asc">Más antiguo primero</option>
+            <option value="monto-desc">Mayor monto</option>
+          </select>
+        </div>
+        <div id="ficha-historial-list"></div>
+      </div>
+
+      <div id="ftab-stats" style="display:none">
+        <div id="ficha-stats-content"></div>
+      </div>
+    </div>
+  </div>
+</div>
 </main>
 </div>
 
