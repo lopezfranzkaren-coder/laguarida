@@ -1122,7 +1122,7 @@ function descargarExcel(datos, nombreHoja, nombreArchivo){
     if(!datos||!datos.length){toast('Sin datos para exportar',true);return;}
     const ws=XLSX.utils.json_to_sheet(datos);
     const wb=XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,nombreHoja);
+   XLSX.utils.book_append_sheet(wb, ws, nombreHoja);
     const fecha=new Date().toLocaleDateString('es-AR').replace(/\//g,'-');
     XLSX.writeFile(wb,`${nombreArchivo}_${fecha}.xlsx`);
     toast('📊 Excel descargado');
