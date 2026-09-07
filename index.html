@@ -3142,6 +3142,41 @@ function renderCalcRows(){
   ].join("")).join("");
   updateCalc();
 }
+  function updateCalc(){
+  const sub=calcRows.reduce(function(s,r){return s+(r.costo||0)*(r.qty||1);},0);
+  const vars=cfg("pct_variables");
+  const variable=sub*vars;
+  const cf=sub+variable;
+  const pmin=cf*2;
+  const trf=cfg("desc_transferencia"),efe=cfg("desc_efectivo");
+  const qrd=cfg("comision_qr_debito"),qrc=cfg("comision_qr_credito"),c3q=cfg("comision_3cuotas");
+  const m12=cfg("markup_12")||0.60,m36=cfg("markup_36")||0.50;
+  const m72=cfg("markup_72")||0.30,m144=cfg("markup_144")||0.20;
+  const esMin=calcTipo==="minorista";
+  const el=document.getElementById("calc-results");
+  if(!el) return;
+  let html="";
+  html+="<div class='calc-result-row sub'><span>Subtotal costos</span><span>"+fmt(sub)+"</span></div>";
+  html+="<div class='calc-result-row sub'><span>Variables ("+((vars*100).toFixed(0))+"%)</span><span>"+fmt(variable)+"</span></div>";
+  html+="<div class='calc-result-row' style='font-weight:700;border-top:2px solid var(--border);margin-top:4px;padding-top:8px'><span>Costo Final</span><span>"+fmt(cf)+"</span></div>";
+  html+="<div class='calc-result-row highlight'><span>Precio mínimo (x2)</span><span>"+fmt(pmin)+"</span></div>";
+  html+="<div style='height:8px'></div>";
+  if(esMin){
+    html+="<div style='font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase'>Precios minorista</div>";
+    html+="<div class='calc-result-row'><span style='color:var(--blue)'>Transferencia -"+((trf*100).toFixed(0))+"%</span><span style='color:var(--blue);font-weight:600'>"+fmt(pmin*(1-trf))+"</span></div>";
+    html+="<div class='calc-result-row'><span style='color:var(--blue)'>Efectivo -"+((efe*100).toFixed(0))+"%</span><span style='color:var(--blue);font-weight:600'>"+fmt(pmin*(1-efe))+"</span></div>";
+    html+="<div class='calc-result-row'><span>QR Debito</span><span>"+fmt(pmin*(1+qrd))+"</span></div>";
+    html+="<div class='calc-result-row'><span>QR Credito</span><span>"+fmt(pmin/(1-qrc))+"</span></div>";
+    html+="<div class='calc-result-row' style='font-weight:700;color:var(--gold)'><span>3 Cuotas s/interes</span><span>"+fmt(pmin/(1-c3q))+"</span></div>";
+  } else {
+    html+="<div style='font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase'>Precios mayorista</div>";
+    html+="<div class='calc-result-row' style='color:var(--blue)'><span>+12u ("+((m12*100).toFixed(0))+"%)</span><span style='font-weight:600'>"+fmt(cf*(1+m12))+"</span></div>";
+    html+="<div class='calc-result-row' style='color:var(--green)'><span>+36u ("+((m36*100).toFixed(0))+"%)</span><span style='font-weight:600'>"+fmt(cf*(1+m36))+"</span></div>";
+    html+="<div class='calc-result-row' style='color:var(--gold)'><span>+72u ("+((m72*100).toFixed(0))+"%)</span><span style='font-weight:600'>"+fmt(cf*(1+m72))+"</span></div>";
+    html+="<div class='calc-result-row' style='color:var(--accent)'><span>+144u ("+((m144*100).toFixed(0))+"%)</span><span style='font-weight:600'>"+fmt(cf*(1+m144))+"</span></div>";
+  }
+  el.innerHTML=html;
+}
 async function init(){
   try{
     [config,productos,insumos,gastos,pedidos,clientes,preciosMin,preciosMay]=await Promise.all([
