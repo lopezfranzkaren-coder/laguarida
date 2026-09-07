@@ -3124,6 +3124,13 @@ function exportarFichaClienteExcel(){
     toast('📊 Excel descargado');
   }catch(e){toast('Error al generar Excel',true);}
 }
+  async function toggleVisible(pid,visible){
+  await api("/api/productos/"+pid+"/visible",{method:"POST",body:JSON.stringify({visible})});
+  const p=productos.find(x=>x.id===pid);
+  if(p) p.visible=visible;
+  renderPrecios();
+  toast(visible?'👁️ Visible':'🙈 Oculto');
+}
   async function init(){
   try{
     [config,productos,insumos,gastos,pedidos,clientes,preciosMin,preciosMay,categorias]=await Promise.all([
