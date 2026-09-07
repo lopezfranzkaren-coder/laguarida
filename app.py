@@ -140,8 +140,8 @@ def init_db():
         CREATE TABLE IF NOT EXISTS pedido_items (id INTEGER PRIMARY KEY AUTOINCREMENT, pedido_id INTEGER NOT NULL, producto TEXT NOT NULL, cantidad INTEGER NOT NULL, precio_unitario REAL NOT NULL, subtotal REAL NOT NULL);
         CREATE TABLE IF NOT EXISTS precios_mayoristas (id INTEGER PRIMARY KEY AUTOINCREMENT, producto_id INTEGER NOT NULL, cantidad TEXT NOT NULL, precio REAL, markup REAL, UNIQUE(producto_id,cantidad));
         CREATE TABLE IF NOT EXISTS precios_minoristas (id INTEGER PRIMARY KEY AUTOINCREMENT, producto_id INTEGER NOT NULL UNIQUE, precio REAL, markup REAL);
-        CREATE TABLE IF NOT EXISTS clientes_fichas (id INTEGER PRIMARY KEY AUTOINCREMENT, cliente TEXT NOT NULL UNIQUE, dni_cuit TEXT, direccion TEXT, localidad TEXT, ciudad TEXT, cp TEXT, telefono TEXT, provincia TEXT, notas TEXT);
-        CREATE TABLE IF NOT EXISTS precio_historial (id INTEGER PRIMARY KEY AUTOINCREMENT, producto_id INTEGER NOT NULL, fecha TEXT NOT NULL, precio_anterior REAL NOT NULL, precio_nuevo REAL NOT NULL, diff_pct REAL);
+ CREATE TABLE IF NOT EXISTS precio_historial (id INTEGER PRIMARY KEY AUTOINCREMENT, producto_id INTEGER NOT NULL, fecha TEXT NOT NULL, precio_anterior REAL NOT NULL, precio_nuevo REAL NOT NULL, diff_pct REAL);
+        CREATE TABLE IF NOT EXISTS categorias (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL UNIQUE);
         """)
         for col in [
             ("productos","visible","INTEGER DEFAULT 1"),
@@ -152,11 +152,24 @@ def init_db():
             ("pedidos","dni_cuit","TEXT"),
             ("pedidos","cp","TEXT"),
             ("clientes_fichas","ciudad","TEXT"),
+                        ("productos","categoria","TEXT"),
+            ("productos","origen","TEXT DEFAULT 'proveedor'"),
         ]:
             try: db.execute(f"ALTER TABLE {col[0]} ADD COLUMN {col[1]} {col[2]}"); db.commit()
             except: pass
 
     # Seed si está vacío
+        cnt = q("SELECT COUNT(*) as n FROM categorias")[0]["n"]
+    if int(cnt) == 0:
+        cats = [("Principales",),("Textil",),("Accesorios",),("Packaging",)]
+        if USE_PG:
+            cur = db.cursor()
+            for c in cats: cur.execute("INSERT INTO categorias (nombre) VALUES (%s) ON CONFLICT DO NOTHING",(c[0],))
+            db.commit()
+        else:
+            db.executemany("INSERT OR IGNORE INTO categorias (nombre) VALUES (?)", cats)
+            db.commit()
+
     cnt = q("SELECT COUNT(*) as n FROM productos")[0]["n"]
     if int(cnt) == 0:
         prods = [
@@ -248,25 +261,33 @@ def get_productos():
     return jsonify(q("SELECT * FROM productos WHERE activo=1 ORDER BY nombre"))
 
 @app.route("/api/productos", methods=["POST"])
+@app.route("/api/productos", methods=["POST"])
 def add_producto():
     d = request.json
     try:
         if USE_PG:
             cur = get_db().cursor()
-            cur.execute("INSERT INTO productos (nombre,costo_base) VALUES (%s,%s)",(d["nombre"],d.get("costo_base")))
+            cur.execute("INSERT INTO productos (nombre,costo_base,categoria,origen) VALUES (%s,%s,%s,%s)",
+                (d["nombre"],d.get("costo_base"),d.get("categoria"),d.get("origen","proveedor")))
             get_db().commit()
         else:
-            get_db().execute("INSERT INTO productos (nombre,costo_base) VALUES (?,?)",(d["nombre"],d.get("costo_base"))); get_db().commit()
+            get_db().execute("INSERT INTO productos (nombre,costo_base,categoria,origen) VALUES (?,?,?,?)",
+                (d["nombre"],d.get("costo_base"),d.get("categoria"),d.get("origen","proveedor")))
+            get_db().commit()
         return jsonify({"ok":True})
     except: return jsonify({"ok":False,"error":"Ya existe"}),400
-
-@app.route("/api/productos/<int:pid>", methods=["PUT"])
+        @app.route("/api/productos/<int:pid>", methods=["PUT"])
 def upd_producto(pid):
     d = request.json
     if USE_PG:
-        cur = get_db().cursor(); cur.execute("UPDATE productos SET nombre=%s,costo_base=%s WHERE id=%s",(d["nombre"],d.get("costo_base"),pid)); get_db().commit()
+        cur = get_db().cursor()
+        cur.execute("UPDATE productos SET nombre=%s,costo_base=%s,categoria=%s,origen=%s WHERE id=%s",
+            (d["nombre"],d.get("costo_base"),d.get("categoria"),d.get("origen","proveedor"),pid))
+        get_db().commit()
     else:
-        get_db().execute("UPDATE productos SET nombre=?,costo_base=? WHERE id=?",(d["nombre"],d.get("costo_base"),pid)); get_db().commit()
+        get_db().execute("UPDATE productos SET nombre=?,costo_base=?,categoria=?,origen=? WHERE id=?",
+            (d["nombre"],d.get("costo_base"),d.get("categoria"),d.get("origen","proveedor"),pid))
+        get_db().commit()
     return jsonify({"ok":True})
 
 @app.route("/api/productos/<int:pid>/visible", methods=["POST"])
@@ -285,7 +306,58 @@ def del_producto(pid):
     else:
         get_db().execute("UPDATE productos SET activo=0 WHERE id=?",(pid,)); get_db().commit()
     return jsonify({"ok":True})
+    @app.route("/api/categorias", methods=["GET"])
+    def get_categorias():
+        return jsonify(q("SELECT * FROM categorias ORDER BY nombre"))
 
+    @app.route("/api/categorias", methods=["POST"])
+    def add_categoria():
+        d = request.json
+        try:
+            if USE_PG:
+                cur = get_db().cursor()
+                cur.execute("INSERT INTO categorias (nombre) VALUES (%s)",(d["nombre"],))
+                get_db().commit()
+            else:
+                get_db().execute("INSERT INTO categorias (nombre) VALUES (?)",(d["nombre"],))
+                get_db().commit()
+            return jsonify({"ok":True})
+        except: return jsonify({"ok":False,"error":"Ya existe"}),400
+
+    @app.route("/api/categorias/<int:cid>", methods=["DELETE"])
+    def del_categoria(cid):
+        db = get_db()
+        if USE_PG:
+            cur = db.cursor(); cur.execute("DELETE FROM categorias WHERE id=%s",(cid,)); db.commit()
+        else:
+            db.execute("DELETE FROM categorias WHERE id=?",(cid,)); db.commit()
+        return jsonify({"ok":True})
+@app.route("/api/categorias", methods=["GET"])
+def get_categorias():
+    return jsonify(q("SELECT * FROM categorias ORDER BY nombre"))
+
+@app.route("/api/categorias", methods=["POST"])
+def add_categoria():
+    d = request.json
+    try:
+        if USE_PG:
+            cur = get_db().cursor()
+            cur.execute("INSERT INTO categorias (nombre) VALUES (%s)",(d["nombre"],))
+            get_db().commit()
+        else:
+            get_db().execute("INSERT INTO categorias (nombre) VALUES (?)",(d["nombre"],))
+            get_db().commit()
+        return jsonify({"ok":True})
+    except: return jsonify({"ok":False,"error":"Ya existe"}),400
+
+@app.route("/api/categorias/<int:cid>", methods=["DELETE"])
+def del_categoria(cid):
+    db = get_db()
+    if USE_PG:
+        cur = db.cursor(); cur.execute("DELETE FROM categorias WHERE id=%s",(cid,)); db.commit()
+    else:
+        db.execute("DELETE FROM categorias WHERE id=?",(cid,)); db.commit()
+    return jsonify({"ok":True})
 @app.route("/api/insumos", methods=["GET"])
 def get_insumos(): return jsonify(q("SELECT * FROM insumos ORDER BY nombre"))
 
