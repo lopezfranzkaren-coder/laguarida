@@ -90,9 +90,13 @@ def logout(): session.clear(); return redirect("/login")
 # ─── Ruta cliente ──────────────────────────────────────────────────────────────
 @app.route("/cliente/<path:nombre>")
 def cliente_page(nombre):
-    with open(os.path.join(BASE_DIR, "cliente.html"), "r", encoding="utf-8") as f:
-        contenido = f.read()
     from flask import Response
+    import os
+    ruta = os.path.join(BASE_DIR, "cliente.html")
+    if not os.path.exists(ruta):
+        return Response(f"ERROR: No se encuentra cliente.html en {BASE_DIR}. Archivos: {os.listdir(BASE_DIR)}", mimetype="text/plain")
+    with open(ruta, "r", encoding="utf-8") as f:
+        contenido = f.read()
     return Response(contenido, mimetype="text/html")
 
 # ─── Init DB ───────────────────────────────────────────────────────────────────
