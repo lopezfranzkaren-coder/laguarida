@@ -3093,6 +3093,55 @@ function exportarFichaClienteExcel(){
     toast('📊 Excel descargado');
   }catch(e){toast('Error al generar Excel',true);}
 }
+  // ── CALCULADORA ───────────────────────────────────────────────────────────────
+let calcRows=[], calcTipo='minorista';
+
+function initCalc(){
+  calcRows=[{concepto:"",costo:0,qty:1}];
+  const sel=document.getElementById("calc-producto");
+  if(sel&&sel.options.length<=1){
+    productos.forEach(p=>{const o=document.createElement("option");o.value=p.id;o.textContent=p.nombre;sel.appendChild(o);});
+  }
+  renderCalcRows();
+}
+
+function setCalcTipo(tipo){
+  calcTipo=tipo;
+  document.getElementById("calc-tipo-min").classList.toggle("active",tipo==="minorista");
+  document.getElementById("calc-tipo-may").classList.toggle("active",tipo==="mayorista");
+  document.getElementById("calc-tipo-label").textContent=tipo==="minorista"?"Minorista":"Mayorista";
+  updateCalc();
+}
+
+function cargarRecetaCalc(){
+  const pid=parseInt(document.getElementById("calc-producto").value);
+  if(!pid){calcRows=[{concepto:"",costo:0,qty:1}];renderCalcRows();return;}
+  const p=productos.find(x=>x.id===pid);
+  const rec=recetasCache[pid]||[];
+  calcRows=[];
+  if(p&&p.costo_base) calcRows.push({concepto:p.nombre+" (base)",costo:p.costo_base*factor(),qty:1});
+  rec.forEach(r=>calcRows.push({concepto:r.insumo_nombre,costo:r.insumo_costo,qty:1}));
+  if(!calcRows.length) calcRows=[{concepto:"",costo:0,qty:1}];
+  renderCalcRows();
+}
+
+function addCalcRow(){calcRows.push({concepto:"",costo:0,qty:1});renderCalcRows();}
+function removeCalcRow(i){calcRows.splice(i,1);if(!calcRows.length)calcRows=[{concepto:"",costo:0,qty:1}];renderCalcRows();}
+
+function renderCalcRows(){
+  const tbody=document.getElementById("calc-rows");
+  if(!tbody) return;
+  tbody.innerHTML=calcRows.map((r,i)=>[
+    "<tr>",
+    "<td><input value='"+r.concepto+"' onchange='calcRows["+i+"].concepto=this.value' style='width:180px'/></td>",
+    "<td><input type='number' value='"+(r.costo||"")+"' oninput='calcRows["+i+"].costo=parseFloat(this.value)||0;updateCalc()' style='width:90px'/></td>",
+    "<td class='tc'><input type='number' value='"+r.qty+"' min='1' oninput='calcRows["+i+"].qty=parseFloat(this.value)||1;updateCalc()' style='width:55px;text-align:center'/></td>",
+    "<td class='tr' style='font-weight:600'>"+fmt(r.costo*r.qty)+"</td>",
+    "<td><button class='btn-icon' onclick='removeCalcRow("+i+")'>✕</button></td>",
+    "</tr>"
+  ].join("")).join("");
+  updateCalc();
+}
 async function init(){
   try{
     [config,productos,insumos,gastos,pedidos,clientes,preciosMin,preciosMay]=await Promise.all([
