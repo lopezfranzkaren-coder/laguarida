@@ -293,7 +293,39 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);
     </div>
   </div>
 </div>
-
+<!-- TAB CALCULADORA -->
+<div id="tab-calculadora" class="tab">
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:16px">
+    <div class="card">
+      <div class="slbl">Tipo de venta</div>
+      <div class="toggle-group mb12" style="max-width:280px">
+        <button class="active" id="calc-tipo-min" onclick="setCalcTipo('minorista')">🏪 Minorista</button>
+        <button id="calc-tipo-may" onclick="setCalcTipo('mayorista')">📦 Mayorista</button>
+      </div>
+      <div class="form-row">
+        <label>Producto (opcional)</label>
+        <select id="calc-producto" class="w100" onchange="cargarRecetaCalc()">
+          <option value="">— Elegí un producto o cargá manual —</option>
+        </select>
+      </div>
+      <div class="slbl" style="margin-top:14px">Insumos</div>
+      <table style="margin-top:8px">
+        <thead><tr>
+          <th>Concepto</th><th class="tr">Costo ($)</th><th class="tc">Cant.</th><th class="tr">Subtotal</th><th></th>
+        </tr></thead>
+        <tbody id="calc-rows"></tbody>
+      </table>
+      <button class="btn btn-ghost" style="margin-top:10px;width:100%" onclick="addCalcRow()">+ Agregar insumo</button>
+    </div>
+    <div class="card" style="position:sticky;top:80px;align-self:start">
+      <div class="card-title">📊 Precios sugeridos</div>
+      <div id="calc-tipo-label" style="font-size:11px;color:var(--muted);margin-bottom:10px">Minorista</div>
+      <div id="calc-results">
+        <div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">Cargá insumos para ver los precios</div>
+      </div>
+    </div>
+  </div>
+</div>
 <!-- TAB MAYORISTAS -->
 <div id="tab-mayoristas" class="tab">
   <div class="info-box">📦 <strong>Mayorista</strong> · Markup = ganancia sobre el costo</div>
