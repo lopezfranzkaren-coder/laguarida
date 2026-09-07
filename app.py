@@ -276,7 +276,7 @@ def add_producto():
             get_db().commit()
         return jsonify({"ok":True})
     except: return jsonify({"ok":False,"error":"Ya existe"}),400
-        @app.route("/api/productos/<int:pid>", methods=["PUT"])
+@app.route("/api/productos/<int:pid>", methods=["PUT"])
 def upd_producto(pid):
     d = request.json
     if USE_PG:
