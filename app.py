@@ -159,7 +159,7 @@ def init_db():
             except: pass
 
     # Seed si está vacío
-        cnt = q("SELECT COUNT(*) as n FROM categorias")[0]["n"]
+    cnt = q("SELECT COUNT(*) as n FROM categorias")[0]["n"]
     if int(cnt) == 0:
         cats = [("Principales",),("Textil",),("Accesorios",),("Packaging",)]
         if USE_PG:
@@ -261,7 +261,6 @@ def get_productos():
     return jsonify(q("SELECT * FROM productos WHERE activo=1 ORDER BY nombre"))
 
 @app.route("/api/productos", methods=["POST"])
-@app.route("/api/productos", methods=["POST"])
 def add_producto():
     d = request.json
     try:
@@ -333,6 +332,7 @@ def del_producto(pid):
         else:
             db.execute("DELETE FROM categorias WHERE id=?",(cid,)); db.commit()
         return jsonify({"ok":True})
+
 @app.route("/api/categorias", methods=["GET"])
 def get_categorias():
     return jsonify(q("SELECT * FROM categorias ORDER BY nombre"))
@@ -359,6 +359,7 @@ def del_categoria(cid):
     else:
         db.execute("DELETE FROM categorias WHERE id=?",(cid,)); db.commit()
     return jsonify({"ok":True})
+
 @app.route("/api/insumos", methods=["GET"])
 def get_insumos(): return jsonify(q("SELECT * FROM insumos ORDER BY nombre"))
 
