@@ -182,6 +182,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);
     <div class="nav-section">Precios</div>
     <button class="active" onclick="showTab('precios',this)">💰 Minoristas</button>
     <button onclick="showTab('mayoristas',this)">📦 Mayoristas</button>
+    <button onclick="showTab('calculadora',this)">🧮 Calculadora</button>
     <div class="nav-section">Clientes</div>
     <button onclick="showTab('clientes',this)">👥 Clientes y pedidos</button>
     <div class="nav-section">Interna</div>
@@ -252,6 +253,43 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);
       <span>🟢 <strong style="color:var(--green)">Bien</strong> — sobre el mínimo</span>
       <span>🟡 <strong style="color:var(--warn)">Justo</strong> — ±5% del mínimo</span>
       <span>🔴 <strong style="color:var(--red)">Barata</strong> — bajo el mínimo</span>
+    </div>
+  </div>
+</div>
+  <!-- TAB CALCULADORA -->
+<div id="tab-calculadora" class="tab">
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:16px">
+    <div>
+      <div class="card">
+        <div class="slbl">Tipo de venta</div>
+        <div class="toggle-group mb12" style="max-width:280px">
+          <button class="active" id="calc-tipo-min" onclick="setCalcTipo('minorista')">🏪 Minorista</button>
+          <button id="calc-tipo-may" onclick="setCalcTipo('mayorista')">📦 Mayorista</button>
+        </div>
+        <div class="form-row">
+          <label>Seleccionar producto</label>
+          <select id="calc-producto" class="w100" onchange="cargarRecetaCalc()">
+            <option value="">— Elegí un producto o cargá manual —</option>
+          </select>
+        </div>
+        <div class="slbl" style="margin-top:14px">Insumos / componentes</div>
+        <table style="margin-top:8px">
+          <thead><tr>
+            <th>Concepto</th><th class="tr">Costo ($)</th><th class="tc">Cant.</th><th class="tr">Subtotal</th><th></th>
+          </tr></thead>
+          <tbody id="calc-rows"></tbody>
+        </table>
+        <button class="btn btn-ghost" style="margin-top:10px;width:100%" onclick="addCalcRow()">+ Agregar insumo</button>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="position:sticky;top:80px">
+        <div class="card-title">📊 Precios sugeridos</div>
+        <div id="calc-tipo-label" style="font-size:11px;color:var(--muted);margin-bottom:10px">Minorista</div>
+        <div id="calc-results">
+          <div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">Cargá insumos para ver los precios</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1036,6 +1074,86 @@ function showTab(name,btn){
   const renders={
     precios:renderPrecios,
     mayoristas:renderMayoristas,
+    // ── CALCULADORA ───────────────────────────────────────────────────────────────
+let calcRows=[], calcTipo='minorista';
+
+function initCalc(){
+  calcRows=[{concepto:"",costo:0,qty:1}];
+  const sel=document.getElementById("calc-producto");
+  if(sel&&sel.options.length<=1){
+    productos.forEach(p=>{const o=document.createElement("option");o.value=p.id;o.textContent=p.nombre;sel.appendChild(o);});
+  }
+  renderCalcRows();
+}
+
+function setCalcTipo(tipo){
+  calcTipo=tipo;
+  document.getElementById("calc-tipo-min").classList.toggle("active",tipo==="minorista");
+  document.getElementById("calc-tipo-may").classList.toggle("active",tipo==="mayorista");
+  document.getElementById("calc-tipo-label").textContent=tipo==="minorista"?"Minorista":"Mayorista";
+  updateCalc();
+}
+
+function cargarRecetaCalc(){
+  const pid=parseInt(document.getElementById("calc-producto").value);
+  if(!pid){calcRows=[{concepto:"",costo:0,qty:1}];renderCalcRows();return;}
+  const p=productos.find(x=>x.id===pid);
+  const rec=recetasCache[pid]||[];
+  const recFiltrada=rec.filter(r=>r.tipo==='ambos'||(calcTipo==='minorista'&&r.tipo==='minorista')||(calcTipo==='mayorista'&&r.tipo==='mayorista'));
+  calcRows=[];
+  if(p.costo_base) calcRows.push({concepto:p.nombre+" (base)",costo:p.costo_base*factor(),qty:1});
+  recFiltrada.forEach(r=>calcRows.push({concepto:r.insumo_nombre,costo:r.insumo_costo,qty:1}));
+  if(!calcRows.length) calcRows=[{concepto:"",costo:0,qty:1}];
+  renderCalcRows();
+}
+
+function addCalcRow(){calcRows.push({concepto:"",costo:0,qty:1});renderCalcRows();}
+function removeCalcRow(i){calcRows.splice(i,1);if(!calcRows.length)calcRows=[{concepto:"",costo:0,qty:1}];renderCalcRows();}
+
+function renderCalcRows(){
+  document.getElementById("calc-rows").innerHTML=calcRows.map((r,i)=>`<tr>
+    <td><input value="${r.concepto}" onchange="calcRows[${i}].concepto=this.value" style="width:180px"/></td>
+    <td><input type="number" value="${r.costo||""}" oninput="calcRows[${i}].costo=parseFloat(this.value)||0;updateCalc()" style="width:90px"/></td>
+    <td class="tc"><input type="number" value="${r.qty}" min="1" oninput="calcRows[${i}].qty=parseFloat(this.value)||1;updateCalc()" style="width:55px;text-align:center"/></td>
+    <td class="tr" style="font-weight:600">${fmt(r.costo*r.qty)}</td>
+    <td><button class="btn-icon" onclick="removeCalcRow(${i})">✕</button></td>
+  </tr>`).join("");
+  updateCalc();
+}
+
+function updateCalc(){
+  const sub=calcRows.reduce((s,r)=>s+(r.costo||0)*(r.qty||1),0);
+  const vars=cfg("pct_variables");
+  const variable=sub*vars;
+  const cf=sub+variable;
+  const pmin=cf*2;
+  const trf=cfg("desc_transferencia"),efe=cfg("desc_efectivo"),
+        qrd=cfg("comision_qr_debito"),qrc=cfg("comision_qr_credito"),c3q=cfg("comision_3cuotas");
+  const m12=cfg("markup_12")||0.60,m36=cfg("markup_36")||0.50,m72=cfg("markup_72")||0.30,m144=cfg("markup_144")||0.20;
+  const esMin=calcTipo==='minorista';
+  document.getElementById("calc-results").innerHTML=`
+    <div class="calc-result-row sub"><span>Subtotal costos</span><span>${fmt(sub)}</span></div>
+    <div class="calc-result-row sub"><span>Variables (${(vars*100).toFixed(0)}%)</span><span>${fmt(variable)}</span></div>
+    <div class="calc-result-row" style="font-weight:700;border-top:2px solid var(--border);margin-top:4px;padding-top:8px">
+      <span>Costo Final</span><span>${fmt(cf)}</span>
+    </div>
+    <div class="calc-result-row highlight"><span>Precio mínimo (×2)</span><span>${fmt(pmin)}</span></div>
+    <div style="height:8px"></div>
+    ${esMin?`
+    <div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase">Precios minorista</div>
+    <div class="calc-result-row"><span style="color:var(--blue)">Transferencia −${(trf*100).toFixed(0)}%</span><span style="color:var(--blue);font-weight:600">${fmt(pmin*(1-trf))}</span></div>
+    <div class="calc-result-row"><span style="color:var(--blue)">Efectivo −${(efe*100).toFixed(0)}%</span><span style="color:var(--blue);font-weight:600">${fmt(pmin*(1-efe))}</span></div>
+    <div class="calc-result-row"><span>QR Débito</span><span>${fmt(pmin*(1+qrd))}</span></div>
+    <div class="calc-result-row"><span>QR Crédito</span><span>${fmt(pmin/(1-qrc))}</span></div>
+    <div class="calc-result-row" style="font-weight:700;color:var(--gold)"><span>3 Cuotas s/interés</span><span>${fmt(pmin/(1-c3q))}</span></div>
+    `:`
+    <div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase">Precios mayorista</div>
+    <div class="calc-result-row" style="color:var(--blue)"><span>+12u (${(m12*100).toFixed(0)}%)</span><span style="font-weight:600">${fmt(cf*(1+m12))}</span></div>
+    <div class="calc-result-row" style="color:var(--green)"><span>+36u (${(m36*100).toFixed(0)}%)</span><span style="font-weight:600">${fmt(cf*(1+m36))}</span></div>
+    <div class="calc-result-row" style="color:var(--gold)"><span>+72u (${(m72*100).toFixed(0)}%)</span><span style="font-weight:600">${fmt(cf*(1+m72))}</span></div>
+    <div class="calc-result-row" style="color:var(--accent)"><span>+144u (${(m144*100).toFixed(0)}%)</span><span style="font-weight:600">${fmt(cf*(1+m144))}</span></div>
+    `}`;
+}
     clientes:()=>{initMesGlobal();renderClientes();showSubtab('clientes');},
     productos:()=>{renderProductosTab();showProdTab('lista');},
     gastos:()=>{renderInsumos();renderGastos();showGastosTab('insumos');},
