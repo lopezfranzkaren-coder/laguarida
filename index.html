@@ -222,7 +222,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);
         </label>
       </div>
       <div class="flex">
-        <input id="precio-search" placeholder="🔍 Buscar..." style="width:170px" oninput="renderPrecios()"/>
+        <input id="precio-search" placeholder="🔍 Buscar..." style="width:140px" oninput="renderPrecios()"/>
+        <select id="precio-cat-filtro" style="width:150px" onchange="renderPrecios()">
+          <option value="">Todas las categorías</option>
+        </select>
         <button class="btn btn-excel btn-sm" onclick="exportarExcelMinoristas()">📊 Excel</button>
       </div>
     </div>
@@ -303,7 +306,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);
         </label>
       </div>
       <div class="flex">
-        <input id="mayor-search" placeholder="🔍 Buscar..." style="width:160px" oninput="renderMayoristas()"/>
+        <input id="mayor-search" placeholder="🔍 Buscar..." style="width:130px" oninput="renderMayoristas()"/>
+        <select id="mayor-cat-filtro" style="width:150px" onchange="renderMayoristas()">
+          <option value="">Todas las categorías</option>
+        </select>
         <button class="btn btn-excel btn-sm" onclick="exportarExcelMayoristas()">📊 Excel</button>
       </div>
     </div>
@@ -543,13 +549,19 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);
   <div id="prod-lista">
     <div class="card">
       <div class="flex-between mb12">
-        <input id="prod-search" placeholder="🔍 Buscar..." style="width:170px" oninput="renderProductosTab()"/>
+        <div class="flex" style="gap:8px;flex-wrap:wrap">
+          <input id="prod-search" placeholder="🔍 Buscar..." style="width:160px" oninput="renderProductosTab()"/>
+          <select id="prod-cat-filtro" style="width:150px" onchange="renderProductosTab()">
+            <option value="">Todas las categorías</option>
+          </select>
+        </div>
         <button class="btn btn-primary btn-sm" onclick="abrirModalProd()">+ Nuevo producto</button>
       </div>
       <div class="tbl-wrap">
         <table>
           <thead><tr>
             <th>Producto</th><th class="tr">Costo base ($)</th>
+            <th class="tc">Categoría</th><th class="tc">Origen</th>
             <th class="tc">Receta</th><th class="tc">Acciones</th>
           </tr></thead>
           <tbody id="prod-tbody"></tbody>
@@ -884,6 +896,25 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);
     <input type="hidden" id="prod-edit-id"/>
     <div class="form-row"><label>Nombre</label><input id="prod-nombre" class="w100"/></div>
     <div class="form-row"><label>Costo base ($)</label><input type="number" id="prod-costo" class="w100"/></div>
+    <div class="form-grid mb8">
+      <div class="form-row">
+        <label>Categoría</label>
+        <div style="display:flex;gap:6px">
+          <select id="prod-categoria" class="w100">
+            <option value="">Sin categoría</option>
+          </select>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="nuevaCategoriaRapida()" title="Nueva categoría">+</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Origen</label>
+        <div class="toggle-group" style="margin-top:2px">
+          <button id="origen-btn-propio" class="active" onclick="setOrigen('propio')">🏭 Propio</button>
+          <button id="origen-btn-proveedor" onclick="setOrigen('proveedor')">🛒 Proveedor</button>
+        </div>
+        <input type="hidden" id="prod-origen" value="propio"/>
+      </div>
+    </div>
     <div class="flex" style="justify-content:flex-end;gap:8px;margin-top:14px">
       <button class="btn btn-ghost" onclick="closeModal('modal-prod')">Cancelar</button>
       <button class="btn btn-primary" onclick="saveProducto()">Guardar</button>
@@ -1015,7 +1046,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);
 
 <div id="toast"></div>
 <script>
-let productos=[], insumos=[], gastos=[], pedidos=[], clientes=[];
+let productos=[], insumos=[], gastos=[], pedidos=[], clientes=[], categorias=[];
 let config={}, recetasCache={}, preciosMin={}, preciosMay={};
 let productoActual=null, fichasCache={}, precioHistorialCache={};
 let clienteActualNombre='', pedidoItems=[], presItems=[];
@@ -1275,7 +1306,7 @@ function exportarExcelMayoristas(){
   const datos=productos.filter(p=>p.visible!==0&&p.costo_base).map(p=>{
     const cf=costoFinalMay(p);
     const pm=preciosMay[p.id]||{};
-    const fila={Producto:p.nombre,'Costo May.':Math.round(cf)};
+    const fila={Producto:p.nombre,Categoría:p.categoria||'',Origen:p.origen==='propio'?'🏭 Propio':'🛒 Proveedor','Costo May.':Math.round(cf)};
     cantidades.forEach(c=>{
       const mk=getMarkup(p.id,c);
       fila[`+${c}u Markup%`]=Math.round(mk*100);
@@ -1355,12 +1386,78 @@ function getMarkupMin(pid){
   if(pm&&typeof pm==="object"&&pm.markup!=null) return pm.markup;
   return 1.0;
 }
+function poblarFiltrosCategorias(){
+  const selects=["prod-cat-filtro","precio-cat-filtro","mayor-cat-filtro"];
+  selects.forEach(id=>{
+    const sel=document.getElementById(id);
+    if(!sel) return;
+    const val=sel.value;
+    sel.innerHTML='<option value="">Todas las categorías</option>'+
+      categorias.map(c=>'<option value="'+c.nombre+'"'+(c.nombre===val?' selected':'')+'>'+ c.nombre+'</option>').join('');
+  });
+}
 function renderPrecios(){
+  poblarFiltrosCategorias();
   const q=(document.getElementById("precio-search")||{value:""}).value.toLowerCase();
   const showHidden=document.getElementById("show-hidden")?.checked;
-  const list=productos.filter(p=>p.nombre.toLowerCase().includes(q)&&(showHidden||p.visible!==0));
+  const catFiltro=(document.getElementById("precio-cat-filtro")||{value:""}).value;
+  const list=productos.filter(p=>p.nombre.toLowerCase().includes(q)&&(showHidden||p.visible!==0)&&(!catFiltro||p.categoria===catFiltro));
   const trf=cfg("desc_transferencia"),efe=cfg("desc_efectivo"),
         qrd=cfg("comision_qr_debito"),qrc=cfg("comision_qr_credito"),c3q=cfg("comision_3cuotas");
+  if(!catFiltro && !q){
+    // Agrupar por categoria
+    const grupos={};
+    list.forEach(p=>{
+      const cat=p.categoria||"Sin categoría";
+      if(!grupos[cat]) grupos[cat]=[];
+      grupos[cat].push(p);
+    });
+    const orden=["Principales","Textil","Accesorios","Packaging","Sin categoría"];
+    const claves=Object.keys(grupos).sort((a,b)=>{
+      const ia=orden.indexOf(a); const ib=orden.indexOf(b);
+      if(ia===-1&&ib===-1) return a.localeCompare(b);
+      if(ia===-1) return 1; if(ib===-1) return -1;
+      return ia-ib;
+    });
+    let html="";
+    claves.forEach(cat=>{
+      html+='<tr><td colspan="14" style="background:var(--bg);padding:10px 9px 4px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid var(--border)">'+cat+'</td></tr>';
+      grupos[cat].forEach(p=>{ html+=buildPrecioRow(p,trf,efe,qrd,qrc,c3q); });
+    });
+    document.getElementById("precios-tbody").innerHTML=html;
+    return;
+  }
+  document.getElementById("precios-tbody").innerHTML=list.map(p=>buildPrecioRow(p,trf,efe,qrd,qrc,c3q)).join("");
+}
+function buildPrecioRow(p,trf,efe,qrd,qrc,c3q){
+  const cf=costoFinalMin(p);
+  const markup=getMarkupMin(p.id);
+  const pmin=cf*(1+markup);
+  const pm=preciosMin[p.id]||{};
+  const tuP=(typeof pm==="object"?pm.precio:pm)||0;
+  const ganancia=tuP?tuP-cf:pmin-cf;
+  const isVisible=p.visible!==0;
+  const histLen=(precioHistorialCache[p.id]||[]).length;
+  const origenIcon=p.origen==="propio"?"🏭":"🛒";
+  return '<tr style="'+(isVisible?'':'opacity:0.35')+'">'
+    +'<td class="tc"><button class="eye-btn '+(isVisible?'':'hidden')+'" onclick="toggleVisible('+p.id+','+(isVisible?0:1)+')">'+(isVisible?'👁️':'🙈')+'</button></td>'
+    +'<td><strong style="font-size:12px">'+origenIcon+' '+p.nombre+'</strong>'+(p.categoria?'<span class="badge b-gray" style="margin-left:4px;font-size:9px">'+p.categoria+'</span>':'')+(p.costo_base?'':'<span style="color:var(--red);margin-left:4px">⚠️</span>')+'</td>'
+    +'<td class="tr" style="color:var(--muted);font-size:11px">'+fmt(cf)+'</td>'
+    +'<td class="tc"><div class="markup-cell"><input class="pct-inp" type="number" value="'+Math.round(markup*100)+'" min="0" max="999" onchange="saveMarkupMin('+p.id+',this.value/100)"/><span style="font-size:10px;color:var(--muted)">%</span></div></td>'
+    +'<td class="tr" style="font-weight:700;color:var(--accent);font-size:12px">'+fmt(pmin)+'</td>'
+    +'<td class="tr" style="font-weight:700;color:var(--green);font-size:12px">'+fmt(ganancia)+'</td>'
+    +'<td class="tc"><input class="price-inp" type="number" value="'+(tuP||"")+'" placeholder="0" onchange="savePrecioMin('+p.id+',this.value)" style="width:90px"/></td>'
+    +'<td class="tr" style="color:var(--blue);font-size:11px">'+(tuP?fmt(tuP*(1-trf)):'—')+'</td>'
+    +'<td class="tr" style="color:var(--blue);font-size:11px">'+(tuP?fmt(tuP*(1-efe)):'—')+'</td>'
+    +'<td class="tr" style="font-size:11px">'+(tuP?fmt(tuP*(1-qrd)):'—')+'</td>'
+    +'<td class="tr" style="font-size:11px">'+(tuP?fmt(tuP*(1-qrc)):'—')+'</td>'
+    +'<td class="tr" style="color:var(--gold);font-size:11px">'+(tuP?fmt(tuP*(1-c3q)):'—')+'</td>'
+    +'<td class="tc">'+semaforo(tuP,pmin)+'</td>'
+    +'<td class="tc"><button class="btn-icon" onclick="verHistorialPrecio('+p.id+',''+p.nombre.replace(/'/g,"\'")+'')">'
+    +'📈'+(histLen>0?'<span style="font-size:9px;color:var(--accent)">'+histLen+'</span>':'')+'</button></td>'
+    +'</tr>';
+}
+function _renderPreciosOld(list,trf,efe,qrd,qrc,c3q){
   document.getElementById("precios-tbody").innerHTML=list.map(p=>{
     const cf=costoFinalMin(p);
     const markup=getMarkupMin(p.id);
@@ -1451,9 +1548,11 @@ function getMarkup(pid,cantidad){
   return defaults[cantidad]||0.60;
 }
 function renderMayoristas(){
+  poblarFiltrosCategorias();
   const q=(document.getElementById("mayor-search")||{value:""}).value.toLowerCase();
   const showHidden=document.getElementById("may-show-hidden")?.checked;
-  const list=productos.filter(p=>p.nombre.toLowerCase().includes(q)&&(showHidden||p.visible!==0));
+  const catFiltro=(document.getElementById("mayor-cat-filtro")||{value:""}).value;
+  const list=productos.filter(p=>p.nombre.toLowerCase().includes(q)&&(showHidden||p.visible!==0)&&(!catFiltro||p.categoria===catFiltro));
   const cantidades=["12","36","72","144"];
   document.getElementById("mayor-tbody").innerHTML=list.map(p=>{
     const cf=costoFinalMay(p);
@@ -2165,20 +2264,57 @@ async function cargarPedidoEnPresupuesto(pid){
 // ── PRODUCTOS ─────────────────────────────────────────────────────────────────
 function renderProductosTab(){
   const q=(document.getElementById("prod-search")||{value:""}).value.toLowerCase();
-  document.getElementById("prod-tbody").innerHTML=productos.filter(p=>p.nombre.toLowerCase().includes(q)).map(p=>`<tr>
-    <td><strong>${p.nombre}</strong>${p.visible===0?'<span class="badge b-gray" style="margin-left:5px">oculto</span>':''}</td>
-    <td class="tr">${p.costo_base?fmt(p.costo_base):'<span class="badge b-red">⚠️ sin costo</span>'}</td>
-    <td class="tc">${(recetasCache[p.id]||[]).length} insumo${(recetasCache[p.id]||[]).length!==1?'s':''}</td>
-    <td class="tc">
-      <button class="btn-icon" onclick="editProd(${p.id})">✏️</button>
-      <button class="btn-icon" onclick="deleteProd(${p.id})">🗑️</button>
-    </td>
-  </tr>`).join("");
+  const catFiltro=(document.getElementById("prod-cat-filtro")||{value:""}).value;
+  document.getElementById("prod-tbody").innerHTML=productos
+    .filter(p=>p.nombre.toLowerCase().includes(q)&&(!catFiltro||p.categoria===catFiltro))
+    .map(p=>{
+      const origenBadge=p.origen==='propio'
+        ?'<span class="badge b-orange">🏭 Propio</span>'
+        :'<span class="badge b-blue">🛒 Proveedor</span>';
+      const catBadge=p.categoria
+        ?'<span class="badge b-gray">'+p.categoria+'</span>'
+        :'<span style="color:var(--muted);font-size:11px">—</span>';
+      return '<tr>'
+        +'<td><strong>'+p.nombre+'</strong>'+(p.visible===0?'<span class="badge b-gray" style="margin-left:5px">oculto</span>':'')+'</td>'
+        +'<td class="tr">'+(p.costo_base?fmt(p.costo_base):'<span class="badge b-red">⚠️ sin costo</span>')+'</td>'
+        +'<td class="tc">'+catBadge+'</td>'
+        +'<td class="tc">'+origenBadge+'</td>'
+        +'<td class="tc">'+(recetasCache[p.id]||[]).length+' insumo'+((recetasCache[p.id]||[]).length!==1?'s':'')+'</td>'
+        +'<td class="tc">'
+        +'<button class="btn-icon" onclick="editProd('+p.id+')">✏️</button>'
+        +'<button class="btn-icon" onclick="deleteProd('+p.id+')">🗑️</button>'
+        +'</td>'
+        +'</tr>';
+    }).join("");
+}
+function poblarSelectCategorias(valorActual){
+  const sel=document.getElementById("prod-categoria");
+  if(!sel) return;
+  sel.innerHTML='<option value="">Sin categoría</option>'+
+    categorias.map(c=>'<option value="'+c.nombre+'"'+(c.nombre===valorActual?' selected':'')+'>'+ c.nombre+'</option>').join('');
+}
+function setOrigen(val){
+  document.getElementById("prod-origen").value=val;
+  document.getElementById("origen-btn-propio").classList.toggle("active",val==="propio");
+  document.getElementById("origen-btn-proveedor").classList.toggle("active",val==="proveedor");
+}
+async function nuevaCategoriaRapida(){
+  const nombre=prompt("Nombre de la nueva categoría:");
+  if(!nombre||!nombre.trim()) return;
+  const res=await api("/api/categorias",{method:"POST",body:JSON.stringify({nombre:nombre.trim()})});
+  if(res.ok){
+    categorias=await api("/api/categorias");
+    poblarSelectCategorias(nombre.trim());
+    document.getElementById("prod-categoria").value=nombre.trim();
+    toast("✅ Categoría creada");
+  } else toast(res.error||"Error",true);
 }
 function abrirModalProd(){
   document.getElementById("prod-edit-id").value="";
   document.getElementById("prod-nombre").value="";
   document.getElementById("prod-costo").value="";
+  poblarSelectCategorias("");
+  setOrigen("propio");
   document.getElementById("modal-prod-title").textContent="➕ Nuevo Producto";
   openModal("modal-prod");
 }
@@ -2187,6 +2323,8 @@ function editProd(id){
   document.getElementById("prod-edit-id").value=id;
   document.getElementById("prod-nombre").value=p.nombre;
   document.getElementById("prod-costo").value=p.costo_base||"";
+  poblarSelectCategorias(p.categoria||"");
+  setOrigen(p.origen||"proveedor");
   document.getElementById("modal-prod-title").textContent="✏️ Editar Producto";
   openModal("modal-prod");
 }
@@ -2194,10 +2332,13 @@ async function saveProducto(){
   const id=document.getElementById("prod-edit-id").value;
   const nombre=document.getElementById("prod-nombre").value.trim();
   const costo_base=parseFloat(document.getElementById("prod-costo").value)||null;
+  const categoria=document.getElementById("prod-categoria").value||null;
+  const origen=document.getElementById("prod-origen").value||"proveedor";
   if(!nombre){toast("Completá el nombre",true);return;}
   try{
-    const res=id?await api(`/api/productos/${id}`,{method:"PUT",body:JSON.stringify({nombre,costo_base})}):
-      await api("/api/productos",{method:"POST",body:JSON.stringify({nombre,costo_base})});
+    const res=id
+      ?await api("/api/productos/"+id,{method:"PUT",body:JSON.stringify({nombre,costo_base,categoria,origen})})
+      :await api("/api/productos",{method:"POST",body:JSON.stringify({nombre,costo_base,categoria,origen})});
     if(res.ok){
       toast(id?"✅ Actualizado":"✅ Creado");
       productos=await api("/api/productos");
@@ -3051,10 +3192,10 @@ function exportarFichaClienteExcel(){
 }
   async function init(){
   try{
-    [config,productos,insumos,gastos,pedidos,clientes,preciosMin,preciosMay]=await Promise.all([
+    [config,productos,insumos,gastos,pedidos,clientes,preciosMin,preciosMay,categorias]=await Promise.all([
       api("/api/config"),api("/api/productos"),api("/api/insumos"),
       api("/api/gastos"),api("/api/pedidos"),api("/api/clientes"),
-      api("/api/precios_minoristas"),api("/api/precios_mayoristas")
+      api("/api/precios_minoristas"),api("/api/precios_mayoristas"),api("/api/categorias")
     ]);
     try{fichasCache=await api('/api/clientes_fichas');}catch(e){fichasCache={};}
     try{
