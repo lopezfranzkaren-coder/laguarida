@@ -1462,15 +1462,6 @@ function renderClientes(){
   }).join("")||`<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px">${mes?"Sin clientes en este mes":"Sin clientes aún"}</td></tr>`;
 }
 
-function irAFichaCliente(nombreEnc){
-  const nombre=decodeURIComponent(nombreEnc);
-  window.open(`/cliente/${encodeURIComponent(nombre)}`,'_blank');
-}
-
-function abrirNuevoClienteDirecto(){
-  window.open('/cliente/__nuevo__','_blank');
-}
-
 // ── UNIFICAR DUPLICADOS ───────────────────────────────────────────────────────
 function abrirUnificar(nombreEnc){
   const nombre=decodeURIComponent(nombreEnc);
@@ -2535,6 +2526,394 @@ function exportarResumen(){
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
+  // ── FICHA CLIENTE INTERNA ─────────────────────────────────────────────────────
+let fichaClienteActual = '';
+let fichaClientePedidos = [];
+
+function irAFichaCliente(nombreEnc){
+  const nombre=decodeURIComponent(nombreEnc);
+  fichaClienteActual=nombre;
+  fichaClientePedidos=pedidos.filter(p=>p.cliente===nombre).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+
+  // Activar tab
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll("#sidebar-nav button").forEach(b=>b.classList.remove("active"));
+  document.getElementById("tab-ficha-cliente").classList.add("active");
+
+  // Título
+  document.getElementById('ficha-page-title').textContent=nombre;
+  const n=fichaClientePedidos.length;
+  const total=fichaClientePedidos.reduce((s,p)=>s+(p.total||0),0);
+  document.getElementById('ficha-page-subtitle').textContent=`${n} pedido${n!==1?'s':''} · ${fmt(total)} acumulado`;
+
+  // Avatar
+  const iniciales=nombre.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('ficha-avatar').textContent=iniciales;
+  document.getElementById('ficha-cli-nombre').textContent=nombre;
+
+  renderFichaKPIs();
+  renderFichaView();
+  renderFichaHistorial();
+  renderFichaProdFrecuentes();
+  poblarFichaUnificar();
+  showFichaTab('historial');
+  cancelarEdicionCliente();
+
+  // Scroll arriba
+  window.scrollTo(0,0);
+}
+
+function volverAClientes(){
+  showTab('clientes');
+  setTimeout(()=>showSubtab('clientes'),50);
+}
+
+function abrirNuevoClienteDirecto(){
+  fichaClienteActual='__nuevo__';
+  fichaClientePedidos=[];
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll("#sidebar-nav button").forEach(b=>b.classList.remove("active"));
+  document.getElementById("tab-ficha-cliente").classList.add("active");
+  document.getElementById('ficha-page-title').textContent='Nuevo cliente';
+  document.getElementById('ficha-page-subtitle').textContent='Completá los datos y guardá la ficha';
+  document.getElementById('ficha-avatar').textContent='?';
+  document.getElementById('ficha-cli-nombre').textContent='Nuevo cliente';
+  document.getElementById('ficha-cli-estado').textContent='';
+  ['fkpi-total','fkpi-pedidos','fkpi-ticket','fkpi-frecuencia','fkpi-ultimo'].forEach(id=>document.getElementById(id).textContent='—');
+  document.getElementById('fkpi-estado').textContent='';
+  document.getElementById('ficha-historial-list').innerHTML='<div style="color:var(--muted);text-align:center;padding:24px">Sin pedidos aún</div>';
+  document.getElementById('ficha-prod-frecuentes').innerHTML='<div style="color:var(--muted);font-size:12px;padding:10px">Sin datos</div>';
+  mostrarEdicionCliente();
+  window.scrollTo(0,0);
+}
+
+function renderFichaKPIs(){
+  const total=fichaClientePedidos.reduce((s,p)=>s+(p.total||0),0);
+  const n=fichaClientePedidos.length;
+  const ticket=n?Math.round(total/n):0;
+  let frecuencia='—';
+  if(n>=2){
+    const fechas=fichaClientePedidos.map(p=>new Date(p.fecha)).sort((a,b)=>a-b);
+    const diffs=[];
+    for(let i=1;i<fechas.length;i++) diffs.push((fechas[i]-fechas[i-1])/(1000*60*60*24));
+    const prom=Math.round(diffs.reduce((s,d)=>s+d,0)/diffs.length);
+    frecuencia=`cada ${prom}d`;
+  }
+  const ult=fichaClientePedidos[0]?.fecha||'—';
+  const hoy=new Date();
+  const dias=ult!=='—'?Math.floor((hoy-new Date(ult))/(1000*60*60*24)):999;
+  let estadoHTML;
+  if(dias<=30) estadoHTML='<span class="badge b-green">🟢 Activo</span>';
+  else if(dias<=90) estadoHTML='<span class="alerta-tibio">🟡 Tibio</span>';
+  else estadoHTML='<span class="alerta-contactar">🔴 Contactar</span>';
+
+  document.getElementById('fkpi-total').textContent=fmt(total);
+  document.getElementById('fkpi-pedidos').textContent=n;
+  document.getElementById('fkpi-ticket').textContent=fmt(ticket);
+  document.getElementById('fkpi-frecuencia').textContent=frecuencia;
+  document.getElementById('fkpi-ultimo').textContent=ult;
+  document.getElementById('fkpi-estado').innerHTML=estadoHTML;
+
+  // Estado en header
+  let estadoTxt,estadoCls;
+  if(dias<=30){estadoTxt='🟢 Cliente activo';estadoCls='b-green';}
+  else if(dias<=90){estadoTxt='🟡 Compra poco frecuente';estadoCls='b-gold';}
+  else{estadoTxt='🔴 Sin compras recientes';estadoCls='b-red';}
+  document.getElementById('ficha-cli-estado').innerHTML=`<span class="badge ${estadoCls}">${estadoTxt}</span>`;
+}
+
+function renderFichaView(){
+  const f=fichasCache[fichaClienteActual]||{};
+  document.getElementById('fv-dni').textContent=f.dni_cuit||'—';
+  document.getElementById('fv-tel').textContent=f.telefono||'—';
+  document.getElementById('fv-dir').textContent=f.direccion||'—';
+  document.getElementById('fv-ciudad').textContent=f.ciudad||'—';
+  document.getElementById('fv-prov').textContent=f.provincia||'—';
+  document.getElementById('fv-cp').textContent=f.cp||'—';
+  document.getElementById('fv-notas').textContent=f.notas||'Sin notas';
+}
+
+function mostrarEdicionCliente(){
+  document.getElementById('ficha-cli-view').style.display='none';
+  document.getElementById('ficha-cli-edit').style.display='block';
+  const f=fichasCache[fichaClienteActual]||{};
+  document.getElementById('fe-dni').value=f.dni_cuit||'';
+  document.getElementById('fe-tel').value=f.telefono||'';
+  document.getElementById('fe-dir').value=f.direccion||'';
+  document.getElementById('fe-ciudad').value=f.ciudad||'';
+  document.getElementById('fe-prov').value=f.provincia||'';
+  document.getElementById('fe-cp').value=f.cp||'';
+  document.getElementById('fe-notas').value=f.notas||'';
+}
+
+function cancelarEdicionCliente(){
+  document.getElementById('ficha-cli-view').style.display='block';
+  document.getElementById('ficha-cli-edit').style.display='none';
+}
+
+async function guardarFichaCliente(){
+  let nombre=fichaClienteActual;
+  if(nombre==='__nuevo__'){
+    nombre=prompt('Nombre del cliente:')?.trim();
+    if(!nombre){toast('El nombre es obligatorio',true);return;}
+  }
+  const data={
+    dni_cuit:document.getElementById('fe-dni').value,
+    telefono:document.getElementById('fe-tel').value,
+    direccion:document.getElementById('fe-dir').value,
+    ciudad:document.getElementById('fe-ciudad').value,
+    provincia:document.getElementById('fe-prov').value,
+    cp:document.getElementById('fe-cp').value,
+    notas:document.getElementById('fe-notas').value,
+  };
+  try{
+    await api(`/api/clientes_fichas/${encodeURIComponent(nombre)}`,{method:'POST',body:JSON.stringify(data)});
+    fichasCache[nombre]={...data,cliente:nombre};
+    if(fichaClienteActual==='__nuevo__'){
+      fichaClienteActual=nombre;
+      document.getElementById('ficha-page-title').textContent=nombre;
+      document.getElementById('ficha-cli-nombre').textContent=nombre;
+      document.getElementById('ficha-avatar').textContent=nombre.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      clientes=await api('/api/clientes');
+    }
+    cancelarEdicionCliente();
+    renderFichaView();
+    toast('✅ Ficha guardada');
+    renderClientes();
+  }catch(e){toast('Error al guardar',true);}
+}
+
+function renderFichaHistorial(){
+  const orden=document.getElementById('ficha-hist-orden')?.value||'fecha-desc';
+  let lista=[...fichaClientePedidos];
+  if(orden==='fecha-asc') lista.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  else if(orden==='monto-desc') lista.sort((a,b)=>(b.total||0)-(a.total||0));
+  else lista.sort((a,b)=>b.fecha.localeCompare(a.fecha));
+
+  const total=lista.reduce((s,p)=>s+(p.total||0),0);
+  document.getElementById('ficha-hist-resumen').textContent=
+    `${lista.length} pedido${lista.length!==1?'s':''} · ${fmt(total)}`;
+
+  if(!lista.length){
+    document.getElementById('ficha-historial-list').innerHTML='<div style="color:var(--muted);text-align:center;padding:24px">Sin pedidos registrados</div>';
+    return;
+  }
+
+  document.getElementById('ficha-historial-list').innerHTML=lista.map(p=>{
+    const estadoCls=p.estado==='pagado'?'b-green':p.estado==='pendiente'?'b-gold':'b-blue';
+    return `<div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;background:var(--surface)">
+      <div class="flex-between" style="margin-bottom:7px">
+        <div class="flex">
+          <span style="font-weight:700;font-size:13px">${p.fecha}</span>
+          ${p.numero?`<span style="color:var(--muted);font-size:11px">#${p.numero}</span>`:''}
+        </div>
+        <div class="flex">
+          <span class="badge ${estadoCls}">${p.estado}</span>
+          <button class="btn btn-ghost btn-sm" style="font-size:10px" onclick="cargarPedidoEnPresupuesto(${p.id})">📋 Presupuesto</button>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.8">
+        ${(p.items||[]).map(i=>`• ${i.producto} × ${i.cantidad} = <strong style="color:var(--text)">${fmt(i.subtotal)}</strong>`).join('<br>')}
+      </div>
+      ${p.transporte?`<div style="font-size:11px;color:var(--muted);margin-top:4px">🚚 ${p.transporte}${p.ciudad?' · '+p.ciudad:''}${p.provincia?' ('+p.provincia+')':''}</div>`:''}
+      ${p.observaciones?`<div style="font-size:11px;color:var(--muted);margin-top:4px;font-style:italic">📝 ${p.observaciones}</div>`:''}
+      <div style="text-align:right;font-weight:800;color:var(--accent);font-size:14px;margin-top:6px">${fmt(p.total)}</div>
+    </div>`;
+  }).join('');
+}
+
+function showFichaTab(name){
+  ['historial','stats'].forEach(t=>{
+    document.getElementById(`ftab-${t}`).style.display=t===name?'block':'none';
+    document.getElementById(`ftab-btn-${t}`).classList.toggle('active',t===name);
+  });
+  if(name==='stats') renderFichaStats();
+}
+
+function renderFichaStats(){
+  if(!fichaClientePedidos.length){
+    document.getElementById('ficha-stats-content').innerHTML='<div style="color:var(--muted);text-align:center;padding:24px">Sin datos suficientes</div>';
+    return;
+  }
+  const porMes={};
+  fichaClientePedidos.forEach(p=>{
+    const mes=p.fecha.slice(0,7);
+    if(!porMes[mes]) porMes[mes]=0;
+    porMes[mes]+=p.total||0;
+  });
+  const meses=Object.keys(porMes).sort();
+  const maxMes=Math.max(...Object.values(porMes),1);
+  const porProd={};
+  fichaClientePedidos.forEach(p=>{
+    (p.items||[]).forEach(i=>{
+      if(!porProd[i.producto]) porProd[i.producto]={unidades:0,total:0};
+      porProd[i.producto].unidades+=i.cantidad||0;
+      porProd[i.producto].total+=i.subtotal||0;
+    });
+  });
+  const prodOrdenado=Object.entries(porProd).sort((a,b)=>b[1].total-a[1].total);
+  const anioActual=new Date().getFullYear();
+  const totalActual=fichaClientePedidos.filter(p=>p.fecha.startsWith(anioActual)).reduce((s,p)=>s+(p.total||0),0);
+  const totalAnterior=fichaClientePedidos.filter(p=>p.fecha.startsWith(anioActual-1)).reduce((s,p)=>s+(p.total||0),0);
+
+  document.getElementById('ficha-stats-content').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px">Ventas ${anioActual}</div>
+        <div style="font-size:20px;font-weight:800;color:var(--accent)">${fmt(totalActual)}</div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px">Ventas ${anioActual-1}</div>
+        <div style="font-size:20px;font-weight:800;color:var(--muted)">${fmt(totalAnterior)}</div>
+      </div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Compras por mes</div>
+    ${meses.map(m=>{
+      const [y,mo]=m.split('-');
+      const label=new Date(y,parseInt(mo)-1).toLocaleString('es-AR',{month:'short',year:'2-digit'});
+      const pct=Math.round(porMes[m]/maxMes*100);
+      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+        <span style="font-size:11px;color:var(--muted);width:55px;flex-shrink:0">${label}</span>
+        <div style="flex:1;background:var(--border);border-radius:3px;height:14px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:var(--accent);border-radius:3px;display:flex;align-items:center;padding-left:5px">
+            <span style="font-size:9px;color:#fff;font-weight:700">${pct>15?fmt(porMes[m]):''}</span>
+          </div>
+        </div>
+        <span style="font-size:11px;color:var(--accent);font-weight:700;min-width:80px;text-align:right">${fmt(porMes[m])}</span>
+      </div>`;
+    }).join('')}
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 10px">Productos comprados</div>
+    <table>
+      <thead><tr>
+        <th>Producto</th><th class="tc">Unidades</th><th class="tr">Total $</th>
+      </tr></thead>
+      <tbody>
+        ${prodOrdenado.map(([nombre,d])=>`<tr>
+          <td>${nombre}</td>
+          <td class="tc">${d.unidades}</td>
+          <td class="tr" style="color:var(--accent);font-weight:700">${fmt(d.total)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function renderFichaProdFrecuentes(){
+  const porProd={};
+  fichaClientePedidos.forEach(p=>{
+    (p.items||[]).forEach(i=>{
+      if(!porProd[i.producto]) porProd[i.producto]={unidades:0,veces:0};
+      porProd[i.producto].unidades+=i.cantidad||0;
+      porProd[i.producto].veces++;
+    });
+  });
+  const lista=Object.entries(porProd).sort((a,b)=>b[1].unidades-a[1].unidades).slice(0,5);
+  const maxU=lista[0]?.[1]?.unidades||1;
+  if(!lista.length){
+    document.getElementById('ficha-prod-frecuentes').innerHTML='<div style="color:var(--muted);font-size:12px;padding:10px">Sin productos registrados</div>';
+    return;
+  }
+  document.getElementById('ficha-prod-frecuentes').innerHTML=lista.map(([nombre,d])=>{
+    const pct=Math.round(d.unidades/maxU*100);
+    return `<div style="margin-bottom:10px">
+      <div class="flex-between" style="font-size:11px;margin-bottom:3px">
+        <span style="font-weight:600">${nombre}</span>
+        <span style="color:var(--accent);font-weight:700">${d.unidades} u</span>
+      </div>
+      <div style="background:var(--border);border-radius:3px;height:12px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:var(--blue);border-radius:3px;display:flex;align-items:center;padding-left:4px">
+          <span style="font-size:9px;color:#fff;font-weight:700">${d.veces>1?d.veces+' pedidos':''}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function poblarFichaUnificar(){
+  const sel=document.getElementById('ficha-unif-select');
+  sel.innerHTML='<option value="">— Elegí el duplicado —</option>'+
+    clientes.filter(c=>c.cliente!==fichaClienteActual)
+      .map(c=>`<option value="${c.cliente}">${c.cliente} (${c.num_pedidos} pedidos · ${fmt(c.total_acumulado)})</option>`)
+      .join('');
+  document.getElementById('ficha-unif-panel').style.display='none';
+  document.getElementById('ficha-unif-preview').style.display='none';
+}
+
+function toggleUnificarPanel(){
+  const panel=document.getElementById('ficha-unif-panel');
+  panel.style.display=panel.style.display==='none'?'block':'none';
+}
+
+function previewUnificar(dup){
+  const prev=document.getElementById('ficha-unif-preview');
+  if(!dup){prev.style.display='none';return;}
+  prev.style.display='block';
+  prev.textContent=`Todos los pedidos de "${dup}" se moverán a "${fichaClienteActual}" y el duplicado se eliminará.`;
+}
+
+async function ejecutarUnificarDesdeCliente(){
+  const duplicado=document.getElementById('ficha-unif-select').value;
+  if(!duplicado){toast('Elegí el duplicado',true);return;}
+  if(!confirm(`¿Unificar "${duplicado}" en "${fichaClienteActual}"? No se puede deshacer.`)) return;
+  try{
+    const pedsDup=pedidos.filter(p=>p.cliente===duplicado);
+    for(const p of pedsDup){
+      await api(`/api/pedidos/${p.id}`,{method:'PUT',body:JSON.stringify({...p,cliente:fichaClienteActual})});
+      p.cliente=fichaClienteActual;
+    }
+    try{await api(`/api/clientes_fichas/${encodeURIComponent(duplicado)}`,{method:'DELETE'});}catch(e){}
+    pedidos=await api('/api/pedidos');
+    clientes=await api('/api/clientes');
+    fichaClientePedidos=pedidos.filter(p=>p.cliente===fichaClienteActual).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+    renderFichaKPIs();
+    renderFichaHistorial();
+    renderFichaProdFrecuentes();
+    poblarFichaUnificar();
+    toast(`✅ "${duplicado}" unificado`);
+  }catch(e){toast('Error al unificar',true);}
+}
+
+function nuevoPedidoDesdeCliente(){
+  showSubtab('pedidos');
+  showTab('clientes');
+  setTimeout(()=>{
+    abrirModalPedido();
+    document.getElementById('ped-cliente').value=fichaClienteActual;
+    seleccionarClienteModal(fichaClienteActual);
+  },100);
+}
+
+function exportarFichaClienteExcel(){
+  try{
+    const f=fichasCache[fichaClienteActual]||{};
+    const filaFicha=[{
+      Cliente:fichaClienteActual,
+      'DNI/CUIT':f.dni_cuit||'',
+      Teléfono:f.telefono||'',
+      Dirección:f.direccion||'',
+      Ciudad:f.ciudad||'',
+      Provincia:f.provincia||'',
+      CP:f.cp||'',
+      Notas:f.notas||'',
+      'Total acumulado':Math.round(fichaClientePedidos.reduce((s,p)=>s+(p.total||0),0)),
+      'N° Pedidos':fichaClientePedidos.length,
+    }];
+    const filaPedidos=fichaClientePedidos.map(p=>({
+      Fecha:p.fecha,
+      'N°':p.numero||'',
+      Estado:p.estado,
+      Ciudad:p.ciudad||'',
+      Provincia:p.provincia||'',
+      Transporte:p.transporte||'',
+      Total:Math.round(p.total||0),
+      Productos:(p.items||[]).map(i=>`${i.producto} x${i.cantidad}`).join(', '),
+    }));
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(filaFicha),'Ficha');
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(filaPedidos),'Pedidos');
+    XLSX.writeFile(wb,`LaGuarida_${fichaClienteActual.replace(/\s+/g,'_')}.xlsx`);
+    toast('📊 Excel descargado');
+  }catch(e){toast('Error al generar Excel',true);}
+}
 async function init(){
   try{
     [config,productos,insumos,gastos,pedidos,clientes,preciosMin,preciosMay]=await Promise.all([
