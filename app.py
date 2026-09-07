@@ -90,7 +90,10 @@ def logout(): session.clear(); return redirect("/login")
 # ─── Ruta cliente ──────────────────────────────────────────────────────────────
 @app.route("/cliente/<path:nombre>")
 def cliente_page(nombre):
-    return send_from_directory(BASE_DIR, "cliente.html")
+    with open(os.path.join(BASE_DIR, "cliente.html"), "r", encoding="utf-8") as f:
+        contenido = f.read()
+    from flask import Response
+    return Response(contenido, mimetype="text/html")
 
 # ─── Init DB ───────────────────────────────────────────────────────────────────
 def init_db():
