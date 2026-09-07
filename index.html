@@ -1453,77 +1453,11 @@ function buildPrecioRow(p,trf,efe,qrd,qrc,c3q){
     +'<td class="tr" style="font-size:11px">'+(tuP?fmt(tuP*(1-qrc)):'—')+'</td>'
     +'<td class="tr" style="color:var(--gold);font-size:11px">'+(tuP?fmt(tuP*(1-c3q)):'—')+'</td>'
     +'<td class="tc">'+semaforo(tuP,pmin)+'</td>'
-    +'<td class="tc"><button class="btn-icon" onclick="verHistorialPrecio('+p.id+',''+p.nombre.replace(/'/g,"\'")+'')">'
+    +'<td class="tc"><button class="btn-icon" onclick="verHistorialPrecio('+p.id+',\''+p.nombre.replace(/'/g,"\\'")+'\')">'
     +'📈'+(histLen>0?'<span style="font-size:9px;color:var(--accent)">'+histLen+'</span>':'')+'</button></td>'
     +'</tr>';
 }
-function _renderPreciosOld(list,trf,efe,qrd,qrc,c3q){
-  document.getElementById("precios-tbody").innerHTML=list.map(p=>{
-    const cf=costoFinalMin(p);
-    const markup=getMarkupMin(p.id);
-    const pmin=cf*(1+markup);
-    const pm=preciosMin[p.id]||{};
-    const tuP=(typeof pm==="object"?pm.precio:pm)||0;
-    const ganancia=tuP?tuP-cf:pmin-cf;
-    const isVisible=p.visible!==0;
-    const histLen=(precioHistorialCache[p.id]||[]).length;
-    return `<tr style="${isVisible?'':'opacity:0.4'}">
-      <td class="tc"><button class="eye-btn ${isVisible?'':'hidden'}" onclick="toggleVisible(${p.id},${isVisible?0:1})">${isVisible?'👁️':'🙈'}</button></td>
-      <td><strong style="font-size:12px">${p.nombre}</strong>${!p.costo_base?'<span style="color:var(--red);margin-left:4px">⚠️</span>':''}</td>
-      <td class="tr" style="color:var(--muted);font-size:11px">${fmt(cf)}</td>
-      <td class="tc">
-        <div class="markup-cell">
-          <input class="pct-inp" type="number" value="${Math.round(markup*100)}" min="0" max="999" onchange="saveMarkupMin(${p.id},this.value/100)"/>
-          <span style="font-size:10px;color:var(--muted)">%</span>
-        </div>
-      </td>
-      <td class="tr" style="font-weight:700;color:var(--accent);font-size:12px">${fmt(pmin)}</td>
-      <td class="tr" style="font-weight:700;color:var(--green);font-size:12px">${fmt(ganancia)}</td>
-      <td class="tc"><input class="price-inp" type="number" value="${tuP||""}" placeholder="0" onchange="savePrecioMin(${p.id},this.value)" style="width:90px"/></td>
-      <td class="tr" style="color:var(--blue);font-size:11px">${tuP?fmt(tuP*(1-trf)):'—'}</td>
-      <td class="tr" style="color:var(--blue);font-size:11px">${tuP?fmt(tuP*(1-efe)):'—'}</td>
-      <td class="tr" style="font-size:11px">${tuP?fmt(tuP*(1-qrd)):'—'}</td>
-      <td class="tr" style="font-size:11px">${tuP?fmt(tuP*(1-qrc)):'—'}</td>
-      <td class="tr" style="color:var(--gold);font-size:11px">${tuP?fmt(tuP*(1-c3q)):'—'}</td>
-      <td class="tc">${semaforo(tuP,pmin)}</td>
-      <td class="tc">
-        <button class="btn-icon" onclick="verHistorialPrecio(${p.id},'${p.nombre.replace(/'/g,"\\'")}')">
-          📈${histLen>0?`<span style="font-size:9px;color:var(--accent)">${histLen}</span>`:''}
-        </button>
-      </td>
-    </tr>`;
-  }).join("");
-}
-async function toggleVisible(pid,visible){
-  await api(`/api/productos/${pid}/visible`,{method:"POST",body:JSON.stringify({visible})});
-  const p=productos.find(x=>x.id===pid);
-  if(p) p.visible=visible;
-  renderPrecios();
-  toast(visible?'👁️ Visible':'🙈 Oculto');
-}
-async function saveMarkupMin(pid,markup){
-  if(!preciosMin[pid]||typeof preciosMin[pid]!=="object") preciosMin[pid]={precio:0,markup:1.0};
-  preciosMin[pid].markup=markup;
-  await api(`/api/precios_minoristas/${pid}`,{method:"POST",body:JSON.stringify({precio:preciosMin[pid].precio||0,markup})});
-  renderPrecios();
-}
-async function savePrecioMin(pid,val){
-  const nuevo=Number(val)||0;
-  if(!preciosMin[pid]||typeof preciosMin[pid]!=="object") preciosMin[pid]={precio:0,markup:1.0};
-  const anterior=preciosMin[pid].precio||0;
-  if(anterior>0&&anterior!==nuevo){
-    if(!precioHistorialCache[pid]) precioHistorialCache[pid]=[];
-    precioHistorialCache[pid].unshift({
-      fecha:new Date().toLocaleDateString('es-AR'),
-      anterior,nuevo,
-      diff:Math.round((nuevo-anterior)/anterior*100)
-    });
-    try{await api(`/api/precio_historial/${pid}`,{method:"POST",body:JSON.stringify({anterior,nuevo})});}catch(e){}
-  }
-  preciosMin[pid].precio=nuevo;
-  await api(`/api/precios_minoristas/${pid}`,{method:"POST",body:JSON.stringify({precio:nuevo,markup:preciosMin[pid].markup||1.0})});
-  renderPrecios();
-}
+
 function verHistorialPrecio(pid,nombre){
   const hist=precioHistorialCache[pid]||[];
   document.getElementById('modal-hist-title').textContent=`📈 Historial: ${nombre}`;
