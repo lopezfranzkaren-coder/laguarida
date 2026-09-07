@@ -67,6 +67,9 @@ def ph():
 @app.before_request
 def check_auth():
     if request.path in ["/login"] or request.path.startswith("/static"): return
+    if request.path.startswith("/cliente"): 
+        if not session.get("ok"): return redirect("/login")
+        return
     if not session.get("ok"):
         if request.path.startswith("/api"): return jsonify({"error":"no autorizado"}),401
         return redirect("/login")
@@ -84,10 +87,14 @@ def login():
 @app.route("/logout")
 def logout(): session.clear(); return redirect("/login")
 
+# ─── Ruta cliente ──────────────────────────────────────────────────────────────
+@app.route("/cliente/<path:nombre>")
+def cliente_page(nombre):
+    return send_from_directory(BASE_DIR, "cliente.html")
+
 # ─── Init DB ───────────────────────────────────────────────────────────────────
 def init_db():
     db = get_db()
-    p = ph()
     if USE_PG:
         cur = db.cursor()
         stmts = [
@@ -96,16 +103,20 @@ def init_db():
             "CREATE TABLE IF NOT EXISTS recetas (id SERIAL PRIMARY KEY, producto_id INTEGER NOT NULL, insumo_id INTEGER NOT NULL, tipo TEXT NOT NULL DEFAULT 'ambos', UNIQUE(producto_id,insumo_id))",
             "CREATE TABLE IF NOT EXISTS gastos_fijos (id SERIAL PRIMARY KEY, item TEXT NOT NULL UNIQUE, monto REAL NOT NULL)",
             "CREATE TABLE IF NOT EXISTS config (clave TEXT PRIMARY KEY, valor TEXT NOT NULL)",
-            "CREATE TABLE IF NOT EXISTS pedidos (id SERIAL PRIMARY KEY, numero TEXT, fecha TEXT NOT NULL, cliente TEXT NOT NULL, telefono TEXT, provincia TEXT, transporte TEXT, tipo_pago TEXT DEFAULT 'transferencia', estado TEXT DEFAULT 'pendiente', observaciones TEXT, total REAL DEFAULT 0)",
+            "CREATE TABLE IF NOT EXISTS pedidos (id SERIAL PRIMARY KEY, numero TEXT, fecha TEXT NOT NULL, cliente TEXT NOT NULL, telefono TEXT, provincia TEXT, ciudad TEXT, direccion TEXT, dni_cuit TEXT, cp TEXT, transporte TEXT, tipo_pago TEXT DEFAULT 'transferencia', estado TEXT DEFAULT 'pendiente', observaciones TEXT, total REAL DEFAULT 0)",
             "CREATE TABLE IF NOT EXISTS pedido_items (id SERIAL PRIMARY KEY, pedido_id INTEGER NOT NULL, producto TEXT NOT NULL, cantidad INTEGER NOT NULL, precio_unitario REAL NOT NULL, subtotal REAL NOT NULL)",
             "CREATE TABLE IF NOT EXISTS precios_mayoristas (id SERIAL PRIMARY KEY, producto_id INTEGER NOT NULL, cantidad TEXT NOT NULL, precio REAL, markup REAL, UNIQUE(producto_id,cantidad))",
             "CREATE TABLE IF NOT EXISTS precios_minoristas (id SERIAL PRIMARY KEY, producto_id INTEGER NOT NULL UNIQUE, precio REAL, markup REAL)",
-            "CREATE TABLE IF NOT EXISTS clientes_fichas (id SERIAL PRIMARY KEY, cliente TEXT NOT NULL UNIQUE, dni_cuit TEXT, direccion TEXT, localidad TEXT, cp TEXT, telefono TEXT, provincia TEXT, notas TEXT)",
-            # NUEVO: historial de precios
+            "CREATE TABLE IF NOT EXISTS clientes_fichas (id SERIAL PRIMARY KEY, cliente TEXT NOT NULL UNIQUE, dni_cuit TEXT, direccion TEXT, localidad TEXT, ciudad TEXT, cp TEXT, telefono TEXT, provincia TEXT, notas TEXT)",
             "CREATE TABLE IF NOT EXISTS precio_historial (id SERIAL PRIMARY KEY, producto_id INTEGER NOT NULL, fecha TEXT NOT NULL, precio_anterior REAL NOT NULL, precio_nuevo REAL NOT NULL, diff_pct REAL)",
             "ALTER TABLE productos ADD COLUMN IF NOT EXISTS visible INTEGER DEFAULT 1",
             "ALTER TABLE precios_mayoristas ADD COLUMN IF NOT EXISTS markup REAL",
             "ALTER TABLE precios_minoristas ADD COLUMN IF NOT EXISTS markup REAL",
+            "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS ciudad TEXT",
+            "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS direccion TEXT",
+            "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS dni_cuit TEXT",
+            "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS cp TEXT",
+            "ALTER TABLE clientes_fichas ADD COLUMN IF NOT EXISTS ciudad TEXT",
         ]
         for s in stmts:
             try: cur.execute(s)
@@ -118,19 +129,25 @@ def init_db():
         CREATE TABLE IF NOT EXISTS recetas (id INTEGER PRIMARY KEY AUTOINCREMENT, producto_id INTEGER NOT NULL, insumo_id INTEGER NOT NULL, tipo TEXT NOT NULL DEFAULT 'ambos', UNIQUE(producto_id,insumo_id));
         CREATE TABLE IF NOT EXISTS gastos_fijos (id INTEGER PRIMARY KEY AUTOINCREMENT, item TEXT NOT NULL UNIQUE, monto REAL NOT NULL);
         CREATE TABLE IF NOT EXISTS config (clave TEXT PRIMARY KEY, valor TEXT NOT NULL);
-        CREATE TABLE IF NOT EXISTS pedidos (id INTEGER PRIMARY KEY AUTOINCREMENT, numero TEXT, fecha TEXT NOT NULL, cliente TEXT NOT NULL, telefono TEXT, provincia TEXT, transporte TEXT, tipo_pago TEXT DEFAULT 'transferencia', estado TEXT DEFAULT 'pendiente', observaciones TEXT, total REAL DEFAULT 0);
+        CREATE TABLE IF NOT EXISTS pedidos (id INTEGER PRIMARY KEY AUTOINCREMENT, numero TEXT, fecha TEXT NOT NULL, cliente TEXT NOT NULL, telefono TEXT, provincia TEXT, ciudad TEXT, direccion TEXT, dni_cuit TEXT, cp TEXT, transporte TEXT, tipo_pago TEXT DEFAULT 'transferencia', estado TEXT DEFAULT 'pendiente', observaciones TEXT, total REAL DEFAULT 0);
         CREATE TABLE IF NOT EXISTS pedido_items (id INTEGER PRIMARY KEY AUTOINCREMENT, pedido_id INTEGER NOT NULL, producto TEXT NOT NULL, cantidad INTEGER NOT NULL, precio_unitario REAL NOT NULL, subtotal REAL NOT NULL);
         CREATE TABLE IF NOT EXISTS precios_mayoristas (id INTEGER PRIMARY KEY AUTOINCREMENT, producto_id INTEGER NOT NULL, cantidad TEXT NOT NULL, precio REAL, markup REAL, UNIQUE(producto_id,cantidad));
         CREATE TABLE IF NOT EXISTS precios_minoristas (id INTEGER PRIMARY KEY AUTOINCREMENT, producto_id INTEGER NOT NULL UNIQUE, precio REAL, markup REAL);
-        CREATE TABLE IF NOT EXISTS clientes_fichas (id INTEGER PRIMARY KEY AUTOINCREMENT, cliente TEXT NOT NULL UNIQUE, dni_cuit TEXT, direccion TEXT, localidad TEXT, cp TEXT, telefono TEXT, provincia TEXT, notas TEXT);
+        CREATE TABLE IF NOT EXISTS clientes_fichas (id INTEGER PRIMARY KEY AUTOINCREMENT, cliente TEXT NOT NULL UNIQUE, dni_cuit TEXT, direccion TEXT, localidad TEXT, ciudad TEXT, cp TEXT, telefono TEXT, provincia TEXT, notas TEXT);
         CREATE TABLE IF NOT EXISTS precio_historial (id INTEGER PRIMARY KEY AUTOINCREMENT, producto_id INTEGER NOT NULL, fecha TEXT NOT NULL, precio_anterior REAL NOT NULL, precio_nuevo REAL NOT NULL, diff_pct REAL);
         """)
-        try: db.execute("ALTER TABLE productos ADD COLUMN visible INTEGER DEFAULT 1"); db.commit()
-        except: pass
-        try: db.execute("ALTER TABLE precios_mayoristas ADD COLUMN markup REAL"); db.commit()
-        except: pass
-        try: db.execute("ALTER TABLE precios_minoristas ADD COLUMN markup REAL"); db.commit()
-        except: pass
+        for col in [
+            ("productos","visible","INTEGER DEFAULT 1"),
+            ("precios_mayoristas","markup","REAL"),
+            ("precios_minoristas","markup","REAL"),
+            ("pedidos","ciudad","TEXT"),
+            ("pedidos","direccion","TEXT"),
+            ("pedidos","dni_cuit","TEXT"),
+            ("pedidos","cp","TEXT"),
+            ("clientes_fichas","ciudad","TEXT"),
+        ]:
+            try: db.execute(f"ALTER TABLE {col[0]} ADD COLUMN {col[1]} {col[2]}"); db.commit()
+            except: pass
 
     # Seed si está vacío
     cnt = q("SELECT COUNT(*) as n FROM productos")[0]["n"]
@@ -156,10 +173,12 @@ def init_db():
 
     cnt = q("SELECT COUNT(*) as n FROM insumos")[0]["n"]
     if int(cnt) == 0:
-        ins = [("Argollita",110,"por llavero"),("Hoja",140,"por hoja"),("Tinta",100,"por hoja"),
-               ("Imanes",170,"por cada uno"),("Vinilo",500,"hoja A4"),("Grabado",200,"por cada 20 min"),
-               ("Madera",800,"plancha A4"),("UV",180,""),("DTF",1750,"por remera / 6 por gorra"),
-               ("Embalaje",100,""),("Caja",350,"por unidad"),("Bolsa",128,"por unidad"),("Bolsita remeras",500,"por unidad")]
+        ins = [
+            ("Argollita",110,"por llavero"),("Hoja",140,"por hoja"),("Tinta",100,"por hoja"),
+            ("Imanes",170,"por cada uno"),("Vinilo",500,"hoja A4"),("Grabado",200,"por cada 20 min"),
+            ("Madera",800,"plancha A4"),("UV",180,""),("DTF",1750,"por remera / 6 por gorra"),
+            ("Embalaje",100,""),("Caja",350,"por unidad"),("Bolsa",128,"por unidad"),("Bolsita remeras",500,"por unidad")
+        ]
         if USE_PG:
             cur = db.cursor()
             for n,c,d in ins: cur.execute("INSERT INTO insumos (nombre,costo,descripcion) VALUES (%s,%s,%s) ON CONFLICT DO NOTHING",(n,c,d))
@@ -169,8 +188,10 @@ def init_db():
 
     cnt = q("SELECT COUNT(*) as n FROM gastos_fijos")[0]["n"]
     if int(cnt) == 0:
-        gastos=[("Alquiler",720000),("Sueldos",3000000),("Luz",70000),("Expensas",90000),
-                ("Agua",35000),("Internet",30000),("Alarma",39000),("ABL",12000),("Publicidad",350000)]
+        gastos=[
+            ("Alquiler",720000),("Sueldos",3000000),("Luz",70000),("Expensas",90000),
+            ("Agua",35000),("Internet",30000),("Alarma",39000),("ABL",12000),("Publicidad",350000)
+        ]
         if USE_PG:
             cur = db.cursor()
             for i,m in gastos: cur.execute("INSERT INTO gastos_fijos (item,monto) VALUES (%s,%s) ON CONFLICT DO NOTHING",(i,m))
@@ -184,9 +205,7 @@ def init_db():
         ("inflacion_q1_2025","0.08"),("inflacion_q2_2025","0.11"),("inflacion_q3_2025","0.09"),
         ("inflacion_q4_2025","0.07"),("inflacion_q1_2026","0.00"),("inflacion_q2_2026","0.00"),
         ("last_update",""),("logo_data",""),
-        ("markup_12","0.60"),("markup_36","0.50"),("markup_72","0.30"),
-        # NUEVO
-        ("markup_144","0.20"),
+        ("markup_12","0.60"),("markup_36","0.50"),("markup_72","0.30"),("markup_144","0.20"),
     ]
     if USE_PG:
         cur = db.cursor()
@@ -395,14 +414,24 @@ def add_pedido():
     db=get_db()
     if USE_PG:
         cur=db.cursor()
-        cur.execute("INSERT INTO pedidos (numero,fecha,cliente,telefono,provincia,transporte,tipo_pago,estado,observaciones,total) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",
-            (d.get("numero",""),d["fecha"],d["cliente"],d.get("telefono",""),d.get("provincia",""),d.get("transporte",""),d.get("tipo_pago","transferencia"),d.get("estado","pendiente"),d.get("observaciones",""),total))
+        cur.execute("""INSERT INTO pedidos 
+            (numero,fecha,cliente,telefono,provincia,ciudad,direccion,dni_cuit,cp,transporte,tipo_pago,estado,observaciones,total) 
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+            (d.get("numero",""),d["fecha"],d["cliente"],d.get("telefono",""),d.get("provincia",""),
+             d.get("ciudad",""),d.get("direccion",""),d.get("dni_cuit",""),d.get("cp",""),
+             d.get("transporte",""),d.get("tipo_pago","transferencia"),d.get("estado","pendiente"),
+             d.get("observaciones",""),total))
         pid=cur.fetchone()[0]
         for i in items: cur.execute("INSERT INTO pedido_items (pedido_id,producto,cantidad,precio_unitario,subtotal) VALUES (%s,%s,%s,%s,%s)",(pid,i["producto"],i["cantidad"],i["precio_unitario"],i["subtotal"]))
         db.commit()
     else:
-        cur=db.execute("INSERT INTO pedidos (numero,fecha,cliente,telefono,provincia,transporte,tipo_pago,estado,observaciones,total) VALUES (?,?,?,?,?,?,?,?,?,?)",
-            (d.get("numero",""),d["fecha"],d["cliente"],d.get("telefono",""),d.get("provincia",""),d.get("transporte",""),d.get("tipo_pago","transferencia"),d.get("estado","pendiente"),d.get("observaciones",""),total))
+        cur=db.execute("""INSERT INTO pedidos 
+            (numero,fecha,cliente,telefono,provincia,ciudad,direccion,dni_cuit,cp,transporte,tipo_pago,estado,observaciones,total) 
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (d.get("numero",""),d["fecha"],d["cliente"],d.get("telefono",""),d.get("provincia",""),
+             d.get("ciudad",""),d.get("direccion",""),d.get("dni_cuit",""),d.get("cp",""),
+             d.get("transporte",""),d.get("tipo_pago","transferencia"),d.get("estado","pendiente"),
+             d.get("observaciones",""),total))
         pid=cur.lastrowid
         for i in items: db.execute("INSERT INTO pedido_items (pedido_id,producto,cantidad,precio_unitario,subtotal) VALUES (?,?,?,?,?)",(pid,i["producto"],i["cantidad"],i["precio_unitario"],i["subtotal"]))
         db.commit()
@@ -414,14 +443,26 @@ def upd_pedido(pid):
     db=get_db()
     if USE_PG:
         cur=db.cursor()
-        cur.execute("UPDATE pedidos SET numero=%s,fecha=%s,cliente=%s,telefono=%s,provincia=%s,transporte=%s,tipo_pago=%s,estado=%s,observaciones=%s,total=%s WHERE id=%s",
-            (d.get("numero",""),d["fecha"],d["cliente"],d.get("telefono",""),d.get("provincia",""),d.get("transporte",""),d.get("tipo_pago","transferencia"),d.get("estado","pendiente"),d.get("observaciones",""),total,pid))
+        cur.execute("""UPDATE pedidos SET 
+            numero=%s,fecha=%s,cliente=%s,telefono=%s,provincia=%s,ciudad=%s,
+            direccion=%s,dni_cuit=%s,cp=%s,transporte=%s,tipo_pago=%s,estado=%s,observaciones=%s,total=%s 
+            WHERE id=%s""",
+            (d.get("numero",""),d["fecha"],d["cliente"],d.get("telefono",""),d.get("provincia",""),
+             d.get("ciudad",""),d.get("direccion",""),d.get("dni_cuit",""),d.get("cp",""),
+             d.get("transporte",""),d.get("tipo_pago","transferencia"),d.get("estado","pendiente"),
+             d.get("observaciones",""),total,pid))
         cur.execute("DELETE FROM pedido_items WHERE pedido_id=%s",(pid,))
         for i in items: cur.execute("INSERT INTO pedido_items (pedido_id,producto,cantidad,precio_unitario,subtotal) VALUES (%s,%s,%s,%s,%s)",(pid,i["producto"],i["cantidad"],i["precio_unitario"],i["subtotal"]))
         db.commit()
     else:
-        db.execute("UPDATE pedidos SET numero=?,fecha=?,cliente=?,telefono=?,provincia=?,transporte=?,tipo_pago=?,estado=?,observaciones=?,total=? WHERE id=?",
-            (d.get("numero",""),d["fecha"],d["cliente"],d.get("telefono",""),d.get("provincia",""),d.get("transporte",""),d.get("tipo_pago","transferencia"),d.get("estado","pendiente"),d.get("observaciones",""),total,pid))
+        db.execute("""UPDATE pedidos SET 
+            numero=?,fecha=?,cliente=?,telefono=?,provincia=?,ciudad=?,
+            direccion=?,dni_cuit=?,cp=?,transporte=?,tipo_pago=?,estado=?,observaciones=?,total=? 
+            WHERE id=?""",
+            (d.get("numero",""),d["fecha"],d["cliente"],d.get("telefono",""),d.get("provincia",""),
+             d.get("ciudad",""),d.get("direccion",""),d.get("dni_cuit",""),d.get("cp",""),
+             d.get("transporte",""),d.get("tipo_pago","transferencia"),d.get("estado","pendiente"),
+             d.get("observaciones",""),total,pid))
         db.execute("DELETE FROM pedido_items WHERE pedido_id=?",(pid,))
         for i in items: db.execute("INSERT INTO pedido_items (pedido_id,producto,cantidad,precio_unitario,subtotal) VALUES (?,?,?,?,?)",(pid,i["producto"],i["cantidad"],i["precio_unitario"],i["subtotal"]))
         db.commit()
@@ -438,28 +479,21 @@ def del_pedido(pid):
 
 @app.route("/api/clientes", methods=["GET"])
 def get_clientes():
-    # FIX: SUBSTR compatible con PostgreSQL y SQLite
+    # Agrupado SOLO por nombre — fix de duplicados
     return jsonify(q("""
-        SELECT cliente, telefono, provincia,
+        SELECT cliente,
+               MAX(telefono) as telefono,
+               MAX(provincia) as provincia,
+               MAX(ciudad) as ciudad,
                COUNT(DISTINCT id) as num_pedidos,
                MAX(fecha) as ultimo_pedido,
                SUM(CASE WHEN SUBSTR(fecha,1,4)='2025' THEN total ELSE 0 END) as total_2025,
                SUM(CASE WHEN SUBSTR(fecha,1,4)='2026' THEN total ELSE 0 END) as total_2026,
                SUM(total) as total_acumulado
         FROM pedidos
-        GROUP BY cliente, telefono, provincia
+        GROUP BY cliente
         ORDER BY total_acumulado DESC
     """))
-
-@app.route("/api/clientes/<path:nombre>/pedidos", methods=["GET"])
-def get_cliente_pedidos(nombre):
-    sql="SELECT * FROM pedidos WHERE cliente={0} ORDER BY fecha DESC".format("%s" if USE_PG else "?")
-    rows=q(sql,(nombre,)); result=[]
-    for r in rows:
-        p=dict(r)
-        sql2="SELECT * FROM pedido_items WHERE pedido_id={0}".format("%s" if USE_PG else "?")
-        p["items"]=q(sql2,(p["id"],)); result.append(p)
-    return jsonify(result)
 
 @app.route("/api/clientes_fichas", methods=["GET"])
 def get_fichas():
@@ -471,24 +505,41 @@ def save_ficha(nombre):
     db = get_db()
     if USE_PG:
         cur = db.cursor()
-        cur.execute("INSERT INTO clientes_fichas (cliente,dni_cuit,direccion,localidad,cp,telefono,provincia,notas) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (cliente) DO UPDATE SET dni_cuit=EXCLUDED.dni_cuit,direccion=EXCLUDED.direccion,localidad=EXCLUDED.localidad,cp=EXCLUDED.cp,telefono=EXCLUDED.telefono,provincia=EXCLUDED.provincia,notas=EXCLUDED.notas",
-            (nombre,d.get("dni_cuit",""),d.get("direccion",""),d.get("localidad",""),d.get("cp",""),d.get("telefono",""),d.get("provincia",""),d.get("notas","")))
+        cur.execute("""INSERT INTO clientes_fichas 
+            (cliente,dni_cuit,direccion,ciudad,cp,telefono,provincia,notas) 
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s) 
+            ON CONFLICT (cliente) DO UPDATE SET 
+            dni_cuit=EXCLUDED.dni_cuit,direccion=EXCLUDED.direccion,ciudad=EXCLUDED.ciudad,
+            cp=EXCLUDED.cp,telefono=EXCLUDED.telefono,provincia=EXCLUDED.provincia,notas=EXCLUDED.notas""",
+            (nombre,d.get("dni_cuit",""),d.get("direccion",""),d.get("ciudad",""),
+             d.get("cp",""),d.get("telefono",""),d.get("provincia",""),d.get("notas","")))
         db.commit()
     else:
-        db.execute("INSERT OR REPLACE INTO clientes_fichas (cliente,dni_cuit,direccion,localidad,cp,telefono,provincia,notas) VALUES (?,?,?,?,?,?,?,?)",
-            (nombre,d.get("dni_cuit",""),d.get("direccion",""),d.get("localidad",""),d.get("cp",""),d.get("telefono",""),d.get("provincia",""),d.get("notas","")))
+        db.execute("""INSERT OR REPLACE INTO clientes_fichas 
+            (cliente,dni_cuit,direccion,ciudad,cp,telefono,provincia,notas) 
+            VALUES (?,?,?,?,?,?,?,?)""",
+            (nombre,d.get("dni_cuit",""),d.get("direccion",""),d.get("ciudad",""),
+             d.get("cp",""),d.get("telefono",""),d.get("provincia",""),d.get("notas","")))
         db.commit()
     return jsonify({"ok":True})
 
-# ─── NUEVO: Historial de precios ───────────────────────────────────────────────
+@app.route("/api/clientes_fichas/<path:nombre>", methods=["DELETE"])
+def del_ficha(nombre):
+    db = get_db()
+    if USE_PG:
+        cur = db.cursor(); cur.execute("DELETE FROM clientes_fichas WHERE cliente=%s",(nombre,)); db.commit()
+    else:
+        db.execute("DELETE FROM clientes_fichas WHERE cliente=?",(nombre,)); db.commit()
+    return jsonify({"ok":True})
+
+# ─── Historial de precios ──────────────────────────────────────────────────────
 @app.route("/api/precio_historial", methods=["GET"])
 def get_precio_historial():
     rows = q("SELECT * FROM precio_historial ORDER BY id DESC")
     result = {}
     for r in rows:
         pid = r["producto_id"]
-        if pid not in result:
-            result[pid] = []
+        if pid not in result: result[pid] = []
         result[pid].append({
             "fecha": r["fecha"],
             "anterior": r["precio_anterior"],
@@ -516,7 +567,7 @@ def add_precio_historial(pid):
         get_db().commit()
     return jsonify({"ok": True})
 
-# ─── Inicializar y correr ──────────────────────────────────────────────────────
+# ─── Inicializar ───────────────────────────────────────────────────────────────
 @app.route("/inicializar-laguarida-2026")
 def seed_now():
     try:
