@@ -306,33 +306,6 @@ def del_producto(pid):
     else:
         get_db().execute("UPDATE productos SET activo=0 WHERE id=?",(pid,)); get_db().commit()
     return jsonify({"ok":True})
-    @app.route("/api/categorias", methods=["GET"])
-    def get_categorias():
-        return jsonify(q("SELECT * FROM categorias ORDER BY nombre"))
-
-    @app.route("/api/categorias", methods=["POST"])
-    def add_categoria():
-        d = request.json
-        try:
-            if USE_PG:
-                cur = get_db().cursor()
-                cur.execute("INSERT INTO categorias (nombre) VALUES (%s)",(d["nombre"],))
-                get_db().commit()
-            else:
-                get_db().execute("INSERT INTO categorias (nombre) VALUES (?)",(d["nombre"],))
-                get_db().commit()
-            return jsonify({"ok":True})
-        except: return jsonify({"ok":False,"error":"Ya existe"}),400
-
-    @app.route("/api/categorias/<int:cid>", methods=["DELETE"])
-    def del_categoria(cid):
-        db = get_db()
-        if USE_PG:
-            cur = db.cursor(); cur.execute("DELETE FROM categorias WHERE id=%s",(cid,)); db.commit()
-        else:
-            db.execute("DELETE FROM categorias WHERE id=?",(cid,)); db.commit()
-        return jsonify({"ok":True})
-
 @app.route("/api/categorias", methods=["GET"])
 def get_categorias():
     return jsonify(q("SELECT * FROM categorias ORDER BY nombre"))
