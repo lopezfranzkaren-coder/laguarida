@@ -1991,12 +1991,33 @@ async function generarPDF(){
   if(!d.dest.nombre){toast('Completá el nombre del destinatario',true);return;}
   if(!d.items.length){toast('Agregá al menos un producto',true);return;}
   await guardarClienteDesdePresupuesto(d);
+  
   const win=window.open('','_blank');
-  win.document.write(`<!DOCTYPE html><html><head><title>${d.tipo.toUpperCase()} N° ${d.numero}</title>
-    <style>body{margin:0;padding:20px;background:#fff;}@media print{body{padding:0;}}@page{margin:15mm;}</style>
-    </head><body>${buildDocHTML(d,true)}</body></html>`);
+  win.document.write(`<!DOCTYPE html><html><head>
+    <title>${d.tipo.toUpperCase()} N° ${d.numero}</title>
+    <style>
+      body{margin:0;padding:20px;background:#fff;font-family:'Segoe UI',Arial,sans-serif;}
+      @media print{
+        body{padding:0;}
+        .no-print{display:none;}
+      }
+      @page{margin:15mm;}
+      .print-btn{
+        position:fixed;top:10px;right:10px;
+        background:#E8720C;color:#fff;border:none;
+        padding:10px 20px;border-radius:7px;font-size:14px;
+        font-weight:700;cursor:pointer;z-index:999;
+      }
+    </style>
+    </head><body>
+    <button class="print-btn no-print" onclick="window.print()">⬇️ Descargar PDF</button>
+    ${buildDocHTML(d,true)}
+    <script>
+      window.onload = function(){ window.print(); }
+    </script>
+    </body></html>`);
   win.document.close();
-  toast('📄 PDF abierto — Ctrl+P para guardar');
+  toast('📄 Abriendo para descargar...');
 }
 async function generarImagen(){
   const d=getPresData();
