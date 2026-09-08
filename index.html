@@ -1463,10 +1463,10 @@ function buildPrecioRow(p,trf,efe,qrd,qrc,c3q){
     <td class="tc"><button class="eye-btn ${isVisible?'':'hidden'}" onclick="toggleVisible(${p.id},${isVisible?0:1})">${isVisible?'👁️':'🙈'}</button></td>
     <td><strong style="font-size:12px">${origenIcon} ${p.nombre}</strong>${catBadge}${p.costo_base?'':'<span style="color:var(--red);margin-left:4px">⚠️</span>'}</td>
     <td class="tr" style="color:var(--muted);font-size:11px">${fmt(cf)}</td>
-    <td class="tc"><div class="markup-cell"><input class="pct-inp" type="number" value="${Math.round(markup*100)}" min="0" max="999" onchange="saveMarkupMin(${p.id},this.value/100)"/><span style="font-size:10px;color:var(--muted)">%</span></div></td>
+    <td class="tc"><div class="markup-cell"><input class="pct-inp" id="markup-inp-${p.id}" type="number" value="${Math.round(markup*100)}" min="0" max="999" onchange="saveMarkupMin(${p.id},this.value/100)" oninput="actualizarPrecioDesdeMarkup(${p.id},this.value,${cf})"/><span style="font-size:10px;color:var(--muted)">%</span></div></td>
     <td class="tr" style="font-weight:700;color:var(--accent);font-size:12px">${fmt(pmin)}</td>
     <td class="tr" style="font-weight:700;color:var(--green);font-size:12px">${fmt(ganancia)}</td>
-    <td class="tc"><input class="price-inp" type="number" value="${tuP||""}" placeholder="0" onchange="savePrecioMin(${p.id},this.value)" style="width:90px"/></td>
+    <td class="tc"><input class="price-inp" id="precio-inp-${p.id}" type="number" value="${tuP||""}" placeholder="0" onchange="savePrecioMin(${p.id},this.value)" oninput="actualizarMarkupDesdePrecio(${p.id},this.value,${cf})" style="width:90px"/></td>
     <td class="tr" style="color:var(--blue);font-size:11px">${tuP?fmt(tuP*(1-trf)):'—'}</td>
     <td class="tr" style="color:var(--blue);font-size:11px">${tuP?fmt(tuP*(1-efe)):'—'}</td>
     <td class="tr" style="font-size:11px">${tuP?fmt(tuP*(1-qrd)):'—'}</td>
@@ -3258,6 +3258,23 @@ function exportarExcelRecetas(){
     console.error(e);
     toast('Error al generar Excel',true);
   }
+}
+
+// ── SINCRONIZACIÓN PRECIO ↔ MARKUP ──────────────────────────────────────────
+function actualizarPrecioDesdeMarkup(pid, markupPct, costoFinal){
+  const markup = parseFloat(markupPct) / 100;
+  if(isNaN(markup) || markup < 0) return;
+  const nuevoPrecio = Math.round(costoFinal * (1 + markup));
+  const inp = document.getElementById("precio-inp-"+pid);
+  if(inp) inp.value = nuevoPrecio || "";
+}
+
+function actualizarMarkupDesdePrecio(pid, precio, costoFinal){
+  const p = parseFloat(precio);
+  if(isNaN(p) || p <= 0 || costoFinal <= 0) return;
+  const markup = Math.round(((p / costoFinal) - 1) * 100);
+  const inp = document.getElementById("markup-inp-"+pid);
+  if(inp) inp.value = markup >= 0 ? markup : 0;
 }
 
 async function init(){
