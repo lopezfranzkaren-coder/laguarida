@@ -1824,7 +1824,7 @@ function editPedido(id){
   document.getElementById("ped-pago").value=p.tipo_pago;
   document.getElementById("ped-estado").value=p.estado;
   document.getElementById("ped-obs").value=p.observaciones||"";
-  pedidoItems=p.items.map(i=>({...i}));
+  pedidoItems=(p.items||[]).map(i=>({...i}));
   if(!pedidoItems.length) pedidoItems=[{producto:"",cantidad:1,precio_unitario:0,subtotal:0}];
   renderPedidoItems();
   document.getElementById("modal-pedido-title").textContent="✏️ Editar Pedido";
@@ -1913,6 +1913,7 @@ async function savePedido(){
         }catch(e){}
       }
       pedidos=await api("/api/pedidos");
+      pedidos=pedidos.map(p=>({...p,items:p.items||[]}));
       clientes=await api("/api/clientes");
       renderPedidos();
       closeModal("modal-pedido");
@@ -1926,6 +1927,7 @@ async function deletePedido(id){
   if(!confirm("¿Eliminar este pedido?")) return;
   await api(`/api/pedidos/${id}`,{method:"DELETE"});
   pedidos=await api("/api/pedidos");
+  pedidos=pedidos.map(p=>({...p,items:p.items||[]}));
   clientes=await api("/api/clientes");
   renderPedidos();
   toast("🗑️ Eliminado");
@@ -2204,7 +2206,7 @@ async function cargarPedidoEnPresupuesto(pid){
   showSubtab('presupuestos');
   initPresupuestos();
   cargarClientePres(p.cliente);
-  presItems=p.items.map(i=>({
+  presItems=(p.items||[]).map(i=>({
     producto:i.producto,cantidad:i.cantidad||1,
     precio:i.precio_unitario||(i.subtotal&&i.cantidad?Math.round(i.subtotal/i.cantidad):0)
   }));
@@ -3155,6 +3157,8 @@ function exportarFichaClienteExcel(){
       api("/api/gastos"),api("/api/pedidos"),api("/api/clientes"),
       api("/api/precios_minoristas"),api("/api/precios_mayoristas"),api("/api/categorias")
     ]);
+    // Asegurar que todos los pedidos tienen items como array
+    pedidos=pedidos.map(p=>({...p,items:p.items||[]}));
     try{fichasCache=await api('/api/clientes_fichas');}catch(e){fichasCache={};}
     try{
       const hist=await api('/api/precio_historial');
