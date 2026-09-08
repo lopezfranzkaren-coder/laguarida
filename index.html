@@ -722,6 +722,19 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);
     <div class="card">
       <div class="card-title">🔧 Parámetros de cálculo</div>
       <div class="form-row"><label>% Variables (IIBB + operativos)</label><input type="number" id="cfg-vars" step="0.01" class="w100"/></div>
+      <div class="slbl" style="margin-top:12px">Multiplicadores de costo por canal</div>
+      <div class="form-grid mb8">
+        <div class="form-row">
+          <label>Local / Tiendanube (×)</label>
+          <input type="number" id="cfg-mult-local" step="0.01" class="w100"/>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px">Default: 1.21 = 21% sobre costo</div>
+        </div>
+        <div class="form-row">
+          <label>Mayorista (×)</label>
+          <input type="number" id="cfg-mult-mayorista" step="0.01" class="w100"/>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px">Default: 1.05 = 5% sobre costo</div>
+        </div>
+      </div>
       <div class="form-row"><label>Descuento Transferencia</label><input type="number" id="cfg-trf" step="0.01" class="w100"/></div>
       <div class="form-row"><label>Descuento Efectivo</label><input type="number" id="cfg-efe" step="0.01" class="w100"/></div>
       <div class="form-row"><label>Comisión QR Débito</label><input type="number" id="cfg-qrd" step="0.001" class="w100"/></div>
@@ -1066,13 +1079,15 @@ function costoFinalMin(p){
   const rec=recetasCache[p.id]||[];
   const base=(p.costo_base||0)*factor();
   const ins=rec.filter(r=>r.tipo==='ambos'||r.tipo==='minorista').reduce((s,r)=>s+r.insumo_costo,0);
-  return (base+ins)*(1+cfg("pct_variables"));
+  const mult=cfg("mult_local")||1.21;
+  return (base+ins)*mult;
 }
 function costoFinalMay(p){
   const rec=recetasCache[p.id]||[];
   const base=(p.costo_base||0)*factor();
   const ins=rec.filter(r=>r.tipo==='ambos'||r.tipo==='mayorista').reduce((s,r)=>s+r.insumo_costo,0);
-  return (base+ins)*(1+cfg("pct_variables"));
+  const mult=cfg("mult_mayorista")||1.05;
+  return (base+ins)*mult;
 }
 function semaforo(tuP,min){
   if(!tuP) return '<span class="badge b-gray">Sin precio</span>';
@@ -2493,6 +2508,8 @@ async function deleteGasto(id){
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 function renderConfig(){
   document.getElementById("cfg-vars").value=cfg("pct_variables");
+  document.getElementById("cfg-mult-local").value=cfg("mult_local")||1.21;
+  document.getElementById("cfg-mult-mayorista").value=cfg("mult_mayorista")||1.05;
   document.getElementById("cfg-trf").value=cfg("desc_transferencia");
   document.getElementById("cfg-efe").value=cfg("desc_efectivo");
   document.getElementById("cfg-qrd").value=cfg("comision_qr_debito");
@@ -2552,6 +2569,8 @@ async function saveConfig(){
   const ks=Object.keys(config).filter(k=>k.startsWith('inflacion_q')).sort();
   const data={
     pct_variables:parseFloat(document.getElementById("cfg-vars").value)||0.44,
+    mult_local:parseFloat(document.getElementById("cfg-mult-local").value)||1.21,
+    mult_mayorista:parseFloat(document.getElementById("cfg-mult-mayorista").value)||1.05,
     desc_transferencia:parseFloat(document.getElementById("cfg-trf").value)||0.05,
     desc_efectivo:parseFloat(document.getElementById("cfg-efe").value)||0.10,
     comision_qr_debito:parseFloat(document.getElementById("cfg-qrd").value)||0.0135,
