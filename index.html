@@ -1453,8 +1453,8 @@ function buildPrecioRow(p,trf,efe,qrd,qrc,c3q){
     +'<td class="tr" style="font-size:11px">'+(tuP?fmt(tuP*(1-qrc)):'—')+'</td>'
     +'<td class="tr" style="color:var(--gold);font-size:11px">'+(tuP?fmt(tuP*(1-c3q)):'—')+'</td>'
     +'<td class="tc">'+semaforo(tuP,pmin)+'</td>'
-    +'<td class="tc"><button class="btn-icon" onclick="verHistorialPrecio('+p.id+',\''+p.nombre.replace(/'/g,"\\'")+'\')">'
-    +'📈'+(histLen>0?'<span style="font-size:9px;color:var(--accent)">'+histLen+'</span>':'')+'</button></td>'
+    +'<td class="tc"><button class="btn-icon" onclick="verHistorialPrecioById('+p.id+')">📈'+(histLen>0?'<span style="font-size:9px;color:var(--accent)">'+histLen+'</span>':'')+\'</button></td>\'
+
     +'</tr>';
 }
 
@@ -1913,7 +1913,6 @@ async function savePedido(){
         }catch(e){}
       }
       pedidos=await api("/api/pedidos");
-      pedidos=pedidos.map(p=>({...p,items:p.items||[]}));
       clientes=await api("/api/clientes");
       renderPedidos();
       closeModal("modal-pedido");
@@ -1927,7 +1926,6 @@ async function deletePedido(id){
   if(!confirm("¿Eliminar este pedido?")) return;
   await api(`/api/pedidos/${id}`,{method:"DELETE"});
   pedidos=await api("/api/pedidos");
-  pedidos=pedidos.map(p=>({...p,items:p.items||[]}));
   clientes=await api("/api/clientes");
   renderPedidos();
   toast("🗑️ Eliminado");
@@ -3150,14 +3148,18 @@ function exportarFichaClienteExcel(){
   renderPrecios();
   toast(visible?'👁️ Visible':'🙈 Oculto');
 }
-  async function init(){
+  function verHistorialPrecioById(pid){
+  const prod=productos.find(p=>p.id===pid);
+  if(prod) verHistorialPrecio(pid, prod.nombre);
+}
+
+async function init(){
   try{
     [config,productos,insumos,gastos,pedidos,clientes,preciosMin,preciosMay,categorias]=await Promise.all([
       api("/api/config"),api("/api/productos"),api("/api/insumos"),
       api("/api/gastos"),api("/api/pedidos"),api("/api/clientes"),
       api("/api/precios_minoristas"),api("/api/precios_mayoristas"),api("/api/categorias")
     ]);
-    // Asegurar que todos los pedidos tienen items como array
     pedidos=pedidos.map(p=>({...p,items:p.items||[]}));
     try{fichasCache=await api('/api/clientes_fichas');}catch(e){fichasCache={};}
     try{
