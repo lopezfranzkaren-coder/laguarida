@@ -2499,25 +2499,54 @@ function renderConfig(){
   document.getElementById("cfg-m36").value=Math.round((cfg("markup_36")||0.50)*100);
   document.getElementById("cfg-m72").value=Math.round((cfg("markup_72")||0.30)*100);
   document.getElementById("cfg-m144").value=Math.round((cfg("markup_144")||0.20)*100);
-  const trims=[
-    ["inflacion_q1_2025","Q1 2025"],["inflacion_q2_2025","Q2 2025"],
-    ["inflacion_q3_2025","Q3 2025"],["inflacion_q4_2025","Q4 2025"],
-    ["inflacion_q1_2026","Q1 2026"],["inflacion_q2_2026","Q2 2026"]
-  ];
+  // Generar trimestres dinámicamente desde config
+  const trims=Object.keys(config)
+    .filter(k=>k.startsWith('inflacion_q'))
+    .sort()
+    .map(k=>{
+      const parts=k.replace('inflacion_','').split('_');
+      const q=parts[0].toUpperCase();
+      const anio=parts[1];
+      const meses={'q1':'Ene–Mar','q2':'Abr–Jun','q3':'Jul–Sep','q4':'Oct–Dic'};
+      return [k, `${q} ${anio} (${meses[parts[0]]||''})`];
+    });
   document.getElementById("inf-grid").innerHTML=trims.map(([k,label])=>`
-    <div class="inf-card"><label>${label}</label>
+    <div class="inf-card">
+      <label>${label}</label>
       <input type="number" id="inf-${k}" value="${(cfg(k)*100).toFixed(1)}" step="0.1" oninput="updateFactor()"/>
       <span style="font-size:12px;color:var(--muted)">%</span>
-    </div>`).join("");
+    </div>`).join("")+`
+    <div class="inf-card" style="border:2px dashed var(--border);cursor:pointer;justify-content:center;align-items:center;display:flex;flex-direction:column;gap:4px" onclick="agregarTrimestre()">
+      <span style="font-size:20px;color:var(--muted)">+</span>
+      <span style="font-size:10px;color:var(--muted)">Agregar trimestre</span>
+    </div>`;
   updateFactor();
 }
+
+async function agregarTrimestre(){
+  // Detectar el último trimestre cargado
+  const ks=Object.keys(config).filter(k=>k.startsWith('inflacion_q')).sort();
+  const ultimo=ks[ks.length-1]||'inflacion_q2_2026';
+  const parts=ultimo.replace('inflacion_','').split('_');
+  let q=parseInt(parts[0].replace('q',''));
+  let anio=parseInt(parts[1]);
+  q++;
+  if(q>4){q=1;anio++;}
+  const nuevaClave=`inflacion_q${q}_${anio}`;
+  if(config[nuevaClave]!==undefined){toast('Ese trimestre ya existe',true);return;}
+  // Guardar con valor 0
+  await api('/api/config',{method:'POST',body:JSON.stringify({[nuevaClave]:'0'})});
+  config[nuevaClave]='0';
+  toast(`✅ Trimestre Q${q} ${anio} agregado`);
+  renderConfig();
+}
 function updateFactor(){
-  const ks=["inflacion_q1_2025","inflacion_q2_2025","inflacion_q3_2025","inflacion_q4_2025","inflacion_q1_2026","inflacion_q2_2026"];
+  const ks=Object.keys(config).filter(k=>k.startsWith('inflacion_q')).sort();
   const f=ks.reduce((acc,k)=>{const el=document.getElementById(`inf-${k}`);return acc*(1+(el?parseFloat(el.value)||0:cfg(k)*100)/100);},1);
   document.getElementById("factor-display").textContent=f.toFixed(3);
 }
 async function saveConfig(){
-  const ks=["inflacion_q1_2025","inflacion_q2_2025","inflacion_q3_2025","inflacion_q4_2025","inflacion_q1_2026","inflacion_q2_2026"];
+  const ks=Object.keys(config).filter(k=>k.startsWith('inflacion_q')).sort();
   const data={
     pct_variables:parseFloat(document.getElementById("cfg-vars").value)||0.44,
     desc_transferencia:parseFloat(document.getElementById("cfg-trf").value)||0.05,
