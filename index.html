@@ -1439,23 +1439,24 @@ function buildPrecioRow(p,trf,efe,qrd,qrc,c3q){
   const isVisible=p.visible!==0;
   const histLen=(precioHistorialCache[p.id]||[]).length;
   const origenIcon=p.origen==="propio"?"🏭":"🛒";
-  return '<tr style="'+(isVisible?'':'opacity:0.35')+'">'
-    +'<td class="tc"><button class="eye-btn '+(isVisible?'':'hidden')+'" onclick="toggleVisible('+p.id+','+(isVisible?0:1)+')">'+(isVisible?'👁️':'🙈')+'</button></td>'
-    +'<td><strong style="font-size:12px">'+origenIcon+' '+p.nombre+'</strong>'+(p.categoria?'<span class="badge b-gray" style="margin-left:4px;font-size:9px">'+p.categoria+'</span>':'')+(p.costo_base?'':'<span style="color:var(--red);margin-left:4px">⚠️</span>')+'</td>'
-    +'<td class="tr" style="color:var(--muted);font-size:11px">'+fmt(cf)+'</td>'
-    +'<td class="tc"><div class="markup-cell"><input class="pct-inp" type="number" value="'+Math.round(markup*100)+'" min="0" max="999" onchange="saveMarkupMin('+p.id+',this.value/100)"/><span style="font-size:10px;color:var(--muted)">%</span></div></td>'
-    +'<td class="tr" style="font-weight:700;color:var(--accent);font-size:12px">'+fmt(pmin)+'</td>'
-    +'<td class="tr" style="font-weight:700;color:var(--green);font-size:12px">'+fmt(ganancia)+'</td>'
-    +'<td class="tc"><input class="price-inp" type="number" value="'+(tuP||"")+'" placeholder="0" onchange="savePrecioMin('+p.id+',this.value)" style="width:90px"/></td>'
-    +'<td class="tr" style="color:var(--blue);font-size:11px">'+(tuP?fmt(tuP*(1-trf)):'—')+'</td>'
-    +'<td class="tr" style="color:var(--blue);font-size:11px">'+(tuP?fmt(tuP*(1-efe)):'—')+'</td>'
-    +'<td class="tr" style="font-size:11px">'+(tuP?fmt(tuP*(1-qrd)):'—')+'</td>'
-    +'<td class="tr" style="font-size:11px">'+(tuP?fmt(tuP*(1-qrc)):'—')+'</td>'
-    +'<td class="tr" style="color:var(--gold);font-size:11px">'+(tuP?fmt(tuP*(1-c3q)):'—')+'</td>'
-    +'<td class="tc">'+semaforo(tuP,pmin)+'</td>'
-    +'<td class="tc"><button class="btn-icon" onclick="verHistorialPrecioById('+p.id+')">📈'+(histLen>0?'<span style="font-size:9px;color:var(--accent)">'+histLen+'</span>':'')+\'</button></td>\'
-
-    +'</tr>';
+  const catBadge=p.categoria?`<span class="badge b-gray" style="margin-left:4px;font-size:9px">${p.categoria}</span>`:"";
+  const histBadge=histLen>0?`<span style="font-size:9px;color:var(--accent)">${histLen}</span>`:"";
+  return `<tr style="${isVisible?'':'opacity:0.35'}">
+    <td class="tc"><button class="eye-btn ${isVisible?'':'hidden'}" onclick="toggleVisible(${p.id},${isVisible?0:1})">${isVisible?'👁️':'🙈'}</button></td>
+    <td><strong style="font-size:12px">${origenIcon} ${p.nombre}</strong>${catBadge}${p.costo_base?'':'<span style="color:var(--red);margin-left:4px">⚠️</span>'}</td>
+    <td class="tr" style="color:var(--muted);font-size:11px">${fmt(cf)}</td>
+    <td class="tc"><div class="markup-cell"><input class="pct-inp" type="number" value="${Math.round(markup*100)}" min="0" max="999" onchange="saveMarkupMin(${p.id},this.value/100)"/><span style="font-size:10px;color:var(--muted)">%</span></div></td>
+    <td class="tr" style="font-weight:700;color:var(--accent);font-size:12px">${fmt(pmin)}</td>
+    <td class="tr" style="font-weight:700;color:var(--green);font-size:12px">${fmt(ganancia)}</td>
+    <td class="tc"><input class="price-inp" type="number" value="${tuP||""}" placeholder="0" onchange="savePrecioMin(${p.id},this.value)" style="width:90px"/></td>
+    <td class="tr" style="color:var(--blue);font-size:11px">${tuP?fmt(tuP*(1-trf)):'—'}</td>
+    <td class="tr" style="color:var(--blue);font-size:11px">${tuP?fmt(tuP*(1-efe)):'—'}</td>
+    <td class="tr" style="font-size:11px">${tuP?fmt(tuP*(1-qrd)):'—'}</td>
+    <td class="tr" style="font-size:11px">${tuP?fmt(tuP*(1-qrc)):'—'}</td>
+    <td class="tr" style="color:var(--gold);font-size:11px">${tuP?fmt(tuP*(1-c3q)):'—'}</td>
+    <td class="tc">${semaforo(tuP,pmin)}</td>
+    <td class="tc"><button class="btn-icon" onclick="verHistorialPrecioById(${p.id})">📈${histBadge}</button></td>
+  </tr>`;
 }
 
 function verHistorialPrecio(pid,nombre){
