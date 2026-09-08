@@ -1518,15 +1518,17 @@ function renderMayoristas(){
       return `
         <td class="tc" style="border-left:2px solid var(--border)">
           <div class="markup-cell">
-            <input class="pct-inp" type="number" value="${Math.round(mk*100)}" min="0" max="999"
-              onchange="saveMarkupMay(${p.id},'${c}',this.value/100,${cf})"/>
+            <input class="pct-inp" id="may-markup-${p.id}-${c}" type="number" value="${Math.round(mk*100)}" min="0" max="999"
+              onchange="saveMarkupMay(${p.id},'${c}',this.value/100,${cf})"
+              oninput="actualizarPrecioMayDesdeMarkup(${p.id},'${c}',this.value,${cf})"/>
             <span style="font-size:10px;color:var(--muted)">%</span>
           </div>
         </td>
         <td class="tr" style="font-size:11px;font-weight:600" id="smay_${p.id}_${c}">${fmt(sug)}</td>
         <td class="tc">
-          <input class="price-inp" type="number" value="${tuP||""}" placeholder="0"
-            onchange="savePrecioMay(${p.id},'${c}',this.value)"/>
+          <input class="price-inp" id="may-precio-${p.id}-${c}" type="number" value="${tuP||""}" placeholder="0"
+            onchange="savePrecioMay(${p.id},'${c}',this.value)"
+            oninput="actualizarMarkupMayDesdePrecio(${p.id},'${c}',this.value,${cf})"/>
           ${tuP?semaforoMay(tuP,sug):''}
         </td>`;
     }).join('');
@@ -3261,6 +3263,22 @@ function exportarExcelRecetas(){
 }
 
 // ── SINCRONIZACIÓN PRECIO ↔ MARKUP ──────────────────────────────────────────
+// Mayoristas
+function actualizarPrecioMayDesdeMarkup(pid, cantidad, markupPct, costoFinal){
+  const markup = parseFloat(markupPct) / 100;
+  if(isNaN(markup) || markup < 0) return;
+  const nuevoPrecio = Math.round(costoFinal * (1 + markup));
+  const inp = document.getElementById("may-precio-"+pid+"-"+cantidad);
+  if(inp) inp.value = nuevoPrecio || "";
+}
+
+function actualizarMarkupMayDesdePrecio(pid, cantidad, precio, costoFinal){
+  const p = parseFloat(precio);
+  if(isNaN(p) || p <= 0 || costoFinal <= 0) return;
+  const markup = Math.round(((p / costoFinal) - 1) * 100);
+  const inp = document.getElementById("may-markup-"+pid+"-"+cantidad);
+  if(inp) inp.value = markup >= 0 ? markup : 0;
+}
 function actualizarPrecioDesdeMarkup(pid, markupPct, costoFinal){
   const markup = parseFloat(markupPct) / 100;
   if(isNaN(markup) || markup < 0) return;
