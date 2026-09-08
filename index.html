@@ -1519,6 +1519,23 @@ function renderMayoristas(){
     </tr>`;
   }).join("");
 }
+async function saveMarkupMin(pid,markup){
+  if(!preciosMin[pid]) preciosMin[pid]={};
+  preciosMin[pid].markup=markup;
+  const costo=(productos.find(p=>p.id===pid)||{costo:0}).costo;
+  const el=document.getElementById(`smin_${pid}`);
+  if(el) el.textContent=fmt(costo*(1+markup));
+  await api(`/api/precios_minoristas/${pid}`,{method:"POST",body:JSON.stringify({precio:preciosMin[pid].precio||null,markup})});
+  renderPrecios();
+}
+async function savePrecioMin(pid,val){
+  if(!preciosMin[pid]) preciosMin[pid]={};
+  preciosMin[pid].precio=Number(val)||0;
+  const markup=preciosMin[pid].markup||0;
+  await api(`/api/precios_minoristas/${pid}`,{method:"POST",body:JSON.stringify({precio:Number(val)||0,markup})});
+  renderPrecios();
+}
+
 async function saveMarkupMay(pid,cantidad,markup,costo){
   if(!preciosMay[pid]) preciosMay[pid]={};
   if(!preciosMay[pid][cantidad]) preciosMay[pid][cantidad]={};
