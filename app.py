@@ -457,7 +457,14 @@ def del_gasto(gid):
 
 @app.route("/api/pedidos", methods=["GET"])
 def get_pedidos():
-    return jsonify(q("SELECT * FROM pedidos ORDER BY id DESC"))
+    rows = q("SELECT * FROM pedidos ORDER BY fecha DESC, id DESC")
+    result = []
+    for r in rows:
+        p = dict(r)
+        sql = "SELECT * FROM pedido_items WHERE pedido_id={0}".format("%s" if USE_PG else "?")
+        p["items"] = q(sql, (p["id"],))
+        result.append(p)
+    return jsonify(result)
 
 @app.route("/api/pedidos", methods=["POST"])
 def add_pedido():
