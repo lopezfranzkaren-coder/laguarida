@@ -580,7 +580,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);
       <div class="card">
         <div class="flex-between mb12">
           <span class="card-title" id="receta-title">Seleccioná un producto</span>
-          <button class="btn btn-green btn-sm" id="receta-save-btn" style="display:none" onclick="saveReceta()">💾 Guardar receta</button>
+          <div class="flex" style="gap:8px">
+            <button class="btn btn-excel btn-sm" onclick="exportarExcelRecetas()">📊 Excel recetas</button>
+            <button class="btn btn-green btn-sm" id="receta-save-btn" style="display:none" onclick="saveReceta()">💾 Guardar receta</button>
+          </div>
         </div>
         <div id="receta-costo-base" style="margin-bottom:10px;display:none">
           <div class="flex" style="gap:16px">
@@ -3181,6 +3184,61 @@ function exportarFichaClienteExcel(){
   function verHistorialPrecioById(pid){
   const prod=productos.find(p=>p.id===pid);
   if(prod) verHistorialPrecio(pid, prod.nombre);
+}
+
+function exportarExcelRecetas(){
+  try{
+    const filas=[];
+    productos.filter(p=>p.activo!==0).forEach(p=>{
+      const rec=recetasCache[p.id]||[];
+      const f=factor();
+      const base=(p.costo_base||0)*f;
+      const insMin=rec.filter(r=>r.tipo==='ambos'||r.tipo==='minorista').reduce((s,r)=>s+r.insumo_costo,0);
+      const insMay=rec.filter(r=>r.tipo==='ambos'||r.tipo==='mayorista').reduce((s,r)=>s+r.insumo_costo,0);
+      const vars=cfg('pct_variables');
+      const costoMin=Math.round((base+insMin)*(1+vars));
+      const costoMay=Math.round((base+insMay)*(1+vars));
+      if(rec.length===0){
+        filas.push({
+          Producto:p.nombre,
+          Categoría:p.categoria||'',
+          Origen:p.origen==='propio'?'Propio':'Proveedor',
+          Insumo:'(sin receta)',
+          Tipo:'—',
+          'Costo insumo':0,
+          'Costo base ($)':Math.round(base),
+          'Variables (%)':Math.round(vars*100),
+          'Costo final minorista':costoMin,
+          'Costo final mayorista':costoMay,
+        });
+      } else {
+        rec.forEach((r,i)=>{
+          filas.push({
+            Producto:i===0?p.nombre:'',
+            Categoría:i===0?p.categoria||'':'',
+            Origen:i===0?p.origen==='propio'?'Propio':'Proveedor':'',
+            Insumo:r.insumo_nombre,
+            Tipo:r.tipo==='ambos'?'Min+May':r.tipo==='minorista'?'Solo min':'Solo may',
+            'Costo insumo':Math.round(r.insumo_costo),
+            'Costo base ($)':i===0?Math.round(base):0,
+            'Variables (%)':i===0?Math.round(vars*100):'',
+            'Costo final minorista':i===0?costoMin:'',
+            'Costo final mayorista':i===0?costoMay:'',
+          });
+        });
+      }
+    });
+    const ws=XLSX.utils.json_to_sheet(filas);
+    // Separador visual entre productos
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'Recetas y costos');
+    const fecha=new Date().toLocaleDateString('es-AR').replace(/\//g,'-');
+    XLSX.writeFile(wb,`LaGuarida_Recetas_${fecha}.xlsx`);
+    toast('📊 Excel de recetas descargado');
+  }catch(e){
+    console.error(e);
+    toast('Error al generar Excel',true);
+  }
 }
 
 async function init(){
