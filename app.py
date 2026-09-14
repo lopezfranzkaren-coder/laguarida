@@ -473,12 +473,13 @@ def add_pedido():
         cur=db.cursor()
         cur.execute("""INSERT INTO pedidos 
             (numero,fecha,cliente,telefono,provincia,ciudad,direccion,dni_cuit,cp,transporte,tipo_pago,estado,observaciones,total) 
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
             (d.get("numero",""),d["fecha"],d["cliente"],d.get("telefono",""),d.get("provincia",""),
              d.get("ciudad",""),d.get("direccion",""),d.get("dni_cuit",""),d.get("cp",""),
              d.get("transporte",""),d.get("tipo_pago","transferencia"),d.get("estado","pendiente"),
              d.get("observaciones",""),total))
-        pid=cur.fetchone()[0] if cur.fetchone() else None
+        row=cur.fetchone()
+        pid=row[0] if row else None
         for i in items: cur.execute("INSERT INTO pedido_items (pedido_id,producto,cantidad,precio_unitario,subtotal) VALUES (%s,%s,%s,%s,%s)",(pid,i["producto"],i["cantidad"],i["precio_unitario"],i["subtotal"]))
         db.commit()
     else:
