@@ -2224,14 +2224,18 @@ async function generarEtiqueta(){
         <div class="et-label">Remitente</div>
         <div class="et-nombre">${REMITENTE.nombre}</div>
         <div class="et-dato">${REMITENTE.direccion}</div>
-        <div class="et-dato">${REMITENTE.localidad} · CP ${REMITENTE.cp}</div>
+        <div class="et-dato">${REMITENTE.localidad}</div>
+        <div class="et-dato">CP: ${REMITENTE.cp}</div>
+        <div class="et-dato">CUIT: ${REMITENTE.dni}</div>
         <div class="et-dato">Tel: ${REMITENTE.tel}</div>
       </div>
       <div class="et-seccion" style="border-color:#1A3A5C">
         <div class="et-label" style="color:#1A3A5C">Destinatario</div>
         <div class="et-nombre">${d.dest.nombre||'—'}</div>
         ${d.dest.dir?`<div class="et-dato">${d.dest.dir}</div>`:''}
-        <div class="et-dato">${[d.dest.ciudad,d.dest.prov,d.dest.cp?'CP '+d.dest.cp:''].filter(Boolean).join(' · ')||'—'}</div>
+        <div class="et-dato">${[d.dest.ciudad,d.dest.prov].filter(Boolean).join(' · ')||'—'}</div>
+        ${d.dest.cp?`<div class="et-dato">CP: ${d.dest.cp}</div>`:''}
+        ${d.dest.dni?`<div class="et-dato">CUIT: ${d.dest.dni}</div>`:''}
         ${d.dest.tel?`<div class="et-dato">Tel: ${d.dest.tel}</div>`:''}
       </div>
       <div class="et-fragil">⚠️ FRÁGIL ⚠️</div>
