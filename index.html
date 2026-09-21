@@ -505,9 +505,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);
             <label>Observaciones</label>
             <textarea id="pres-obs" class="w100" rows="2"></textarea>
           </div>
-          <div class="flex" style="gap:9px;margin-top:12px">
-            <button class="btn btn-primary" style="flex:1" onclick="generarPDF()">📄 PDF</button>
-            <button class="btn btn-green" style="flex:1" onclick="generarImagen()">📱 WhatsApp</button>
+          <div class="flex" style="gap:9px;margin-top:12px;flex-wrap:wrap">
+            <button class="btn btn-ghost" style="flex:1;min-width:110px" onclick="generarEtiqueta()">🏷️ Etiqueta</button>
+            <button class="btn btn-primary" style="flex:1;min-width:110px" onclick="generarRemitoCompleto()">📄 Remito completo</button>
+            <button class="btn btn-blue" style="flex:1;min-width:110px" onclick="generarSinPrecios()">📦 Sin precios</button>
           </div>
         </div>
       </div>
@@ -2097,7 +2098,8 @@ async function guardarClienteDesdePresupuesto(d){
     toast(`✅ Cliente "${nombre}" guardado`);
   }catch(e){}
 }
-function buildDocHTML(d,forPDF=false){
+function buildDocHTML(d,forPDF=false,modo='completo'){
+  const sinPrecios=modo==='sin_precios';
   const total=d.subtotal+d.seguro;
   const tipoLabel=d.tipo==='remito'?'REMITO':'PRESUPUESTO';
   const logoHTML=d.logo?`<img src="${d.logo}" style="width:55px;height:55px;object-fit:cover;border-radius:7px;border:2px solid #E8720C"/>`:
@@ -2139,18 +2141,16 @@ function buildDocHTML(d,forPDF=false){
       <thead><tr style="background:#E8720C;color:#fff">
         <th style="padding:7px 9px;text-align:left">Producto</th>
         <th style="padding:7px 9px;text-align:center">Cant.</th>
-        <th style="padding:7px 9px;text-align:right">Precio unit.</th>
-        <th style="padding:7px 9px;text-align:right">Subtotal</th>
+        ${sinPrecios?'':'<th style="padding:7px 9px;text-align:right">Precio unit.</th><th style="padding:7px 9px;text-align:right">Subtotal</th>'}
       </tr></thead>
       <tbody>${d.items.map((item,idx)=>`
         <tr style="background:${idx%2===0?'#F5F0E8':'#fff'}">
           <td style="padding:6px 9px;font-weight:600">${item.producto}</td>
           <td style="padding:6px 9px;text-align:center">${item.cantidad}</td>
-          <td style="padding:6px 9px;text-align:right">${fmt(item.precio)}</td>
-          <td style="padding:6px 9px;text-align:right;font-weight:700">${fmt(item.cantidad*item.precio)}</td>
+          ${sinPrecios?'':`<td style="padding:6px 9px;text-align:right">${fmt(item.precio)}</td><td style="padding:6px 9px;text-align:right;font-weight:700">${fmt(item.cantidad*item.precio)}</td>`}
         </tr>`).join('')}</tbody>
     </table>
-    <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+    ${sinPrecios?'':`<div style="display:flex;justify-content:flex-end;margin-bottom:12px">
       <div style="min-width:210px">
         <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:11px">
           <span style="color:#9A8E82">Subtotal</span><span style="font-weight:600">${fmt(d.subtotal)}</span>
@@ -2163,7 +2163,7 @@ function buildDocHTML(d,forPDF=false){
           <span style="font-weight:900;color:#fff;font-size:17px">${fmt(total)}</span>
         </div>
       </div>
-    </div>
+    </div>`}
     ${d.obs?`<div style="background:#FFF3E8;border:1px solid #F5C49A;border-radius:5px;padding:9px;font-size:10px;margin-bottom:12px"><strong>Observaciones:</strong> ${d.obs}</div>`:''}
     <div style="border-top:2px solid #DDD5C8;padding-top:10px;text-align:center;font-size:9px;color:#9A8E82">
       La Guarida · ${REMITENTE.direccion}, ${REMITENTE.localidad} · Tel: ${REMITENTE.tel}
@@ -2172,6 +2172,90 @@ function buildDocHTML(d,forPDF=false){
 }
 function actualizarPreview(){
   document.getElementById('pres-preview').innerHTML=buildDocHTML(getPresData(),false);
+}
+function abrirDocParaImprimir(html,titulo){
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head>
+    <title>${titulo}</title>
+    <style>
+      body{margin:0;padding:20px;background:#fff;font-family:'Segoe UI',Arial,sans-serif;}
+      @media print{
+        body{padding:0;}
+        .no-print{display:none;}
+      }
+      @page{margin:15mm;}
+      .print-btn{
+        position:fixed;top:10px;right:10px;
+        background:#E8720C;color:#fff;border:none;
+        padding:10px 20px;border-radius:7px;font-size:14px;
+        font-weight:700;cursor:pointer;z-index:999;
+      }
+    </style>
+    </head><body>
+    <button class="print-btn no-print" onclick="window.print()">⬇️ Descargar PDF</button>
+    ${html}
+    <script>window.onload=function(){window.print();}<\/script>
+    </body></html>`);
+  win.document.close();
+}
+async function generarEtiqueta(){
+  const d=getPresData();
+  if(!d.dest.nombre){toast('Completá el nombre del destinatario',true);return;}
+  await guardarClienteDesdePresupuesto(d);
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head>
+    <title>Etiqueta N° ${d.numero}</title>
+    <style>
+      body{margin:0;padding:16px;background:#fff;font-family:'Segoe UI',Arial,sans-serif;display:flex;justify-content:center;}
+      @media print{ body{padding:0;} .no-print{display:none;} }
+      @page{size:10cm 15cm;margin:8mm;}
+      .print-btn{position:fixed;top:10px;right:10px;background:#E8720C;color:#fff;border:none;padding:10px 20px;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;z-index:999;}
+      .etiqueta{width:100%;max-width:380px;border:3px solid #3D3128;border-radius:10px;padding:16px;margin-top:10px;}
+      .et-seccion{border:2px solid #DDD5C8;border-radius:8px;padding:10px 12px;margin-bottom:12px;}
+      .et-label{font-size:10px;font-weight:800;color:#E8720C;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
+      .et-nombre{font-size:15px;font-weight:800;color:#3D3128;}
+      .et-dato{font-size:12px;color:#6B5E52;margin-top:2px;}
+      .et-fragil{margin-top:10px;background:#FFEBEE;border:3px solid #C62828;border-radius:8px;padding:10px;text-align:center;font-size:20px;font-weight:900;color:#C62828;letter-spacing:2px;}
+    </style>
+    </head><body>
+    <button class="print-btn no-print" onclick="window.print()">⬇️ Descargar etiqueta</button>
+    <div class="etiqueta">
+      <div class="et-seccion">
+        <div class="et-label">Remitente</div>
+        <div class="et-nombre">${REMITENTE.nombre}</div>
+        <div class="et-dato">${REMITENTE.direccion}</div>
+        <div class="et-dato">${REMITENTE.localidad} · CP ${REMITENTE.cp}</div>
+        <div class="et-dato">Tel: ${REMITENTE.tel}</div>
+      </div>
+      <div class="et-seccion" style="border-color:#1A3A5C">
+        <div class="et-label" style="color:#1A3A5C">Destinatario</div>
+        <div class="et-nombre">${d.dest.nombre||'—'}</div>
+        ${d.dest.dir?`<div class="et-dato">${d.dest.dir}</div>`:''}
+        <div class="et-dato">${[d.dest.ciudad,d.dest.prov,d.dest.cp?'CP '+d.dest.cp:''].filter(Boolean).join(' · ')||'—'}</div>
+        ${d.dest.tel?`<div class="et-dato">Tel: ${d.dest.tel}</div>`:''}
+      </div>
+      <div class="et-fragil">⚠️ FRÁGIL ⚠️</div>
+    </div>
+    <script>window.onload=function(){window.print();}<\/script>
+    </body></html>`);
+  win.document.close();
+  toast('🏷️ Abriendo etiqueta...');
+}
+async function generarRemitoCompleto(){
+  const d=getPresData();
+  if(!d.dest.nombre){toast('Completá el nombre del destinatario',true);return;}
+  if(!d.items.length){toast('Agregá al menos un producto',true);return;}
+  await guardarClienteDesdePresupuesto(d);
+  abrirDocParaImprimir(buildDocHTML(d,true,'completo'),`${d.tipo.toUpperCase()} N° ${d.numero}`);
+  toast('📄 Abriendo para descargar...');
+}
+async function generarSinPrecios(){
+  const d=getPresData();
+  if(!d.dest.nombre){toast('Completá el nombre del destinatario',true);return;}
+  if(!d.items.length){toast('Agregá al menos un producto',true);return;}
+  await guardarClienteDesdePresupuesto(d);
+  abrirDocParaImprimir(buildDocHTML(d,true,'sin_precios'),`REMITO SIN PRECIOS N° ${d.numero}`);
+  toast('📦 Abriendo para descargar...');
 }
 async function generarPDF(){
   const d=getPresData();
@@ -2222,15 +2306,18 @@ async function generarImagen(){
 async function cargarPedidoEnPresupuesto(pid){
   const p=pedidos.find(x=>x.id===pid);
   if(!p) return;
-  showSubtab('presupuestos');
-  initPresupuestos();
-  cargarClientePres(p.cliente);
-  presItems=(p.items||[]).map(i=>({
-    producto:i.producto,cantidad:i.cantidad||1,
-    precio:i.precio_unitario||(i.subtotal&&i.cantidad?Math.round(i.subtotal/i.cantidad):0)
-  }));
-  renderPresItems();
-  toast(`📋 Pedido de ${p.cliente} cargado`);
+  showTab('clientes');
+  setTimeout(()=>{
+    showSubtab('presupuestos');
+    initPresupuestos();
+    cargarClientePres(p.cliente);
+    presItems=(p.items||[]).map(i=>({
+      producto:i.producto,cantidad:i.cantidad||1,
+      precio:i.precio_unitario||(i.subtotal&&i.cantidad?Math.round(i.subtotal/i.cantidad):0)
+    }));
+    renderPresItems();
+    toast(`📋 Pedido de ${p.cliente} cargado`);
+  },50);
 }
 
 // ── PRODUCTOS ─────────────────────────────────────────────────────────────────
