@@ -88,7 +88,8 @@ async function login() {
     body: JSON.stringify({password: pwd})
   });
   const data = await res.json();
-  if(data.ok) window.location.href = "/";
+  const next = new URLSearchParams(location.search).get("next") || "/";
+  if(data.ok) window.location.href = (next.startsWith("/") && !next.startsWith("//")) ? next : "/";
   else err.textContent = "❌ " + (data.error || "Contraseña incorrecta");
 }
 </script>

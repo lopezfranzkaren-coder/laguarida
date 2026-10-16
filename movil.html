@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#D6441C"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Presupuesto"/>
+<link rel="apple-touch-icon" href="/movil-icono.png"/>
+<title>Presupuesto rápido · La Guarida</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat+Alternates:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --rojo:#D6441C; --rojo-osc:#B23714; --negro:#141414; --mostaza:#EFB400;
+  --indigo:#4E4E99; --hueso:#F3F3D9; --papel:#FFFDF4; --linea:#E3E0C4;
+  --gris:#6E6A58; --verde:#2E8B57;
+  --radio:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--hueso);color:var(--negro)}
+body{font-family:'Montserrat Alternates',system-ui,sans-serif;font-size:15px;line-height:1.35;
+  min-height:100vh;padding-bottom:calc(150px + env(safe-area-inset-bottom))}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input{font:inherit;font-size:16px;color:inherit}
+.num{font-variant-numeric:tabular-nums}
+
+/* Encabezado */
+header{background:var(--rojo);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 16px 16px;
+  border-radius:0 0 22px 22px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.marca{font-family:'Bebas Neue','Arial Narrow',Impact,sans-serif;font-size:30px;letter-spacing:.5px;line-height:1}
+.marca small{display:block;font-family:'Montserrat Alternates',system-ui,sans-serif;font-size:11px;letter-spacing:0;opacity:.85;font-weight:600;margin-top:2px}
+.estado{font-size:11px;font-weight:600;background:rgba(0,0,0,.18);padding:6px 10px;border-radius:99px;
+  display:flex;align-items:center;gap:6px;white-space:nowrap;max-width:55%;overflow:hidden;text-overflow:ellipsis}
+.estado i{width:8px;height:8px;border-radius:50%;background:#7CF2A6;flex:none}
+.estado.carga i{background:var(--mostaza);animation:lat 1s infinite}
+.estado.off i{background:#ffb3a1}
+@keyframes lat{50%{opacity:.3}}
+
+.modo{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;background:rgba(0,0,0,.2);border-radius:12px;padding:4px}
+.modo button{padding:11px 0;border-radius:9px;font-weight:700;font-size:14px;color:rgba(255,255,255,.85)}
+.modo button.on{background:#fff;color:var(--rojo)}
+.modo-ayuda{font-size:11px;opacity:.85;margin-top:7px;text-align:center}
+
+main{padding:16px}
+.aviso{background:#fff;border:1.5px solid var(--rojo);border-radius:12px;padding:12px;font-size:13px;margin-bottom:12px}
+.aviso a{color:var(--rojo);font-weight:700}
+
+/* Ítems */
+.item{background:var(--papel);border:1px solid var(--linea);border-radius:var(--radio);padding:14px;margin-bottom:10px}
+.item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.item-nombre{font-weight:700;font-size:15px}
+.item-cat{font-size:11px;color:var(--gris);margin-top:2px}
+.quitar{width:32px;height:32px;border-radius:50%;color:var(--gris);font-size:18px;flex:none}
+.fila{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+.stepper{display:flex;align-items:center;background:#fff;border:1.5px solid var(--negro);border-radius:12px;overflow:hidden}
+.stepper button{width:44px;height:44px;font-size:22px;font-weight:700}
+.stepper input{width:58px;height:44px;border:0;text-align:center;font-weight:700;background:transparent;-moz-appearance:textfield}
+.stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none}
+.precio{text-align:right}
+.precio .unit{font-size:12px;color:var(--gris)}
+.precio .unit button{color:var(--indigo);font-weight:700;text-decoration:underline;text-underline-offset:2px}
+.precio .sub{font-weight:700;font-size:18px}
+.chips{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.chips button{padding:7px 12px;border-radius:99px;border:1.5px solid var(--linea);background:#fff;font-weight:700;font-size:13px}
+.chips button.on{background:var(--negro);color:#fff;border-color:var(--negro)}
+.nota{font-size:12px;margin-top:9px;color:var(--gris)}
+.nota b{color:var(--indigo)}
+.nota.alerta{color:var(--rojo-osc)}
+.precio-edit{display:flex;gap:6px;margin-top:10px}
+.precio-edit input{flex:1;min-width:0;height:42px;border:1.5px solid var(--indigo);border-radius:10px;padding:0 10px;background:#fff}
+.precio-edit button{padding:0 12px;border-radius:10px;font-size:13px;font-weight:700}
+.btn-ok{background:var(--indigo);color:#fff}
+.btn-gris{background:var(--linea)}
+
+.agregar{width:100%;padding:16px;border:2px dashed var(--negro);border-radius:var(--radio);font-weight:700;font-size:15px;background:transparent}
+.vacio{text-align:center;padding:26px 10px 18px;color:var(--gris);font-size:14px}
+.vacio .big{font-family:'Bebas Neue','Arial Narrow',Impact,sans-serif;font-weight:400;font-size:34px;color:var(--negro);line-height:1;margin-bottom:6px}
+
+/* Opciones */
+.opciones{margin-top:14px;background:var(--papel);border:1px solid var(--linea);border-radius:var(--radio);overflow:hidden}
+.op{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px}
+.op+.op{border-top:1px solid var(--linea)}
+.op label{font-size:14px;font-weight:600}
+.op small{display:block;font-size:11px;color:var(--gris);font-weight:500}
+.op input[type=text]{flex:1;min-width:0;border:0;background:transparent;text-align:right;padding:4px 0}
+.sw{position:relative;width:50px;height:30px;flex:none}
+.sw input{opacity:0;width:0;height:0}
+.sw span{position:absolute;inset:0;background:var(--linea);border-radius:99px;transition:.2s}
+.sw span::after{content:"";position:absolute;width:24px;height:24px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sw input:checked+span{background:var(--rojo)}
+.sw input:checked+span::after{transform:translateX(20px)}
+
+/* Ganancia (solo para vos) */
+.ganancia{margin-top:14px;background:var(--negro);color:#fff;border-radius:var(--radio);padding:14px}
+.gan-top{display:flex;justify-content:space-between;align-items:center}
+.gan-top span{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--mostaza)}
+.gan-top button{font-size:12px;font-weight:600;color:rgba(255,255,255,.7)}
+.gan-num{font-family:'Bebas Neue','Arial Narrow',Impact,sans-serif;font-weight:400;font-size:34px;line-height:1.05;margin-top:6px}
+.gan-det{font-size:12px;color:rgba(255,255,255,.7)}
+.ganancia.oculta .gan-num,.ganancia.oculta .gan-det{filter:blur(9px)}
+
+/* Barra inferior */
+.barra{position:fixed;left:0;right:0;bottom:0;background:var(--papel);border-top:1px solid var(--linea);
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom));box-shadow:0 -6px 20px rgba(0,0,0,.06)}
+.tot{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.tot .lbl{font-size:12px;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:.5px}
+.tot .val{font-family:'Bebas Neue','Arial Narrow',Impact,sans-serif;font-weight:400;font-size:36px;line-height:1}
+.pagos{font-size:12px;color:var(--gris);margin-top:2px}
+.acciones{display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-top:10px}
+.btn-wa{background:var(--rojo);color:#fff;border-radius:12px;padding:14px 10px;font-weight:700;font-size:15px}
+.btn-wa:disabled{opacity:.45}
+.btn-sec{border:1.5px solid var(--negro);border-radius:12px;padding:0 14px;font-weight:700;font-size:13px}
+
+/* Hoja de productos */
+.velo{position:fixed;inset:0;background:rgba(20,20,20,.45);opacity:0;pointer-events:none;transition:.2s;z-index:10}
+.velo.on{opacity:1;pointer-events:auto}
+.hoja{position:fixed;left:0;right:0;bottom:0;max-height:88vh;background:var(--hueso);border-radius:22px 22px 0 0;
+  transform:translateY(100%);transition:transform .25s ease;z-index:11;display:flex;flex-direction:column}
+.hoja.on{transform:none}
+.hoja-top{padding:10px 16px 12px}
+.agarre{width:42px;height:5px;background:var(--linea);border-radius:9px;margin:0 auto 12px}
+.hoja-top h2{font-family:'Bebas Neue','Arial Narrow',Impact,sans-serif;font-weight:400;font-size:26px;font-weight:400;display:flex;justify-content:space-between;align-items:center}
+.hoja-top h2 button{font-family:'Montserrat Alternates',system-ui,sans-serif;font-size:14px;font-weight:700;color:var(--rojo)}
+.buscar{width:100%;height:46px;border:1.5px solid var(--negro);border-radius:12px;padding:0 14px;background:#fff;margin-top:8px}
+.lista{overflow-y:auto;padding:0 16px calc(20px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+.grupo{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--gris);margin:14px 0 6px}
+.prod{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;
+  background:var(--papel);border:1px solid var(--linea);border-radius:12px;padding:13px 14px;margin-bottom:6px}
+.prod b{font-weight:600}
+.prod span{font-size:13px;color:var(--gris);white-space:nowrap}
+.prod.ya{border-color:var(--rojo)}
+
+#toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top));transform:translateX(-50%) translateY(-20px);
+  background:var(--negro);color:#fff;padding:10px 16px;border-radius:99px;font-size:13px;font-weight:600;opacity:0;transition:.2s;z-index:20;pointer-events:none}
+#toast.on{opacity:1;transform:translateX(-50%)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="top">
+    <div class="marca">Presupuesto rápido<small>La Guarida</small></div>
+    <div class="estado carga" id="estado"><i></i><span>Cargando…</span></div>
+  </div>
+  <div class="modo" role="tablist">
+    <button id="m-menor" onclick="elegirModo('menor')">Por menor</button>
+    <button id="m-mayor" onclick="elegirModo('mayor')">Por mayor</button>
+  </div>
+  <div class="modo-ayuda" id="modo-ayuda"></div>
+</header>
+
+<main>
+  <div id="avisos"></div>
+  <div id="items"></div>
+  <button class="agregar" onclick="abrirHoja()">＋ Agregar producto</button>
+
+  <div class="opciones">
+    <div class="op">
+      <label>Personalizado<small id="perso-txt">+$700 por unidad</small></label>
+      <label class="sw" aria-label="Personalizado"><input type="checkbox" id="perso" onchange="S.perso=this.checked;render()"/><span></span></label>
+    </div>
+    <div class="op">
+      <label for="cliente">Para</label>
+      <input type="text" id="cliente" placeholder="Nombre (opcional)" autocomplete="off" oninput="S.cliente=this.value"/>
+    </div>
+  </div>
+
+  <div class="ganancia" id="ganancia">
+    <div class="gan-top"><span>Solo para vos</span><button onclick="toggleGanancia()" id="gan-btn">Ocultar</button></div>
+    <div class="gan-num num" id="gan-num">—</div>
+    <div class="gan-det" id="gan-det">Agregá un producto para ver cuánto ganás.</div>
+  </div>
+</main>
+
+<div class="barra">
+  <div class="tot"><span class="lbl">Total</span><span class="val num" id="total">$0</span></div>
+  <div class="pagos num" id="pagos"></div>
+  <div class="acciones">
+    <button class="btn-wa" id="btn-wa" onclick="mandarWhatsApp()">Mandar por WhatsApp</button>
+    <button class="btn-sec" onclick="copiar()">Copiar</button>
+    <button class="btn-sec" onclick="nuevo()">Nuevo</button>
+  </div>
+</div>
+
+<div class="velo" id="velo" onclick="cerrarHoja()"></div>
+<div class="hoja" id="hoja" aria-hidden="true">
+  <div class="hoja-top">
+    <div class="agarre"></div>
+    <h2>Elegí el producto <button onclick="cerrarHoja()">Listo</button></h2>
+    <input class="buscar" id="buscar" type="search" placeholder="Buscar… (taza, chopp, remera)" oninput="renderLista()" autocomplete="off"/>
+  </div>
+  <div class="lista" id="lista"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ── Ajustes que podés cambiar ─────────────────────────────────────────── */
+const MINIMO_MAYORISTA = 120000;   // compra mínima de la tienda mayorista
+const RECARGO_PERSO    = 700;      // personalización, por unidad
+const VALIDEZ_DIAS     = 7;        // validez que figura en el mensaje
+const ESCALAS          = [12, 36, 72, 144];
+/* ──────────────────────────────────────────────────────────────────────── */
+
+const CLAVE_DATOS = 'lg_movil_datos_v1';
+const S = { datos:null, items:[], modo:'menor', modoManual:false, perso:false, cliente:'', ocultarGan:false };
+
+const $ = id => document.getElementById(id);
+const fmt = n => n==null||isNaN(n) ? '—' : '$' + Math.round(n).toLocaleString('es-AR');
+const leer = k => { try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } };
+const guardar = (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+
+/* ── Misma lógica de precios que el sistema de escritorio ─────────────── */
+const cfg = k => parseFloat((S.datos && S.datos.config && S.datos.config[k]) || 0);
+function factor(){
+  const c = (S.datos && S.datos.config) || {};
+  return Object.keys(c).filter(k => k.startsWith('inflacion_')).reduce((f,k) => f*(1+cfg(k)), 1);
+}
+function costo(p, canal){ // canal: 'minorista' | 'mayorista'
+  const rec = (S.datos.recetas[p.id] || []).filter(r => r.tipo === 'ambos' || r.tipo === canal);
+  const ins = rec.reduce((s,r) => s + (r.costo||0), 0);
+  if (!p.costo_base && !ins) return null;
+  const mult = canal === 'minorista' ? (cfg('mult_local') || 1.21) : (cfg('mult_mayorista') || 1.05);
+  return ((p.costo_base||0) * factor() + ins) * mult;
+}
+function markupMayor(pid, esc){
+  const pm = S.datos.mayoristas[pid];
+  if (pm && pm[esc] && pm[esc].markup != null) return pm[esc].markup;
+  return cfg('markup_' + esc) || ({12:.6, 36:.5, 72:.3, 144:.2})[esc];
+}
+function precioMenor(p){
+  const m = S.datos.minoristas[p.id];
+  if (m && m.precio) return m.precio;
+  const c = costo(p, 'minorista');
+  if (c == null) return null;
+  return Math.round(c * (1 + ((m && m.markup != null) ? m.markup : 1.0)));
+}
+function precioMayor(p, cant){
+  const pm = S.datos.mayoristas[p.id] || {};
+  for (const e of [...ESCALAS].reverse()) {
+    if (cant >= e && pm[e] && pm[e].precio) return { precio: pm[e].precio, escala: e };
+  }
+  const esc = [...ESCALAS].reverse().find(e => cant >= e) || 12;
+  if (pm[esc] && pm[esc].precio) return { precio: pm[esc].precio, escala: esc };
+  const c = costo(p, 'mayorista');
+  if (c == null) return { precio: null, escala: esc };
+  return { precio: Math.round(c * (1 + markupMayor(p.id, esc))), escala: esc, sugerido: true };
+}
+function escalaDe(cant){ return [...ESCALAS].reverse().find(e => cant >= e) || null; }
+
+/* ── Cálculo de cada línea ────────────────────────────────────────────── */
+function prod(id){ return S.datos.productos.find(p => p.id === id); }
+function calcular(it){
+  const p = prod(it.id); if (!p) return null;
+  const canal = S.modo === 'mayor' ? 'mayorista' : 'minorista';
+  let lista, escala = null, sugerido = false;
+  if (S.modo === 'mayor') { const r = precioMayor(p, it.cant); lista = r.precio; escala = r.escala; sugerido = !!r.sugerido; }
+  else lista = precioMenor(p);
+  const base = it.manual != null ? it.manual : lista;
+  const unit = base == null ? null : base + (S.perso ? RECARGO_PERSO : 0);
+  const c = costo(p, canal);
+  return { p, lista, unit, escala, sugerido, costo: c,
+           sub: unit == null ? 0 : unit * it.cant,
+           gan: (unit == null || c == null) ? null : (unit - c) * it.cant };
+}
+function totalUnidades(){ return S.items.reduce((s,i) => s + i.cant, 0); }
+
+/* ── Modo por menor / por mayor ───────────────────────────────────────── */
+function modoAuto(){
+  if (S.modoManual) return;
+  S.modo = totalUnidades() >= 12 ? 'mayor' : 'menor';
+}
+function elegirModo(m){ S.modo = m; S.modoManual = true; render(); }
+
+/* ── Render ───────────────────────────────────────────────────────────── */
+function render(){
+  if (!S.datos) return;
+  modoAuto();
+  $('m-menor').classList.toggle('on', S.modo === 'menor');
+  $('m-mayor').classList.toggle('on', S.modo === 'mayor');
+  $('modo-ayuda').textContent = S.modoManual ? 'Elegido a mano · se reinicia con “Nuevo”'
+                                             : 'Automático: desde 12 unidades pasa a por mayor';
+  $('perso-txt').textContent = '+' + fmt(RECARGO_PERSO) + ' por unidad';
+
+  const cont = $('items');
+  if (!S.items.length) {
+    cont.innerHTML = `<div class="vacio"><div class="big">¿Qué te pidieron?</div>Tocá “Agregar producto”, poné la cantidad y listo.</div>`;
+  } else {
+    cont.innerHTML = S.items.map((it, i) => {
+      const r = calcular(it); if (!r) return '';
+      let notas = '';
+      if (S.modo === 'mayor') {
+        const sig = ESCALAS.find(e => e > it.cant);
+        if (it.cant < 12) notas += `<div class="nota alerta">Menos de 12 u.: se cotiza con el precio de 12.</div>`;
+        if (sig && it.manual == null) {
+          const ps = precioMayor(r.p, sig).precio;
+          if (ps && r.lista && ps < r.lista) notas += `<div class="nota">Si llega a <b>${sig} u.</b>: ${fmt(ps + (S.perso?RECARGO_PERSO:0))} c/u</div>`;
+        }
+      }
+      if (r.lista == null && it.manual == null) notas += `<div class="nota alerta">Este producto no tiene precio cargado: poné uno a mano.</div>`;
+      const etiqueta = it.manual != null ? 'precio a mano'
+                     : S.modo === 'mayor' ? `precio ${r.escala}+${r.sugerido ? ' (sugerido)' : ''}` : 'precio de lista';
+      const chips = S.modo === 'mayor'
+        ? `<div class="chips">${ESCALAS.map(e => `<button class="${it.cant===e?'on':''}" onclick="setCant(${i},${e})">${e}</button>`).join('')}</div>` : '';
+      const editor = it.editando
+        ? `<div class="precio-edit"><input type="number" inputmode="numeric" id="pm-${i}" placeholder="Precio por unidad" value="${it.manual ?? (r.lista ?? '')}"/>
+             <button class="btn-ok" onclick="guardarPrecio(${i})">OK</button>
+             ${it.manual != null ? `<button class="btn-gris" onclick="precioLista(${i})">Lista</button>` : ''}</div>` : '';
+      return `<div class="item">
+        <div class="item-top">
+          <div><div class="item-nombre">${esc(r.p.nombre)}</div><div class="item-cat">${esc(r.p.categoria || '')}</div></div>
+          <button class="quitar" onclick="quitar(${i})" aria-label="Quitar">✕</button>
+        </div>
+        <div class="fila">
+          <div class="stepper">
+            <button onclick="setCant(${i},${Math.max(1, it.cant - 1)})" aria-label="Menos">−</button>
+            <input type="number" inputmode="numeric" value="${it.cant}" min="1" onchange="const v=parseInt(this.value)||1;setTimeout(()=>setCant(${i},v))"/>
+            <button onclick="setCant(${i},${it.cant + 1})" aria-label="Más">+</button>
+          </div>
+          <div class="precio num">
+            <div class="sub">${fmt(r.sub)}</div>
+            <div class="unit">${fmt(r.unit)} c/u · <button onclick="editarPrecio(${i})">${etiqueta}</button></div>
+          </div>
+        </div>
+        ${chips}${editor}${notas}
+      </div>`;
+    }).join('');
+  }
+
+  // Totales
+  const filas = S.items.map(calcular).filter(Boolean);
+  const total = filas.reduce((s,r) => s + r.sub, 0);
+  $('total').textContent = fmt(total);
+  if (S.modo === 'menor' && total) {
+    const efe = cfg('desc_efectivo'), trf = cfg('desc_transferencia');
+    $('pagos').textContent = `Efectivo ${fmt(total*(1-efe))} · Transferencia ${fmt(total*(1-trf))}`;
+  } else if (S.modo === 'mayor' && total && total < MINIMO_MAYORISTA) {
+    $('pagos').textContent = `Faltan ${fmt(MINIMO_MAYORISTA - total)} para el mínimo mayorista (${fmt(MINIMO_MAYORISTA)})`;
+  } else $('pagos').textContent = '';
+  $('btn-wa').disabled = !total;
+
+  // Ganancia
+  const conCosto = filas.filter(r => r.gan != null);
+  if (!filas.length) { $('gan-num').textContent = '—'; $('gan-det').textContent = 'Agregá un producto para ver cuánto ganás.'; }
+  else if (!conCosto.length) { $('gan-num').textContent = '—'; $('gan-det').textContent = 'Estos productos no tienen costo cargado.'; }
+  else {
+    const gan = conCosto.reduce((s,r) => s + r.gan, 0);
+    const vta = conCosto.reduce((s,r) => s + r.sub, 0);
+    $('gan-num').textContent = fmt(gan);
+    let det = `Margen ${vta ? Math.round(gan/vta*100) : 0}% sobre el costo ${S.modo === 'mayor' ? 'mayorista' : 'minorista'}`;
+    if (conCosto.length < filas.length) det += ' · hay productos sin costo';
+    if (S.perso) det += ' · incluye el recargo de personalización';
+    $('gan-det').textContent = det;
+  }
+  $('ganancia').classList.toggle('oculta', S.ocultarGan);
+  $('gan-btn').textContent = S.ocultarGan ? 'Mostrar' : 'Ocultar';
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]); }
+
+/* ── Acciones sobre los ítems ─────────────────────────────────────────── */
+function setCant(i, n){ S.items[i].cant = Math.max(1, n|0); render(); }
+function quitar(i){ S.items.splice(i,1); render(); }
+function editarPrecio(i){ S.items[i].editando = !S.items[i].editando; render(); if (S.items[i].editando) setTimeout(() => { const el = $('pm-'+i); el && el.focus(); }, 50); }
+function guardarPrecio(i){
+  const v = parseFloat($('pm-'+i).value);
+  S.items[i].manual = isNaN(v) ? null : v; S.items[i].editando = false; render();
+}
+function precioLista(i){ S.items[i].manual = null; S.items[i].editando = false; render(); }
+function toggleGanancia(){ S.ocultarGan = !S.ocultarGan; guardar('lg_movil_ocultar', S.ocultarGan); render(); }
+function nuevo(){
+  S.items = []; S.modoManual = false; S.perso = false; S.cliente = '';
+  $('perso').checked = false; $('cliente').value = ''; render(); window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ── Hoja para elegir productos ───────────────────────────────────────── */
+function abrirHoja(){
+  if (!S.datos) return;
+  $('buscar').value = ''; renderLista();
+  $('velo').classList.add('on'); $('hoja').classList.add('on'); $('hoja').setAttribute('aria-hidden','false');
+}
+function cerrarHoja(){ $('velo').classList.remove('on'); $('hoja').classList.remove('on'); $('hoja').setAttribute('aria-hidden','true'); $('buscar').blur(); }
+function normal(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
+function renderLista(){
+  const q = normal($('buscar').value);
+  const lista = S.datos.productos.filter(p => p.visible !== 0 && normal(p.nombre).includes(q));
+  const orden = ['Principales','Textil','Accesorios','Packaging'];
+  const grupos = {};
+  lista.forEach(p => { const c = p.categoria || 'Otros'; (grupos[c] = grupos[c] || []).push(p); });
+  const claves = Object.keys(grupos).sort((a,b) => {
+    const ia = orden.indexOf(a), ib = orden.indexOf(b);
+    return (ia<0?99:ia) - (ib<0?99:ib) || a.localeCompare(b);
+  });
+  const enLista = new Set(S.items.map(i => i.id));
+  $('lista').innerHTML = !lista.length ? `<div class="vacio">No encontré “${esc($('buscar').value)}”.</div>` :
+    claves.map(c => `<div class="grupo">${esc(c)}</div>` + grupos[c].map(p => {
+      const ref = S.modo === 'mayor' ? precioMayor(p, 12).precio : precioMenor(p);
+      return `<button class="prod ${enLista.has(p.id)?'ya':''}" onclick="agregar(${p.id})"><b>${esc(p.nombre)}</b><span class="num">${enLista.has(p.id) ? 'ya está' : (ref ? fmt(ref) + (S.modo==='mayor'?' (12+)':'') : 'sin precio')}</span></button>`;
+    }).join('')).join('');
+}
+function agregar(id){
+  if (!S.items.find(i => i.id === id)) S.items.push({ id, cant: S.modo === 'mayor' ? 12 : 1, manual: null });
+  cerrarHoja(); render();
+  toast('Agregado');
+}
+
+/* ── Texto para el cliente ────────────────────────────────────────────── */
+function textoPresupuesto(){
+  const filas = S.items.map(it => ({ it, r: calcular(it) })).filter(x => x.r && x.r.unit != null);
+  if (!filas.length) return '';
+  const total = filas.reduce((s,x) => s + x.r.sub, 0);
+  const nombre = S.cliente.trim();
+  let t = `¡Hola${nombre ? ' ' + nombre : ''}! 👋 Te paso el presupuesto de La Guarida:\n\n`;
+  filas.forEach(({ it, r }) => {
+    t += `• ${it.cant} × ${r.p.nombre}${S.perso ? ' · con personalización' : ''} — ${fmt(r.unit)} c/u = ${fmt(r.sub)}\n`;
+  });
+  t += `\n*Total: ${fmt(total)}*\n`;
+  if (S.modo === 'menor') {
+    t += `💵 En efectivo: ${fmt(total*(1-cfg('desc_efectivo')))} · Transferencia: ${fmt(total*(1-cfg('desc_transferencia')))}\n`;
+  }
+  if (S.perso) t += `\nLa personalización incluye el asesoramiento con el diseño.\n`;
+  t += `\nPrecios válidos por ${VALIDEZ_DIAS} días. Cualquier duda, escribime 😊`;
+  return t;
+}
+function mandarWhatsApp(){
+  const t = textoPresupuesto(); if (!t) return;
+  window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank');
+}
+async function copiar(){
+  const t = textoPresupuesto(); if (!t) { toast('No hay nada para copiar'); return; }
+  try { await navigator.clipboard.writeText(t); toast('Texto copiado'); }
+  catch(e){
+    const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta);
+    ta.select(); try { document.execCommand('copy'); toast('Texto copiado'); } catch(_){ toast('No se pudo copiar'); }
+    ta.remove();
+  }
+}
+let tt; function toast(m){ const el = $('toast'); el.textContent = m; el.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => el.classList.remove('on'), 1800); }
+
+/* ── Datos: primero lo guardado, después lo actualizado ───────────────── */
+function estado(tipo, txt){ const e = $('estado'); e.className = 'estado ' + tipo; e.querySelector('span').textContent = txt; }
+function horaCorta(ts){ const d = new Date(ts); return d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'}) + ' ' + d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}); }
+async function cargar(){
+  if (window.LG_DEMO) { S.datos = window.LG_DEMO; estado('', 'Datos de ejemplo'); render(); return; }
+  const guardado = leer(CLAVE_DATOS);
+  if (guardado && guardado.datos) { S.datos = guardado.datos; render(); estado('carga', 'Actualizando precios…'); }
+  else estado('carga', 'Despertando el sistema…');
+  try {
+    const r = await fetch('/api/movil/datos', { credentials: 'same-origin', cache: 'no-store' });
+    if (r.status === 401) {
+      estado('off', 'Sesión vencida');
+      $('avisos').innerHTML = `<div class="aviso">Tenés que volver a entrar. <a href="/login?next=/movil">Ingresar</a></div>`;
+      return;
+    }
+    if (!r.ok) throw new Error(r.status);
+    S.datos = await r.json();
+    guardar(CLAVE_DATOS, { datos: S.datos, ts: Date.now() });
+    estado('', 'Precios al día');
+    render();
+  } catch(e) {
+    if (guardado && guardado.datos) estado('off', 'Sin conexión · precios del ' + horaCorta(guardado.ts));
+    else { estado('off', 'Sin conexión'); $('avisos').innerHTML = `<div class="aviso">No pude traer los precios. Revisá la conexión y volvé a abrir.</div>`; }
+  }
+}
+
+S.ocultarGan = !!leer('lg_movil_ocultar');
+cargar();
+if (!window.LG_DEMO && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/movil-sw.js', { scope: '/movil' }).catch(() => {});
+}
+</script>
+</body>
+</html>

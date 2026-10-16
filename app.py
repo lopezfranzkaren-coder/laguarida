@@ -3,12 +3,14 @@ La Guarida — Flask + PostgreSQL (Supabase) | Login por contraseña
 VERSIÓN LIMPIA - SIN DUPLICADOS
 """
 import os
+from datetime import timedelta
 from flask import Flask, g, jsonify, request, send_from_directory, session, redirect
 
 BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
 app          = Flask(__name__, static_folder=BASE_DIR)
 app.secret_key  = os.environ.get("SECRET_KEY", "guarida-secret-2024")
 APP_PASSWORD    = os.environ.get("APP_PASSWORD", "laiguarida2024")
+app.permanent_session_lifetime = timedelta(days=90)  # no pedir contraseña a cada rato en el celular
 DATABASE_URL    = os.environ.get("DATABASE_URL", "")
 USE_PG = DATABASE_URL.startswith("postgresql") or DATABASE_URL.startswith("postgres")
 
@@ -67,7 +69,8 @@ def ph():
 # ─── Auth ──────────────────────────────────────────────────────────────────────
 @app.before_request
 def check_auth():
-    if request.path in ["/login"] or request.path.startswith("/static"): return
+    if request.path in ["/login", "/movil-sw.js", "/movil-icono.png"] or request.path.startswith("/static"): return
+    if request.path == "/movil" and not session.get("ok"): return redirect("/login?next=/movil")
     if request.path.startswith("/cliente"): 
         if not session.get("ok"): return redirect("/login")
         return
@@ -82,6 +85,7 @@ def login_page(): return send_from_directory(BASE_DIR, "login.html")
 def login():
     data = request.json or {}
     if data.get("password") == APP_PASSWORD:
+        session.permanent = True
         session["ok"] = True; return jsonify({"ok":True})
     return jsonify({"ok":False,"error":"Contraseña incorrecta"}),401
 
@@ -99,6 +103,34 @@ def cliente_page(nombre):
     with open(ruta, "r", encoding="utf-8") as f:
         contenido = f.read()
     return Response(contenido, mimetype="text/html")
+
+# ─── Presupuesto rápido (celular) ──────────────────────────────────────────────
+@app.route("/movil")
+def movil_page(): return send_from_directory(BASE_DIR, "movil.html")
+
+@app.route("/movil-sw.js")
+def movil_sw():
+    resp = send_from_directory(BASE_DIR, "movil-sw.js", mimetype="application/javascript")
+    resp.headers["Cache-Control"] = "no-cache"
+    return resp
+
+@app.route("/movil-icono.png")
+def movil_icono(): return send_from_directory(BASE_DIR, "movil-icono.png", mimetype="image/png")
+
+@app.route("/api/movil/datos")
+def movil_datos():
+    """Todo lo que necesita el presupuesto rápido, en un solo pedido."""
+    config = {r["clave"]: r["valor"] for r in q("SELECT clave,valor FROM config") if r["clave"] != "logo_data"}
+    productos = q("SELECT id,nombre,costo_base,categoria,visible FROM productos WHERE activo=1 ORDER BY nombre")
+    minoristas = {r["producto_id"]: {"precio": r["precio"], "markup": r["markup"]} for r in q("SELECT * FROM precios_minoristas")}
+    mayoristas = {}
+    for r in q("SELECT * FROM precios_mayoristas"):
+        mayoristas.setdefault(r["producto_id"], {})[r["cantidad"]] = {"precio": r["precio"], "markup": r["markup"]}
+    recetas = {}
+    for r in q("SELECT r.producto_id, r.tipo, i.costo FROM recetas r JOIN insumos i ON r.insumo_id=i.id"):
+        recetas.setdefault(r["producto_id"], []).append({"tipo": r["tipo"], "costo": r["costo"]})
+    return jsonify({"config": config, "productos": productos, "minoristas": minoristas,
+                    "mayoristas": mayoristas, "recetas": recetas})
 
 # ─── Init DB ───────────────────────────────────────────────────────────────────
 def init_db():
