@@ -56,6 +56,8 @@ main{padding:16px}
 .item-nombre{font-weight:700;font-size:15px}
 .item-cat{font-size:11px;color:var(--gris);margin-top:2px}
 .quitar{width:32px;height:32px;border-radius:50%;color:var(--gris);font-size:18px;flex:none}
+.perso-fila{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--linea);font-size:13px;font-weight:600}
+.perso-fila small{display:block;font-weight:400;color:var(--gris);font-size:11px}
 .fila{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
 .stepper{display:flex;align-items:center;background:#fff;border:1.5px solid var(--negro);border-radius:12px;overflow:hidden}
 .stepper button{width:44px;height:44px;font-size:22px;font-weight:700}
@@ -161,10 +163,6 @@ main{padding:16px}
 
   <div class="opciones">
     <div class="op">
-      <label>Personalizado<small id="perso-txt">+$700 por unidad</small></label>
-      <label class="sw" aria-label="Personalizado"><input type="checkbox" id="perso" onchange="S.perso=this.checked;render()"/><span></span></label>
-    </div>
-    <div class="op">
       <label for="cliente">Para</label>
       <input type="text" id="cliente" placeholder="Nombre (opcional)" autocomplete="off" oninput="S.cliente=this.value"/>
     </div>
@@ -208,7 +206,7 @@ const ESCALAS          = [12, 36, 72, 144];
 /* ──────────────────────────────────────────────────────────────────────── */
 
 const CLAVE_DATOS = 'lg_movil_datos_v1';
-const S = { datos:null, items:[], modo:'menor', modoManual:false, perso:false, cliente:'', ocultarGan:false };
+const S = { datos:null, items:[], modo:'menor', modoManual:false, cliente:'', ocultarGan:false };
 
 const $ = id => document.getElementById(id);
 const fmt = n => n==null||isNaN(n) ? '—' : '$' + Math.round(n).toLocaleString('es-AR');
@@ -267,9 +265,9 @@ function calcular(it){
   if (S.modo === 'mayor') { const r = precioMayor(p, unidadesGrupo(esAccesorio(p))); lista = r.precio; escala = r.escala; sugerido = !!r.sugerido; }
   else lista = precioMenor(p);
   const base = it.manual != null ? it.manual : lista;
-  const unit = base == null ? null : base + (S.perso ? RECARGO_PERSO : 0);
+  const unit = base == null ? null : base + (it.perso ? RECARGO_PERSO : 0);
   const c = costo(p, canal);
-  return { p, lista, unit, escala, sugerido, costo: c,
+  return { p, lista, unit, escala, sugerido, costo: c, perso: !!it.perso,
            sub: unit == null ? 0 : unit * it.cant,
            gan: (unit == null || c == null) ? null : (unit - c) * it.cant };
 }
@@ -290,7 +288,6 @@ function render(){
   $('m-mayor').classList.toggle('on', S.modo === 'mayor');
   $('modo-ayuda').textContent = S.modoManual ? 'Elegido a mano · se reinicia con “Nuevo”'
                                              : 'Automático: desde 12 unidades pasa a por mayor · la escala la define todo el pedido';
-  $('perso-txt').textContent = '+' + fmt(RECARGO_PERSO) + ' por unidad';
 
   const cont = $('items');
   if (!S.items.length) {
@@ -322,6 +319,8 @@ function render(){
             <div class="unit">${fmt(r.unit)} c/u · <button onclick="editarPrecio(${i})">${etiqueta}</button></div>
           </div>
         </div>
+        <div class="perso-fila"><span>Personalizado<small>+${fmt(RECARGO_PERSO)} por unidad · sin descuento por medio de pago</small></span>
+          <label class="sw" aria-label="Personalizado"><input type="checkbox" ${it.perso ? 'checked' : ''} onchange="setPerso(${i}, this.checked)"/><span></span></label></div>
         ${editor}${notas}
       </div>`;
     }).join('');
@@ -331,9 +330,9 @@ function render(){
   const filas = S.items.map(calcular).filter(Boolean);
   const total = filas.reduce((s,r) => s + r.sub, 0);
   $('total').textContent = fmt(total);
-  if (S.modo === 'menor' && total && !S.perso) {
-    const efe = cfg('desc_efectivo'), trf = cfg('desc_transferencia');
-    $('pagos').textContent = `Efectivo ${fmt(total*(1-efe))} · Transferencia ${fmt(total*(1-trf))}`;
+  const pg = pagosMenor(filas);
+  if (S.modo === 'menor' && total && pg) {
+    $('pagos').textContent = `Efectivo ${fmt(pg.efe)} · Transferencia ${fmt(pg.trf)}` + (pg.mixto ? ' (descuento solo en catálogo)' : '');
   } else if (S.modo === 'mayor' && total) {
     $('pagos').innerHTML = avisoEscalas();
   } else $('pagos').textContent = '';
@@ -349,7 +348,7 @@ function render(){
     $('gan-num').textContent = fmt(gan);
     let det = `Margen ${vta ? Math.round(gan/vta*100) : 0}% sobre el costo ${S.modo === 'mayor' ? 'mayorista' : 'minorista'}`;
     if (conCosto.length < filas.length) det += ' · hay productos sin costo';
-    if (S.perso) det += ' · incluye el recargo de personalización';
+    if (S.items.some(i => i.perso)) det += ' · incluye el recargo de personalización';
     $('gan-det').textContent = det;
   }
   $('ganancia').classList.toggle('oculta', S.ocultarGan);
@@ -358,6 +357,7 @@ function render(){
 function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]); }
 
 /* ── Acciones sobre los ítems ─────────────────────────────────────────── */
+function setPerso(i, v){ S.items[i].perso = v; render(); }
 function setCant(i, n){ S.items[i].cant = Math.max(1, n|0); render(); }
 function quitar(i){ S.items.splice(i,1); render(); }
 function editarPrecio(i){ S.items[i].editando = !S.items[i].editando; render(); if (S.items[i].editando) setTimeout(() => { const el = $('pm-'+i); el && el.focus(); }, 50); }
@@ -368,8 +368,8 @@ function guardarPrecio(i){
 function precioLista(i){ S.items[i].manual = null; S.items[i].editando = false; render(); }
 function toggleGanancia(){ S.ocultarGan = !S.ocultarGan; guardar('lg_movil_ocultar', S.ocultarGan); render(); }
 function nuevo(){
-  S.items = []; S.modoManual = false; S.perso = false; S.cliente = '';
-  $('perso').checked = false; $('cliente').value = ''; render(); window.scrollTo({top:0, behavior:'smooth'});
+  S.items = []; S.modoManual = false; S.cliente = '';
+  $('cliente').value = ''; render(); window.scrollTo({top:0, behavior:'smooth'});
 }
 
 /* ── Hoja para elegir productos ───────────────────────────────────────── */
@@ -417,6 +417,14 @@ function avisoEscalas(){
   return partes.join('<br>');
 }
 
+/* Descuentos por efectivo/transferencia: solo sobre lo que no es personalizado */
+function pagosMenor(filas){
+  const cat = filas.filter(r => !r.perso).reduce((s,r) => s + r.sub, 0);
+  const per = filas.filter(r => r.perso).reduce((s,r) => s + r.sub, 0);
+  if (!cat) return null;
+  return { efe: cat*(1-cfg('desc_efectivo')) + per, trf: cat*(1-cfg('desc_transferencia')) + per, mixto: per > 0 };
+}
+
 /* ── Texto para el cliente ────────────────────────────────────────────── */
 function textoPresupuesto(){
   const filas = S.items.map(it => ({ it, r: calcular(it) })).filter(x => x.r && x.r.unit != null);
@@ -425,14 +433,16 @@ function textoPresupuesto(){
   const nombre = S.cliente.trim();
   let t = `¡Hola${nombre ? ' ' + nombre : ''}! 👋 Te paso el presupuesto de La Guarida:\n\n`;
   filas.forEach(({ it, r }) => {
-    t += `• ${it.cant} × ${r.p.nombre}${S.perso ? ' · con personalización' : ''} — ${fmt(r.unit)} c/u = ${fmt(r.sub)}\n`;
+    t += `• ${it.cant} × ${r.p.nombre}${it.perso ? ' · personalizado' : ''} — ${fmt(r.unit)} c/u = ${fmt(r.sub)}\n`;
   });
   t += `\n*Total: ${fmt(total)}*\n`;
-  if (S.modo === 'menor' && !S.perso) {
-    t += `💵 En efectivo: ${fmt(total*(1-cfg('desc_efectivo')))} · Transferencia: ${fmt(total*(1-cfg('desc_transferencia')))}\n`;
+  const pg = S.modo === 'menor' ? pagosMenor(filas.map(x => x.r)) : null;
+  if (pg) {
+    t += `💵 En efectivo: ${fmt(pg.efe)} · Transferencia: ${fmt(pg.trf)}\n`;
+    if (pg.mixto) t += `(El descuento por medio de pago aplica a los productos de catálogo, no a los personalizados.)\n`;
   }
   if (S.modo === 'mayor') t += `Precios mayoristas con pago en efectivo o transferencia.\n`;
-  if (S.perso) t += `\nLa personalización incluye el asesoramiento con el diseño.\n`;
+  if (S.items.some(i => i.perso)) t += `\nLa personalización incluye el asesoramiento con el diseño.\n`;
   t += `\nPrecios válidos por ${VALIDEZ_DIAS} días. Cualquier duda, escribime 😊`;
   return t;
 }
