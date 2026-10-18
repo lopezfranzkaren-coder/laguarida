@@ -201,7 +201,7 @@ main{padding:16px}
 
 <script>
 /* ── Ajustes que podés cambiar ─────────────────────────────────────────── */
-const MINIMO_MAYORISTA = 120000;   // compra mínima de la tienda mayorista
+const CATS_ACCESORIOS = ['Accesorios', 'Packaging']; // tienen su propia escala
 const RECARGO_PERSO    = 700;      // personalización, por unidad
 const VALIDEZ_DIAS     = 7;        // validez que figura en el mensaje
 const ESCALAS          = [12, 36, 72, 144];
@@ -252,6 +252,11 @@ function precioMayor(p, cant){
   return { precio: Math.round(c * (1 + markupMayor(p.id, esc))), escala: esc, sugerido: true };
 }
 function escalaDe(cant){ return [...ESCALAS].reverse().find(e => cant >= e) || null; }
+/* La escala la define todo el pedido; los accesorios se cuentan aparte */
+const esAccesorio = p => CATS_ACCESORIOS.includes((p && p.categoria) || '');
+function unidadesGrupo(acc){
+  return S.items.reduce((s,i) => s + (esAccesorio(prod(i.id)) === acc ? i.cant : 0), 0);
+}
 
 /* ── Cálculo de cada línea ────────────────────────────────────────────── */
 function prod(id){ return S.datos.productos.find(p => p.id === id); }
@@ -259,7 +264,7 @@ function calcular(it){
   const p = prod(it.id); if (!p) return null;
   const canal = S.modo === 'mayor' ? 'mayorista' : 'minorista';
   let lista, escala = null, sugerido = false;
-  if (S.modo === 'mayor') { const r = precioMayor(p, it.cant); lista = r.precio; escala = r.escala; sugerido = !!r.sugerido; }
+  if (S.modo === 'mayor') { const r = precioMayor(p, unidadesGrupo(esAccesorio(p))); lista = r.precio; escala = r.escala; sugerido = !!r.sugerido; }
   else lista = precioMenor(p);
   const base = it.manual != null ? it.manual : lista;
   const unit = base == null ? null : base + (S.perso ? RECARGO_PERSO : 0);
@@ -284,7 +289,7 @@ function render(){
   $('m-menor').classList.toggle('on', S.modo === 'menor');
   $('m-mayor').classList.toggle('on', S.modo === 'mayor');
   $('modo-ayuda').textContent = S.modoManual ? 'Elegido a mano · se reinicia con “Nuevo”'
-                                             : 'Automático: desde 12 unidades pasa a por mayor';
+                                             : 'Automático: desde 12 unidades pasa a por mayor · la escala la define todo el pedido';
   $('perso-txt').textContent = '+' + fmt(RECARGO_PERSO) + ' por unidad';
 
   const cont = $('items');
@@ -294,19 +299,9 @@ function render(){
     cont.innerHTML = S.items.map((it, i) => {
       const r = calcular(it); if (!r) return '';
       let notas = '';
-      if (S.modo === 'mayor') {
-        const sig = ESCALAS.find(e => e > it.cant);
-        if (it.cant < 12) notas += `<div class="nota alerta">Menos de 12 u.: se cotiza con el precio de 12.</div>`;
-        if (sig && it.manual == null) {
-          const ps = precioMayor(r.p, sig).precio;
-          if (ps && r.lista && ps < r.lista) notas += `<div class="nota">Si llega a <b>${sig} u.</b>: ${fmt(ps + (S.perso?RECARGO_PERSO:0))} c/u</div>`;
-        }
-      }
       if (r.lista == null && it.manual == null) notas += `<div class="nota alerta">Este producto no tiene precio cargado: poné uno a mano.</div>`;
       const etiqueta = it.manual != null ? 'precio a mano'
                      : S.modo === 'mayor' ? `precio ${r.escala}+${r.sugerido ? ' (sugerido)' : ''}` : 'precio de lista';
-      const chips = S.modo === 'mayor'
-        ? `<div class="chips">${ESCALAS.map(e => `<button class="${it.cant===e?'on':''}" onclick="setCant(${i},${e})">${e}</button>`).join('')}</div>` : '';
       const editor = it.editando
         ? `<div class="precio-edit"><input type="number" inputmode="numeric" id="pm-${i}" placeholder="Precio por unidad" value="${it.manual ?? (r.lista ?? '')}"/>
              <button class="btn-ok" onclick="guardarPrecio(${i})">OK</button>
@@ -327,7 +322,7 @@ function render(){
             <div class="unit">${fmt(r.unit)} c/u · <button onclick="editarPrecio(${i})">${etiqueta}</button></div>
           </div>
         </div>
-        ${chips}${editor}${notas}
+        ${editor}${notas}
       </div>`;
     }).join('');
   }
@@ -336,11 +331,11 @@ function render(){
   const filas = S.items.map(calcular).filter(Boolean);
   const total = filas.reduce((s,r) => s + r.sub, 0);
   $('total').textContent = fmt(total);
-  if (S.modo === 'menor' && total) {
+  if (S.modo === 'menor' && total && !S.perso) {
     const efe = cfg('desc_efectivo'), trf = cfg('desc_transferencia');
     $('pagos').textContent = `Efectivo ${fmt(total*(1-efe))} · Transferencia ${fmt(total*(1-trf))}`;
-  } else if (S.modo === 'mayor' && total && total < MINIMO_MAYORISTA) {
-    $('pagos').textContent = `Faltan ${fmt(MINIMO_MAYORISTA - total)} para el mínimo mayorista (${fmt(MINIMO_MAYORISTA)})`;
+  } else if (S.modo === 'mayor' && total) {
+    $('pagos').innerHTML = avisoEscalas();
   } else $('pagos').textContent = '';
   $('btn-wa').disabled = !total;
 
@@ -408,6 +403,20 @@ function agregar(id){
   toast('Agregado');
 }
 
+/* Aviso de escala: en qué precio está el pedido y cuánto falta para el siguiente */
+function avisoEscalas(){
+  const partes = [];
+  for (const acc of [false, true]) {
+    const n = unidadesGrupo(acc); if (!n) continue;
+    const quien = acc ? 'Accesorios' : 'Pedido';
+    const esc = escalaDe(n), sig = ESCALAS.find(e => e > n);
+    let t = `${quien}: ${n} u. · ${esc ? 'precio +' + esc : 'menos de 12, va con precio +12'}`;
+    if (sig) t += ` · faltan <b>${sig - n}</b> para +${sig}`;
+    partes.push(t);
+  }
+  return partes.join('<br>');
+}
+
 /* ── Texto para el cliente ────────────────────────────────────────────── */
 function textoPresupuesto(){
   const filas = S.items.map(it => ({ it, r: calcular(it) })).filter(x => x.r && x.r.unit != null);
@@ -419,9 +428,10 @@ function textoPresupuesto(){
     t += `• ${it.cant} × ${r.p.nombre}${S.perso ? ' · con personalización' : ''} — ${fmt(r.unit)} c/u = ${fmt(r.sub)}\n`;
   });
   t += `\n*Total: ${fmt(total)}*\n`;
-  if (S.modo === 'menor') {
+  if (S.modo === 'menor' && !S.perso) {
     t += `💵 En efectivo: ${fmt(total*(1-cfg('desc_efectivo')))} · Transferencia: ${fmt(total*(1-cfg('desc_transferencia')))}\n`;
   }
+  if (S.modo === 'mayor') t += `Precios mayoristas con pago en efectivo o transferencia.\n`;
   if (S.perso) t += `\nLa personalización incluye el asesoramiento con el diseño.\n`;
   t += `\nPrecios válidos por ${VALIDEZ_DIAS} días. Cualquier duda, escribime 😊`;
   return t;
