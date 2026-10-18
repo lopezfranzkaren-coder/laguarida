@@ -281,11 +281,31 @@ function modoAuto(){
 function elegirModo(m){ S.modo = m; S.modoManual = true; render(); }
 
 /* ── Render ───────────────────────────────────────────────────────────── */
-function render(){
-  if (!S.datos) return;
-  modoAuto();
+function etiquetaDe(it, r){
+  return it.manual != null ? 'precio a mano'
+       : S.modo === 'mayor' ? `precio ${r.escala}+${r.sugerido ? ' (sugerido)' : ''}` : 'precio de lista';
+}
+function unitHTML(i, r, etiqueta){ return `${fmt(r.unit)} c/u · <button onclick="editarPrecio(${i})">${etiqueta}</button>`; }
+function pintarModo(){
   $('m-menor').classList.toggle('on', S.modo === 'menor');
   $('m-mayor').classList.toggle('on', S.modo === 'mayor');
+}
+/* Mientras se escribe la cantidad: actualiza precios y totales sin redibujar (no se cierra el teclado) */
+function cantEnVivo(i, v){
+  const n = parseInt(v); if (!n || n < 1 || !S.items[i]) return;
+  S.items[i].cant = n;
+  modoAuto(); pintarModo();
+  S.items.forEach((it, k) => {
+    const r = calcular(it); if (!r) return;
+    const sub = $('sub-' + k), unit = $('unit-' + k);
+    if (sub) sub.textContent = fmt(r.sub);
+    if (unit) unit.innerHTML = unitHTML(k, r, etiquetaDe(it, r));
+  });
+  renderTotales();
+}
+function render(){
+  if (!S.datos) return;
+  modoAuto(); pintarModo();
   $('modo-ayuda').textContent = S.modoManual ? 'Elegido a mano · se reinicia con “Nuevo”'
                                              : 'Automático: desde 12 unidades pasa a por mayor · la escala la define todo el pedido';
 
@@ -297,8 +317,7 @@ function render(){
       const r = calcular(it); if (!r) return '';
       let notas = '';
       if (r.lista == null && it.manual == null) notas += `<div class="nota alerta">Este producto no tiene precio cargado: poné uno a mano.</div>`;
-      const etiqueta = it.manual != null ? 'precio a mano'
-                     : S.modo === 'mayor' ? `precio ${r.escala}+${r.sugerido ? ' (sugerido)' : ''}` : 'precio de lista';
+      const etiqueta = etiquetaDe(it, r);
       const editor = it.editando
         ? `<div class="precio-edit"><input type="number" inputmode="numeric" id="pm-${i}" placeholder="Precio por unidad" value="${it.manual ?? (r.lista ?? '')}"/>
              <button class="btn-ok" onclick="guardarPrecio(${i})">OK</button>
@@ -311,12 +330,12 @@ function render(){
         <div class="fila">
           <div class="stepper">
             <button onclick="setCant(${i},${Math.max(1, it.cant - 1)})" aria-label="Menos">−</button>
-            <input type="number" inputmode="numeric" value="${it.cant}" min="1" onchange="const v=parseInt(this.value)||1;setTimeout(()=>setCant(${i},v))"/>
+            <input type="number" inputmode="numeric" value="${it.cant}" min="1" oninput="cantEnVivo(${i}, this.value)" onchange="const v=parseInt(this.value)||1;setTimeout(()=>setCant(${i},v))"/>
             <button onclick="setCant(${i},${it.cant + 1})" aria-label="Más">+</button>
           </div>
           <div class="precio num">
-            <div class="sub">${fmt(r.sub)}</div>
-            <div class="unit">${fmt(r.unit)} c/u · <button onclick="editarPrecio(${i})">${etiqueta}</button></div>
+            <div class="sub" id="sub-${i}">${fmt(r.sub)}</div>
+            <div class="unit" id="unit-${i}">${unitHTML(i, r, etiqueta)}</div>
           </div>
         </div>
         <div class="perso-fila"><span>Personalizado<small>+${fmt(RECARGO_PERSO)} por unidad · sin descuento por medio de pago</small></span>
@@ -326,7 +345,9 @@ function render(){
     }).join('');
   }
 
-  // Totales
+  renderTotales();
+}
+function renderTotales(){
   const filas = S.items.map(calcular).filter(Boolean);
   const total = filas.reduce((s,r) => s + r.sub, 0);
   $('total').textContent = fmt(total);
